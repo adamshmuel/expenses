@@ -1,0 +1,34 @@
+# Dependencies — reinstall with `npm install`, never commit them.
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Secrets. The Gemini API key and the JWT secrets live in .env, which must
+# never reach GitHub. .env.example is committed instead: same keys, no values.
+.env
+.env.*
+!.env.example
+
+# Winston writes here (see the logging demo in the course).
+logs/
+*.log
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.sw?
+
+# Claude Code — personal overrides and scratch worktrees only.
+# .claude/agents/, rules/, hooks/ and settings.json ARE committed on purpose:
+# they are how the project's working rules travel with the repo.
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
