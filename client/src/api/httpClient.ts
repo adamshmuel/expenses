@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios'
 import { getAccessToken, setStoredAccessToken } from './tokenStore'
 import type { ApiError } from './types'
 
-const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api'
+const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export const httpClient = axios.create({
   baseURL,
@@ -30,12 +30,12 @@ httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const request = error.config as (typeof error.config & { _retried?: boolean }) | undefined
-    const isRefreshCall = request?.url?.includes('/auth/refresh')
+    const isRefreshCall = request?.url?.includes('/users/refresh')
 
     if (error.response?.status === 401 && request && !request._retried && !isRefreshCall) {
       request._retried = true
       try {
-        const { data } = await httpClient.post('/auth/refresh')
+        const { data } = await httpClient.post('/users/refresh')
         setStoredAccessToken(data.accessToken)
         return httpClient(request)
       } catch {

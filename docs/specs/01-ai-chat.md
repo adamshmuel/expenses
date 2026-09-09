@@ -84,7 +84,7 @@ each message under its own field. Nothing already typed is lost.
 The access token is sent on every request as `Authorization: Bearer <token>`.
 
 **When the access token expires mid-session:** the server answers `401`. The
-client calls `/auth/refresh` once, gets a fresh access token, and retries the
+client calls `/users/refresh` once, gets a fresh access token, and retries the
 original request. The user notices nothing. If the refresh also fails, the user
 is logged out and sent to `/login`.
 
@@ -188,12 +188,12 @@ Why each part is here. Source:
 | Course topic | Demo | Where it is used |
 |---|---|---|
 | Express basics | 9 | The server itself |
-| Routes | 10 | `/auth/*`, `/chat/*`, `/expenses` |
+| Routes | 10 | `/users/*`, `/chat/*`, `/expenses` |
 | Route params | 11 | `PUT /categories/:id`, `DELETE /categories/:id` |
 | Query string | 12 | `GET /chat/messages?limit=` |
 | CRUD | 13 | Create and read messages; create expenses |
 | Middleware | 14 | `requireAuth` on `/chat` and `/expenses` |
-| Router per resource | 15 | `routes/auth.js`, `routes/chat.js`, `routes/expenses.js` |
+| Router per resource | 15 | `routes/userRoute.js`, `routes/chat.js`, `routes/expenses.js` |
 | Error handling | 16 | `catchAsync` plus one central error handler |
 | CORS, static, dotenv | 17 | Server setup; the Gemini key in `.env` |
 | Mongoose | 18 | `User`, `Message`, `Category`, `Expense` |

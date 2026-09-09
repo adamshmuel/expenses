@@ -9,7 +9,7 @@ const remember = (response: AuthResponse) => {
 
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
   try {
-    const { data } = await httpClient.post<AuthResponse>('/auth/login', credentials)
+    const { data } = await httpClient.post<AuthResponse>('/users/login', credentials)
     return remember(data)
   } catch (error) {
     throw toApiError(error)
@@ -18,7 +18,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
 
 export const register = async (details: RegisterDetails): Promise<AuthResponse> => {
   try {
-    const { data } = await httpClient.post<AuthResponse>('/auth/register', details)
+    const { data } = await httpClient.post<AuthResponse>('/users/signup', details)
     return remember(data)
   } catch (error) {
     throw toApiError(error)
@@ -28,7 +28,7 @@ export const register = async (details: RegisterDetails): Promise<AuthResponse> 
 /** Used on start-up: the cookie is still there even though the token is gone. */
 export const refresh = async (): Promise<AuthResponse> => {
   try {
-    const { data } = await httpClient.post<AuthResponse>('/auth/refresh')
+    const { data } = await httpClient.post<AuthResponse>('/users/refresh')
     return remember(data)
   } catch (error) {
     throw toApiError(error)
@@ -37,7 +37,7 @@ export const refresh = async (): Promise<AuthResponse> => {
 
 export const logout = async (): Promise<void> => {
   try {
-    await httpClient.post('/auth/logout')
+    await httpClient.post('/users/logout')
   } finally {
     // Whatever the server said, this browser is logged out.
     setStoredAccessToken(null)

@@ -1,16 +1,21 @@
 # 03 — API contract
 
-Status: **v1 auth section is final — the client is already built against it.**
+Status: **v1 auth section is agreed. The client is built against it.**
 The chat and expense endpoints are still open.
 
 This is the line between Adam's server and Claude's client. Neither side changes
 it alone.
 
+The auth router mounts at **`/users`**, following the `route → bl → dal`
+layout of Adam's `ex6_mongodb` exercise. There is no `/api` prefix — the server
+only serves this API. The four endpoints below are `/users/signup`, `/login`,
+`/refresh`, `/logout`.
+
 ## 0. Ground rules
 
 | Thing | Value |
 |---|---|
-| Base URL | `http://localhost:3000/api` |
+| Base URL | `http://localhost:3000` |
 | Client origin | `http://localhost:5173` |
 | Body format | JSON |
 | Access token | sent by the client as `Authorization: Bearer <token>` |
@@ -62,7 +67,7 @@ if (!result.isEmpty()) {
 
 ## 1. Auth endpoints — v1
 
-### `POST /api/auth/register`
+### `POST /users/signup`
 
 Request:
 
@@ -91,7 +96,7 @@ Rules: hash the password with bcrypt; never return the `password` field;
 username 3–20 chars, unique; email valid, unique; password at least 8 chars.
 The "already taken" checks are custom async validators.
 
-### `POST /api/auth/login`
+### `POST /users/login`
 
 Request:
 
@@ -99,7 +104,7 @@ Request:
 { "username": "adam", "password": "password123" }
 ```
 
-Success — **200**, same body as register, and sets the refresh cookie.
+Success — **200**, same body as signup, and sets the refresh cookie.
 
 | Status | When |
 |---|---|
@@ -110,7 +115,7 @@ Success — **200**, same body as register, and sets the refresh cookie.
 The 401 message must not say which one was wrong. Rate-limit this route more
 strictly than the rest of the API.
 
-### `POST /api/auth/refresh`
+### `POST /users/refresh`
 
 No request body. The browser sends the cookie automatically.
 
@@ -137,7 +142,7 @@ The client calls this in two situations:
 2. **After any 401 on another request.** The client retries the original request
    once with the new token. If the refresh fails too, the user is logged out.
 
-### `POST /api/auth/logout`
+### `POST /users/logout`
 
 No body. Invalidate the refresh token and clear the cookie.
 
@@ -157,7 +162,7 @@ Built and tested. No further client work is needed for these.
 | Sends `Authorization: Bearer` on every request | `client/src/api/httpClient.ts` |
 | Refreshes once on a 401 and retries | `client/src/api/httpClient.ts` |
 | Keeps the access token in memory only | `client/src/api/tokenStore.ts` |
-| Calls `/auth/refresh` on start-up | `client/src/App.tsx` |
+| Calls `/users/refresh` on start-up | `client/src/App.tsx` |
 | Maps `errors[]` to individual fields | `client/src/api/httpClient.ts` |
 | Redirects logged-out users away from `/home` | `client/src/components/ProtectedRoute.tsx` |
 
@@ -171,11 +176,11 @@ either side:
 
 | Purpose | Likely route |
 |---|---|
-| Send a chat message, get drafts back | `POST /api/chat/messages` |
-| Load chat history | `GET /api/chat/messages?limit=` |
-| Save confirmed expenses | `POST /api/expenses` |
-| Category CRUD | `/api/categories` — deferred to v2 |
-| Statistics | `GET /api/expenses/summary?period=` |
+| Send a chat message, get drafts back | `POST /chat/messages` |
+| Load chat history | `GET /chat/messages?limit=` |
+| Save confirmed expenses | `POST /expenses` |
+| Category CRUD | `/categories` — deferred to v2 |
+| Statistics | `GET /expenses/summary?period=` |
 
 The data model behind all of them is agreed and written up in
 [04-data-model.md](04-data-model.md).
