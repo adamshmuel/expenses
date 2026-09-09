@@ -1,5 +1,20 @@
 const mongoose = require("mongoose");
 
+/**
+ * Mongoose schema for a Category document.
+ * Categories are two levels deep: a document with no `parent` is a main
+ * category, and one with a `parent` is a subcategory of that main category.
+ * A subcategory can never itself have subcategories.
+ *
+ * @typedef {Object} Category
+ * @property {string} name - Required, trimmed.
+ * @property {mongoose.Types.ObjectId} [parent] - The main category this
+ *   belongs to. Missing/empty means this document is itself a main category.
+ * @property {mongoose.Types.ObjectId} owner - Required. The User who owns
+ *   this category — categories are private per user, never shared.
+ * @property {boolean} isProtected - True only for the "Other" category.
+ *   Blocks renaming, unprotecting, and deleting.
+ */
 const categorySchema = new mongoose.Schema({
     name: {
         type: String,
@@ -24,6 +39,11 @@ const categorySchema = new mongoose.Schema({
 categorySchema.index({ owner: 1, parent: 1, name: 1 }, { unique: true });
 categorySchema.index({ owner: 1 });
 
+/**
+ * Runs before a Category is created.
+ * Rejects it if `isProtected` is set on anything but "Other", or if its
+ * `parent` is itself a subcategory (which would make three levels deep).
+ */
 categorySchema.pre("save", async function (next) {
     if (this.isProtected === true && this.name !== "Other") {
         return next(new Error("Only the 'Other' category can be protected"));
@@ -46,6 +66,11 @@ categorySchema.pre("save", async function (next) {
     next();
 });
 
+/**
+ * Runs before a Category is updated via findOneAndUpdate.
+ * Rejects the update if it would rename or unprotect a protected category,
+ * or set a `parent` that is itself a subcategory.
+ */
 categorySchema.pre("findOneAndUpdate", async function (next) {
 
     const update = this.getUpdate();
@@ -90,6 +115,10 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
     next();
 });
 
+/**
+ * Runs before a Category is deleted via findOneAndDelete.
+ * Rejects the delete if the category is protected.
+ */
 categorySchema.pre("findOneAndDelete", async function (next) {
 
     const docToDelete = await this.model.findOne(this.getFilter());
@@ -105,6 +134,10 @@ categorySchema.pre("findOneAndDelete", async function (next) {
     next();
 });
 
+/**
+ * Runs before a bulk Category delete via deleteMany.
+ * Rejects the whole operation if any matched category is protected.
+ */
 categorySchema.pre("deleteMany", async function (next) {
     const docs = await this.model.find(this.getFilter());
 
@@ -118,5 +151,10 @@ categorySchema.pre("deleteMany", async function (next) {
 });
 
 categorySchema.set("toJSON", { virtuals: true });
+
+/**
+ * The Category model. Use this to create, read, update, and delete categories.
+ * @type {mongoose.Model<Category>}
+ */
 const Category = mongoose.model("Category", categorySchema);
 module.exports = Category;

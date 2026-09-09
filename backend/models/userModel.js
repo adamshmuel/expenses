@@ -1,6 +1,18 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 
+/**
+ * Mongoose schema for a User document.
+ *
+ * @typedef {Object} User
+ * @property {string} username - Required, unique, 3-20 characters, trimmed.
+ * @property {string} email - Required, unique, trimmed, lowercased, must be
+ *   a valid email address.
+ * @property {string} password - Required. Stored as a bcrypt hash; hashing
+ *   happens outside this schema, and this field should never be sent back
+ *   to the client.
+ * @property {Date} createdAt - Set automatically to the creation time.
+ */
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -8,7 +20,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         minLength: [3, 'Username must be at least 3 characters long'],
         maxLength: [20, 'Username cannot exceed 20 characters'],
-        trim: true 
+        trim: true
     },
     email: {
         type: String,
@@ -26,4 +38,9 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.set("toJSON", { virtuals: true });
+
+/**
+ * The User model. Use this to create, read, update, and delete users.
+ * @type {mongoose.Model<User>}
+ */
 const User = mongoose.model("User", userSchema);
