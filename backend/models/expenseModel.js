@@ -60,3 +60,4 @@ expenseSchema.set("toJSON", { virtuals: true });
  * @type {mongoose.Model<Expense>}
  */
 const Expense = mongoose.model("Expense", expenseSchema);
+module.exports = Expense;

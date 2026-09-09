@@ -41,3 +41,4 @@ refreshTokenSchema.set("toJSON", { virtuals: true });
  * @type {mongoose.Model<RefreshToken>}
  */
 const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
+module.exports = RefreshToken;
