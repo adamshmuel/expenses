@@ -87,8 +87,8 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
     const docToUpdate = await this.model.findOne(this.getFilter());
 
     if (!docToUpdate) {
-    return next();
-}
+        return next();
+    }
 
     if (docToUpdate.isProtected === true) {
         if (nameValue !== undefined && nameValue !== "Other") {
@@ -118,6 +118,12 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
 /**
  * Runs before a Category is deleted via findOneAndDelete.
  * Rejects the delete if the category is protected.
+ *
+ * Otherwise, re-points that user's expenses to their "Other" category before
+ * the delete goes through, so spending history is never lost:
+ *  - if this is a main category (no `parent`), its subcategories' expenses
+ *    move to "Other" too, and the subcategories are then deleted;
+ *  - the category being deleted itself always has its expenses moved.
  */
 categorySchema.pre("findOneAndDelete", async function (next) {
 
@@ -130,7 +136,26 @@ categorySchema.pre("findOneAndDelete", async function (next) {
     if (docToDelete.isProtected === true) {
         return next(new Error("Protected categories cannot be deleted"));
     }
+    const otherCategory = await this.model.findOne({ owner: docToDelete.owner, name: "Other" });
+    
+    let categoryIdsToMove = [docToDelete._id];
 
+    if (!docToDelete.parent) {
+        const subcategories = await this.model.find({ parent: docToDelete._id });
+        const subcategoryIds = subcategories.map(sub => sub._id);
+        categoryIdsToMove = categoryIdsToMove.concat(subcategoryIds);
+    }
+
+    const Expense = mongoose.model("Expense");
+
+    await Expense.updateMany(
+        { category: { $in: categoryIdsToMove } },
+        { category: otherCategory._id }
+    );
+
+    if (!docToDelete.parent) {
+    await this.model.deleteMany({ parent: docToDelete._id });
+}
     next();
 });
 
@@ -146,7 +171,6 @@ categorySchema.pre("deleteMany", async function (next) {
     if (hasProtectedCategory) {
         return next(new Error("Protected categories cannot be deleted"));
     }
-
     next();
 });
 
