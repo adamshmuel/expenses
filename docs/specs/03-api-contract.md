@@ -177,5 +177,5 @@ either side:
 | Category CRUD | `/api/categories` — deferred to v2 |
 | Statistics | `GET /api/expenses/summary?period=` |
 
-The full data model (`User`, `Message`, `Category`, `Expense`) is written here
-once those are agreed.
+The data model behind all of them is agreed and written up in
+[04-data-model.md](04-data-model.md).

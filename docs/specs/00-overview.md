@@ -15,6 +15,9 @@ shows statistics about what was saved.
 | `/home` | AI chat. The user types their expense or expenses. | [01-ai-chat.md](01-ai-chat.md) |
 | `/dashboard` | Statistics about the saved expenses. | [02-dashboard.md](02-dashboard.md) |
 
+The API between the two sides is [03-api-contract.md](03-api-contract.md); the
+database behind it is [04-data-model.md](04-data-model.md).
+
 ## Purpose
 
 This is Adam's Node.js course final project. Its goal is to demonstrate as much
@@ -33,12 +36,12 @@ that goal.
 
 Three parts:
 
-- `server/` — the API and the database. Adam's work.
-- `server/ai/` — turns free text into a structured expense. Claude's work.
+- `backend/` — the API and the database. Adam's work.
+- `backend/ai/` — turns free text into a structured expense. Claude's work.
 - `client/` — the two screens. Claude's work.
 
 The client never talks to the language model directly. It calls the server, and
-the server calls `server/ai/`.
+the server calls `backend/ai/`.
 
 ## Open questions
 

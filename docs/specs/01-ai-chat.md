@@ -43,9 +43,9 @@ the same for everyone. From there each user can:
 
 Categories are two levels deep: a main category, and subcategories under it.
 
-How this is stored — one collection or two, how defaults are copied to a new
-user, and what happens to expenses whose category is deleted — is a database
-question, decided later in [03-api-contract.md](03-api-contract.md).
+How this is stored is decided in [04-data-model.md](04-data-model.md): one
+`Category` collection with a `parent` field, one set copied per user at sign-up,
+and deleting a category moves its expenses to "Other" rather than losing them.
 
 ## 3. `/signup`
 
@@ -116,7 +116,7 @@ filling in a form.
 1. On entering the page, the last messages are loaded and shown, oldest first.
 2. The user types a message. Example: `spent 50 at the supermarket`.
 3. The client sends the text to the server. **Request one.**
-4. The server saves the user's message, passes the text to `server/ai/`, saves
+4. The server saves the user's message, passes the text to `backend/ai/`, saves
    the reply as an assistant message, and returns both the reply and a list of
    **draft** expenses: amount, store, date, category.
 5. The client shows the drafts and asks the user to confirm.
@@ -163,7 +163,7 @@ the expenses collection without the user agreeing to it.
 | Not logged in, opens `/home` | Redirect to `/login` |
 | Server unreachable | An error message, and a way to try again |
 
-## 8. What `server/ai/` exposes
+## 8. What `backend/ai/` exposes
 
 One function. Claude writes it; Adam's server calls it.
 
