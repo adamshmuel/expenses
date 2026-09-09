@@ -26,9 +26,11 @@ logs/
 *.swp
 *.sw?
 
-# Claude Code — personal overrides and scratch worktrees only.
-# .claude/agents/, rules/, hooks/ and settings.json ARE committed on purpose:
-# they are how the project's working rules travel with the repo.
-.claude/settings.local.json
-.claude/worktrees/
+# AI tooling config and AI-authored root docs — kept on disk for local use,
+# never tracked or pushed. Fresh clones will not have these; see the project
+# owner before relying on git history to restore them.
+.claude/
+.github/
+/*.md
+!/README.md
 CLAUDE.local.md
