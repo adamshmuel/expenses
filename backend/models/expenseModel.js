@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 /**
  * Mongoose schema for an Expense document.
  * Every amount is a number of shekels — there is no currency field, and no
