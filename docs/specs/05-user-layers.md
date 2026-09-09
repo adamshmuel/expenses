@@ -120,12 +120,13 @@ This is the rotation (course demo 24).
    out, or from before a restart, is gone from the collection.)
 2. `jwt.verify(oldRefreshToken, REFRESH_TOKEN_SECRET)`. If it throws (tampered
    or expired) — let it become a 401.
-3. `deleteRefreshToken(oldRefreshToken)` — the old one can never be used again.
-4. `findUserById(payload.userId)` — needed because the response includes the
+3. `findUserById(payload.userId)` — needed because the response includes the
    user.
-5. Issue a **new** token pair for that user.
-6. `saveRefreshToken(...)` the new refresh token.
-7. Return `{ user, accessToken, refreshToken }`.
+4. `deleteRefreshToken(oldRefreshToken)` — the old one can never be used again.
+5. Issue a **new** token pair for that user. The token-pair helper saves the
+   new refresh token itself (§ *Private helper*), so there is no separate
+   `saveRefreshToken` call here.
+6. Return `{ user, accessToken, refreshToken }`.
 
 Storing refresh tokens in the `RefreshToken` collection (not an in-memory array
 like `ex6`) is deliberate: restarting the server does not log everyone out, and
@@ -139,15 +140,20 @@ there, that is fine — logout is idempotent.
 
 ### Private helper: issuing a token pair
 
-Not exported. Used by signup, login and refresh.
+`issueTokenPair(user)` — not exported. Used by signup, login and refresh.
 
-- **access token**: `jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '15m' })`
+- signs the **access token**: `jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '15m' })`
   — short. Payload carries what `requireAuth` will read off `req.user` on the
   chat and expense routes later.
-- **refresh token**: `jwt.sign({ userId: id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' })`
+- signs the **refresh token**: `jwt.sign({ userId: id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' })`
   — long, minimal payload, different secret from the access token.
-- Also compute the refresh token's `expiresAt` Date (now + 7 days) so
-  `saveRefreshToken` can store it for the TTL index.
+- computes the refresh token's `expiresAt` Date (now + 7 days) and calls
+  `saveRefreshToken({ token, user, expiresAt })` so every caller stores the row
+  the same way and the TTL index has its date.
+- returns `{ accessToken, refreshToken }`.
+
+It is `async` because of that `saveRefreshToken` call, so all three callers
+`await` it.
 
 Decided: access token **15 minutes**, refresh token **7 days**, different
 secrets.
