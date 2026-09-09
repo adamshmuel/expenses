@@ -42,6 +42,17 @@ const findUserByUsername = (username) => {
 };
 
 /**
+ * Find one user by email. Used by the signup async validator to check that an
+ * email is not already registered, before the request reaches the service.
+ *
+ * @param {string} email
+ * @returns {Promise<import('mongoose').Document|null>} the User document, or null
+ */
+const findUserByEmail = (email) => {
+    return User.findOne({ email: email });
+};
+
+/**
  * Find one user by id. Used by the refresh flow, which needs the user for the
  * response body.
  *
@@ -95,5 +106,6 @@ module.exports = {
     findUserById,
     saveRefreshToken,
     findRefreshToken,
-    deleteRefreshToken
+    deleteRefreshToken,
+    findUserByEmail
 }

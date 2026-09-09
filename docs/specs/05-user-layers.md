@@ -69,6 +69,7 @@ concern, that is the service.
 |---|---|---|
 | `createUser({ username, email, password })` | `new User(...).save()`. The `password` it receives is **already hashed** — the repository does not hash. | the saved `User` document |
 | `findUserByUsername(username)` | `User.findOne({ username })` | the `User` document, or `null` |
+| `findUserByEmail(email)` | `User.findOne({ email })` | the `User` document, or `null` |
 | `findUserById(id)` | `User.findById(id)` | the `User` document, or `null` |
 | `saveRefreshToken({ token, user, expiresAt })` | `new RefreshToken(...).save()` | the saved `RefreshToken` document |
 | `findRefreshToken(token)` | `RefreshToken.findOne({ token })` | the `RefreshToken` document, or `null` |
@@ -148,8 +149,8 @@ Not exported. Used by signup, login and refresh.
 - Also compute the refresh token's `expiresAt` Date (now + 7 days) so
   `saveRefreshToken` can store it for the TTL index.
 
-Exact minutes/days are Adam's to pick; "short access, long refresh, different
-secrets" is the rule.
+Decided: access token **15 minutes**, refresh token **7 days**, different
+secrets.
 
 ## 5. What the service returns vs. what the client sees
 
@@ -239,10 +240,10 @@ A tiny function in the route file that maps a `User` document to
 | credentials actually correct | `userService.login` | — |
 | refresh token valid and not rotated out | `userService.refresh` | demo 24 |
 
-The async "is it taken" validators need to read the database. They may call
-`userRepository.findUserByUsername` / a new `findUserByEmail`, so the route can
-stay out of the model. **Open question 2** covers whether to add
-`findUserByEmail` to the repository for this.
+The async "is it taken" validators read the database through
+`userRepository.findUserByUsername` and `userRepository.findUserByEmail`, so the
+route stays out of the model. The model's `unique` index on `username` and
+`email` is the safety net behind them — see §8.
 
 express-validator's output is mapped to the agreed `errors` shape exactly as
 shown in [03-api-contract.md](03-api-contract.md) §0.
@@ -252,14 +253,17 @@ shown in [03-api-contract.md](03-api-contract.md) §0.
 | Situation | Thrown by | Route answers |
 |---|---|---|
 | A signup field fails a rule | express-validator | 400 + `errors[]` |
-| Username or email already taken | express-validator async validator | 409 (or 400 + `errors[]` so it lands on the field) |
+| Username or email already taken (normal path) | express-validator async validator | 400 + `errors[]` so it lands on the field |
+| Same, but it slipped past the validator (race) | `createUser` → Mongo `E11000` | central error handler special-cases `err.code === 11000` → 409 |
 | Wrong username or password | `userService.login` | 401 + `{ error }`, generic |
 | No refresh cookie on `/refresh` | route itself | 401, **not logged as error** |
 | Refresh token unknown / expired / tampered | `userService.refresh` | 401, cookie cleared |
 | Database is down | repository | the central error handler → 500 |
 
 One central error handler (course demo 16) turns a thrown error with `.status`
-into that status, and anything else into 500.
+into that status. It also special-cases MongoDB's duplicate-key error
+(`err.code === 11000`) into a **409** — this covers `User`, and any future model
+with a `unique` index. Anything else becomes a 500.
 
 ## 9. Course-topic coverage
 
@@ -274,18 +278,16 @@ into that status, and anything else into 500.
 | express-validator | 22 | `/signup` and `/login` bodies, async taken-checks |
 | Advanced security | 24 | strict login rate limit, HttpOnly cookie, refresh-token rotation in the DB |
 
-## 10. Open questions
+## 10. Decisions
 
-1. **Access-token lifetime.** 15 minutes is a common choice; Adam picks the
-   number. The rule (short access, long refresh, separate secrets) is fixed.
-2. **`findUserByEmail` in the repository.** The signup async validator for
-   "email already taken" needs a DB read. Add `findUserByEmail` to
-   `userRepository`, or let the validator use `User` directly? Adding it keeps
-   the layering clean; it is one more small function.
-3. **Who catches the duplicate-key (`E11000`) error** if a race slips past the
-   async validator — the service (translate to a `.status = 409` error) or the
-   central error handler (special-case `E11000`). Either is fine; pick one so it
-   is not handled twice.
-4. **`createdAt` in the response.** The contract's `user` object is
-   `{ id, username, email }` only. Confirm the client never needs `createdAt`
-   here. (It does not today.)
+1. **Access-token lifetime:** 15 minutes. Refresh token: 7 days. Separate
+   secrets.
+2. **`findUserByEmail` in the repository:** added. The signup async validators
+   call `findUserByUsername` and `findUserByEmail`; the model's `unique` index is
+   the safety net.
+3. **Duplicate-key (`E11000`) error:** handled once in the central error handler
+   (`err.code === 11000` → 409), not in the service. Covers every model with a
+   `unique` index.
+4. **`createdAt` in the response:** no. It stays on the `User` model for
+   debugging (visible in the database and in Winston logs), but the response
+   body is `{ id, username, email }` only, per the API contract.
