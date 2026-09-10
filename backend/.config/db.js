@@ -5,8 +5,6 @@
  *
  * See docs/specs/06-server-modules.md, section 2.
  */
-
-require("dotenv").config();
 const mongoose = require("mongoose");
 const logger = require("./logger");
 
