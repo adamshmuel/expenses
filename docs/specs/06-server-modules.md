@@ -1,6 +1,6 @@
 # 06 — Server modules: logger, DB, error handling, requireAuth
 
-Status: **draft — needs Adam's approval.**
+Status: **agreed. The four modules are written and match this spec.**
 
 The self-contained pieces the server is built from — each one a file that
 exports a function or object, understandable and testable on its own. How they
@@ -105,9 +105,8 @@ connection pool, so every model reuses it — nothing passes a connection around
 
 ### What it exports
 
-Either a `connectDB()` function that `index.js` calls, or the module runs the
-connect on `require`. Prefer the function form — it keeps start-up order
-explicit and is testable.
+A `connectDB()` function that `index.js` calls (decision 3) — not a side effect
+on `require`. Keeps start-up order explicit and is testable.
 
 ### Uses
 
@@ -133,8 +132,8 @@ Wraps an `async` route handler so a rejected promise does not crash the server.
 - **Returns:** a plain `(req, res, next)` function that runs the handler and, if
   it throws or rejects, forwards the error with `next(err)`.
 - It does **not** decide the status or the response body — that is the central
-  handler's single job. Whether `catchAsync` also logs is decided in §6
-  (see the note under 3.3).
+  handler's single job. It does **not** log either — logging happens once, in
+  `errorHandler` (decision 2). `catchAsync` is now just a `.catch(next)` wrapper.
 
 Every route handler in the app is wrapped in this.
 
@@ -167,20 +166,18 @@ Key points:
 
 ### 3.3 What gets logged
 
-- A 5xx (the fallback case) is logged at `error` level, with method, path, and
+Logging happens **once, here** — `catchAsync` does not log (decision 2).
+
+- The 500 fallback case is logged at `error` level, with method, path, and
   stack. This is what lands in `logs/error.log`.
-- A 4xx that carries a deliberate `err.status` (401 bad credentials, 409
-  duplicate, 400 validation) is an expected outcome, not a fault. It may be
-  logged at `warn` or `http`, but **not** at `error` — `error.log` should stay a
-  list of real problems.
+- A 4xx that carries a deliberate `err.status` (401 bad credentials, 400
+  validation) and the 409 duplicate case are expected outcomes, not faults.
+  They are logged at `warn`, never `error` — `error.log` stays a list of real
+  problems.
 - The no-cookie 401 on `POST /users/refresh` never reaches this handler at all
   ([05-user-layers.md](05-user-layers.md) §6): the route answers it directly so
   it is not logged as an error. That behaviour stays in the route; this handler
   does not need to know about it.
-
-**Open point for §6:** today `catchAsync` and `errorHandler` would both log the
-same error if both log unconditionally. Decide whether `catchAsync` logs at all,
-or whether logging lives only in `errorHandler`. One place is better than two.
 
 ### Uses
 
@@ -219,10 +216,9 @@ the proof; this middleware is the one place that checks it.
 
 ### Factory or plain middleware
 
-Adam's `ex6_mongodb` writes this as a **factory** (`requireRole('admin')`) —
-demo 20. This app has no roles in v1, so a plain `requireAuth` function is
-enough. If it is written as a factory that takes options, the only call is
-`requireAuth()` with no arguments. Either is acceptable; plain is simpler.
+A plain `requireAuth(req, res, next)` function (decision 4). Adam's `ex6_mongodb`
+uses a factory (`requireRole('admin')`, demo 20), but this app has no roles in
+v1, so the factory layer would wrap nothing.
 
 ### The 401 here vs. the 401 on `/refresh`
 
@@ -271,19 +267,22 @@ setting up the project knows what to provide.
 
 ---
 
-## 6. Open questions
-
-1. **Where logging lives.** In `catchAsync`, in `errorHandler`, or both? Pick one
-   so an error is not logged twice. (§3.3)
-2. **`db.js` shape.** A `connectDB()` function `index.js` calls, or connect on
-   `require`? (recommended: the function) (§2)
-3. **`requireAuth` as a plain function or a no-arg factory.** (recommended:
-   plain) (§4)
-
-## Decisions
+## 6. Decisions
 
 1. **AI-call log:** its own file, `logs/ai.log`, fed by lines tagged
-   `area: "ai"`. (§1)
+   `area: "ai"`. The shared line format is applied to it too. (§1)
+2. **Where logging lives:** only in `errorHandler`. `catchAsync` forwards with
+   `next(err)` and does not log — no error is logged twice. (§3.3)
+3. **`db.js` shape:** a `connectDB()` function `index.js` calls, exported as
+   `{ connectDB }`. Not a connect-on-`require` side effect. (§2)
+4. **`requireAuth`:** a plain `(req, res, next)` function, no factory. (§4)
+
+### Deferred to the `index.js` spec
+
+- `dotenv` is currently loaded inside `.config/db.js`. It moves to the top of
+  `index.js`, before any module reads `process.env`, and comes out of `db.js`.
+- `.env.example` is written and committed alongside the `index.js` work, once
+  `PORT` and `CLIENT_ORIGIN` have a consumer.
 
 ---
 
