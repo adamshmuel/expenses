@@ -202,7 +202,7 @@ the proof; this middleware is the one place that checks it.
 2. No header, or not in that form → **401** `{ "error": "Not authenticated." }`,
    and `next()` is **not** called (the route never runs).
 3. `jwt.verify(token, process.env.JWT_SECRET)`. If it throws (expired, tampered,
-   wrong secret) → **401** `{ "error": "Not authenticated." }`.
+   wrong secret) → **401** `{ "error": "Invalid or expired token!" }`.
 4. On success, put the token's payload on the request as `req.user`:
 
    ```js
