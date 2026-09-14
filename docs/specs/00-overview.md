@@ -16,7 +16,8 @@ shows statistics about what was saved.
 | `/dashboard` | Statistics about the saved expenses. | [02-dashboard.md](02-dashboard.md) |
 
 The API between the two sides is [03-api-contract.md](03-api-contract.md); the
-database behind it is [04-data-model.md](04-data-model.md).
+database behind it is [04-data-model.md](04-data-model.md), and the DAL
+contract for it is [08-expense-category-dal.md](08-expense-category-dal.md).
 
 ## Purpose
 
