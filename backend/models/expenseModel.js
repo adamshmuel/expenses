@@ -14,7 +14,9 @@ const mongoose = require("mongoose");
  *   category is deleted — see categoryModel.js.
  * @property {mongoose.Types.ObjectId} user - Required. The User who owns
  *   this expense.
- * @property {Date} createdAt - Set automatically to the creation time.
+ * @property {Date} createdAt - Set automatically to the creation time (from { timestamps: true }).
+ * @property {Date} updatedAt - Set automatically, and updated on every edit (from { timestamps: true }).
+
  */
 const expenseSchema = new mongoose.Schema({
     amount: {
@@ -42,12 +44,9 @@ const expenseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: [true, 'User is required']
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true });
+
 
 // Every dashboard query is "this user, this period", so this is the index
 // that matters.

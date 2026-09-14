@@ -16,8 +16,13 @@ const queryExpenses = (userId, filters) => {
         if (filters.from) query.date.$gte = filters.from;
         if (filters.to) query.date.$lte = filters.to;
     }
+    if (filters.text) {
+        const pattern = new RegExp(filters.text, 'i');
+        query.$or = [{ store: pattern }, { description: pattern }];
+    }
     return Expense.find(query);
 }
+
 
 const getExpenseTotalByCategory = (userId, from, to) => {
 
@@ -43,10 +48,21 @@ const getExpenseTotalByCategory = (userId, from, to) => {
 
 }
 
+const updateExpense = (id, obj) => {
+    return Expense.findOneAndUpdate({ _id: id }, obj, { new: true });
+}
+
+const deleteExpense = (id) => {
+    return Expense.findByIdAndDelete(id);
+}
+
+
 
 module.exports = {
     createExpense,
     createManyExpenses,
     queryExpenses,
-    getExpenseTotalByCategory
+    getExpenseTotalByCategory,
+    updateExpense,
+    deleteExpense
 }
