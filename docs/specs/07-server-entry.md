@@ -103,7 +103,7 @@ are exactly `/users/signup`, `/users/login`, `/users/refresh`, `/users/logout`.
 After every router, in this order:
 
 1. **A 404 handler** — a middleware that runs when no route matched. It responds
-   `404` with the general error shape `{ "error": "Not found." }`
+   `404` with the general error shape `{ "error": "Not Found" }`
    ([03](03-api-contract.md) §0). It can do this directly, or create an error
    with `status = 404` and pass it to `next` so the central handler formats it —
    either is fine; the response shape is what matters.
