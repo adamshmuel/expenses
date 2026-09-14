@@ -1,4 +1,5 @@
 const userRepository = require('../dal/userRepository.js');
+const categoryService = require('./categoryService.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -71,6 +72,7 @@ const signup = async (obj) => {
     obj.password = await bcrypt.hash(obj.password, 10);
     const user = await userRepository.createUser(obj);
     const { accessToken, refreshToken } = await issueTokenPair(user);
+    await categoryService.seedDefaultCategories(user._id);
     return { user, accessToken, refreshToken };
 };
 
