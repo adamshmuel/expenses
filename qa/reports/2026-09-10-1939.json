@@ -1,0 +1,1474 @@
+{
+  "numTotalTestSuites": 31,
+  "numPassedTestSuites": 27,
+  "numFailedTestSuites": 4,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 121,
+  "numPassedTests": 119,
+  "numFailedTests": 2,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1789058330680,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-01 valid signup returns 201",
+          "status": "passed",
+          "title": "SU-01 valid signup returns 201",
+          "duration": 1219.6940000000031,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-02 success body matches AuthSuccess exactly (no extra keys)",
+          "status": "passed",
+          "title": "SU-02 success body matches AuthSuccess exactly (no extra keys)",
+          "duration": 311.0489170000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-03 body contains no password and no bcrypt hash",
+          "status": "passed",
+          "title": "SU-03 body contains no password and no bcrypt hash",
+          "duration": 308.7845410000009,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-04 body contains no createdAt",
+          "status": "passed",
+          "title": "SU-04 body contains no createdAt",
+          "duration": 308.48649999999907,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-05 body contains no refreshToken",
+          "status": "passed",
+          "title": "SU-05 body contains no refreshToken",
+          "duration": 309.2403750000012,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-06 Set-Cookie sets an HttpOnly refreshToken with the right attributes",
+          "status": "passed",
+          "title": "SU-06 Set-Cookie sets an HttpOnly refreshToken with the right attributes",
+          "duration": 308.86708300000464,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-07 user.id is a 24-hex ObjectId; username/email echo the request (email lowercased)",
+          "status": "passed",
+          "title": "SU-07 user.id is a 24-hex ObjectId; username/email echo the request (email lowercased)",
+          "duration": 309.981832999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-08 username shorter than 3 -> 400 with the errors shape, field 'username'",
+          "status": "passed",
+          "title": "SU-08 username shorter than 3 -> 400 with the errors shape, field 'username'",
+          "duration": 119.38166600000113,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-09 invalid email -> 400, field 'email'",
+          "status": "passed",
+          "title": "SU-09 invalid email -> 400, field 'email'",
+          "duration": 118.25400000000081,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-10 password shorter than 8 -> 400, field 'password'",
+          "status": "passed",
+          "title": "SU-10 password shorter than 8 -> 400, field 'password'",
+          "duration": 118.95304100000067,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-11 every field in a multi-error response matches a body key exactly",
+          "status": "passed",
+          "title": "SU-11 every field in a multi-error response matches a body key exactly",
+          "duration": 118.53662500000064,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-12 duplicate username -> 400 (async validator) OR 409 (unique-index race), always a valid shape",
+          "status": "passed",
+          "title": "SU-12 duplicate username -> 400 (async validator) OR 409 (unique-index race), always a valid shape",
+          "duration": 428.5291670000006,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058369839,
+      "endTime": 1789058373819.529,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/01-signup.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-01 no cookie -> 401 with the general error shape",
+          "status": "passed",
+          "title": "RF-01 no cookie -> 401 with the general error shape",
+          "duration": 4.138500000000931,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-02 the no-cookie 401 is NOT written to logs/error.log",
+          "status": "passed",
+          "title": "RF-02 the no-cookie 401 is NOT written to logs/error.log",
+          "duration": 403.0224159999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-03 a valid cookie -> 200 with { user, accessToken }",
+          "status": "passed",
+          "title": "RF-03 a valid cookie -> 200 with { user, accessToken }",
+          "duration": 594.3106659999976,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-04 refresh issues a NEW refresh cookie (rotation)",
+          "status": "passed",
+          "title": "RF-04 refresh issues a NEW refresh cookie (rotation)",
+          "duration": 1666.9892919999984,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-05 the previous refresh token stops working after one rotation",
+          "status": "passed",
+          "title": "RF-05 the previous refresh token stops working after one rotation",
+          "duration": 1971.8585420000018,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-06 a tampered cookie -> 401 and the cookie is cleared",
+          "status": "passed",
+          "title": "RF-06 a tampered cookie -> 401 and the cookie is cleared",
+          "duration": 377.68958399999974,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-07 the RefreshToken collection grows by net zero per rotation",
+          "status": "passed",
+          "title": "RF-07 the RefreshToken collection grows by net zero per rotation",
+          "duration": 1103.266040999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-08 refresh returns the correct user",
+          "status": "passed",
+          "title": "RF-08 refresh returns the correct user",
+          "duration": 573.9492920000012,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-09 an unknown but well-formed token -> 401",
+          "status": "passed",
+          "title": "RF-09 an unknown but well-formed token -> 401",
+          "duration": 63.2823329999992,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058354959,
+      "endTime": 1789058361719.2822,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/02-refresh.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-01 logout returns 204 with no body",
+          "status": "passed",
+          "title": "LO-01 logout returns 204 with no body",
+          "duration": 1311.6197919999977,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-02 logout clears the refreshToken cookie",
+          "status": "passed",
+          "title": "LO-02 logout clears the refreshToken cookie",
+          "duration": 385.517875000005,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-03 after logout the old refresh token no longer works on /refresh",
+          "status": "passed",
+          "title": "LO-03 after logout the old refresh token no longer works on /refresh",
+          "duration": 451.94641599999886,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-04 logout with no cookie is still 204 (safe / idempotent)",
+          "status": "passed",
+          "title": "LO-04 logout with no cookie is still 204 (safe / idempotent)",
+          "duration": 64.6807090000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-05 logout twice with the same cookie is safe",
+          "status": "passed",
+          "title": "LO-05 logout twice with the same cookie is safe",
+          "duration": 450.67520899999363,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058378615,
+      "endTime": 1789058381280.6753,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/03-logout.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-01 every error body is one of exactly two shapes",
+          "status": "passed",
+          "title": "XC-01 every error body is one of exactly two shapes",
+          "duration": 131.8425830000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-02 field values in a validation error match request body keys exactly",
+          "status": "passed",
+          "title": "XC-02 field values in a validation error match request body keys exactly",
+          "duration": 127.97529200000008,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-03 no successful response body ever contains password or a bcrypt hash",
+          "status": "passed",
+          "title": "XC-03 no successful response body ever contains password or a bcrypt hash",
+          "duration": 0.3393750000000182,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-04 refreshToken never appears in a JSON body, only in Set-Cookie",
+          "status": "passed",
+          "title": "XC-04 refreshToken never appears in a JSON body, only in Set-Cookie",
+          "duration": 0.21666599999980463,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-05 helmet security headers present on a success response",
+          "status": "passed",
+          "title": "XC-05 helmet security headers present on a success response",
+          "duration": 324.2133329999997,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-06 helmet headers present on an error response too",
+          "status": "passed",
+          "title": "XC-06 helmet headers present on an error response too",
+          "duration": 2.56866699999955,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-07 CORS: exact client origin echoed, credentials allowed",
+          "status": "passed",
+          "title": "XC-07 CORS: exact client origin echoed, credentials allowed",
+          "duration": 125.5416669999995,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-08 CORS preflight (OPTIONS) is answered for the client origin",
+          "status": "passed",
+          "title": "XC-08 CORS preflight (OPTIONS) is answered for the client origin",
+          "duration": 3.33141599999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-09 a foreign origin does not get its origin echoed",
+          "status": "passed",
+          "title": "XC-09 a foreign origin does not get its origin echoed",
+          "duration": 124.6723750000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-10 an unmatched path returns 404 with the general error shape",
+          "status": "passed",
+          "title": "XC-10 an unmatched path returns 404 with the general error shape",
+          "duration": 3.3320829999993293,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-11 the 404 body message is 'Not found.' [SPEC DIVERGENCE]",
+          "status": "failed",
+          "title": "XC-11 the 404 body message is 'Not found.' [SPEC DIVERGENCE]",
+          "duration": 9.02100000000064,
+          "failureMessages": [
+            "AssertionError: expected 'Not Found' to be 'Not found.' // Object.is equality\n    at /Users/adamshmuel/Dev/git/expenses/qa/tests/api/04-crosscutting.test.ts:144:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-12 JSON body parsing and cookie parsing are wired (middleware-order effect)",
+          "status": "passed",
+          "title": "XC-12 JSON body parsing and cookie parsing are wired (middleware-order effect)",
+          "duration": 186.90870799999993,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-13 middleware order: helmet vs compression [DESIGN NOTE]",
+          "status": "passed",
+          "title": "XC-13 middleware order: helmet vs compression [DESIGN NOTE]",
+          "duration": 2.4204579999995985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-14 a global rate limiter is present and looser than the login limiter",
+          "status": "passed",
+          "title": "XC-14 a global rate limiter is present and looser than the login limiter",
+          "duration": 8.150749999999789,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058335293,
+      "endTime": 1789058336344.1506,
+      "status": "failed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/04-crosscutting.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-01 valid credentials return 200",
+          "status": "passed",
+          "title": "LI-01 valid credentials return 200",
+          "duration": 2548.564458,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-02 success body matches AuthSuccess exactly and equals signup's shape",
+          "status": "passed",
+          "title": "LI-02 success body matches AuthSuccess exactly and equals signup's shape",
+          "duration": 1628.2444590000014,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-03 login sets a fresh HttpOnly refreshToken cookie",
+          "status": "passed",
+          "title": "LI-03 login sets a fresh HttpOnly refreshToken cookie",
+          "duration": 1634.304709,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-04 no password / hash / refreshToken in the body",
+          "status": "passed",
+          "title": "LI-04 no password / hash / refreshToken in the body",
+          "duration": 1624.0661249999994,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — validation"
+          ],
+          "fullName": "POST /users/login — validation LI-05 missing username -> 400 with the errors shape",
+          "status": "passed",
+          "title": "LI-05 missing username -> 400 with the errors shape",
+          "duration": 5.200125000001208,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — validation"
+          ],
+          "fullName": "POST /users/login — validation LI-06 missing password -> 400",
+          "status": "passed",
+          "title": "LI-06 missing password -> 400",
+          "duration": 8.042625000000044,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — generic 401"
+          ],
+          "fullName": "POST /users/login — generic 401 LI-07 wrong password and unknown username produce the IDENTICAL 401 body",
+          "status": "passed",
+          "title": "LI-07 wrong password and unknown username produce the IDENTICAL 401 body",
+          "duration": 197.98058300000048,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — finding F-1: same-second re-login collision"
+          ],
+          "fullName": "POST /users/login — finding F-1: same-second re-login collision LI-10 two logins by the same user within one second: the second returns 409 [FINDING]",
+          "status": "passed",
+          "title": "LI-10 two logins by the same user within one second: the second returns 409 [FINDING]",
+          "duration": 1658.8319579999988,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — strict rate limit"
+          ],
+          "fullName": "POST /users/login — strict rate limit LI-08 the 6th login attempt in the window returns 429",
+          "status": "passed",
+          "title": "LI-08 the 6th login attempt in the window returns 429",
+          "duration": 602.5620419999977,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — strict rate limit"
+          ],
+          "fullName": "POST /users/login — strict rate limit LI-09 a 429 from the login limiter uses the general error shape",
+          "status": "passed",
+          "title": "LI-09 a 429 from the login limiter uses the general error shape",
+          "duration": 2.0137920000015583,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058337976,
+      "endTime": 1789058353540.0137,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/05-login.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-01 a good URI connects and logs one info line, exits 0",
+          "status": "passed",
+          "title": "DB-01 a good URI connects and logs one info line, exits 0",
+          "duration": 4114.190041000005,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-02 a bad URI logs an error line and exits non-zero",
+          "status": "passed",
+          "title": "DB-02 a bad URI logs an error line and exits non-zero",
+          "duration": 3117.890416000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-03 db.js exports only { connectDB } and registers no models",
+          "status": "passed",
+          "title": "DB-03 db.js exports only { connectDB } and registers no models",
+          "duration": 72.7127909999981,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058362013,
+      "endTime": 1789058369318.713,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/db.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-01 an error line reaches both error.log and app.log",
+          "status": "passed",
+          "title": "LG-01 an error line reaches both error.log and app.log",
+          "duration": 1.0347079999992275,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-02 a warn line reaches app.log but NOT error.log",
+          "status": "passed",
+          "title": "LG-02 a warn line reaches app.log but NOT error.log",
+          "duration": 0.5524999999979627,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-03 a line tagged { area: 'ai' } reaches ai.log",
+          "status": "passed",
+          "title": "LG-03 a line tagged { area: 'ai' } reaches ai.log",
+          "duration": 0.3167909999974654,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-04 a line without area:'ai' does NOT reach ai.log",
+          "status": "passed",
+          "title": "LG-04 a line without area:'ai' does NOT reach ai.log",
+          "duration": 0.2273750000022119,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-05 an AI line also appears in app.log",
+          "status": "passed",
+          "title": "LG-05 an AI line also appears in app.log",
+          "duration": 0.1516669999982696,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-06 a line with empty meta prints no trailing {}",
+          "status": "passed",
+          "title": "LG-06 a line with empty meta prints no trailing {}",
+          "duration": 0.27816700000403216,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-07 exception and rejection handlers are configured",
+          "status": "passed",
+          "title": "LG-07 exception and rejection handlers are configured",
+          "duration": 0.1852080000026035,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058383924,
+      "endTime": 1789058383927.278,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/logger.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-01 username is required",
+          "status": "passed",
+          "title": "MD-01 username is required",
+          "duration": 7.327499999999418,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-02 username shorter than 3 is rejected",
+          "status": "passed",
+          "title": "MD-02 username shorter than 3 is rejected",
+          "duration": 0.6861669999998412,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-03 username longer than 20 is rejected",
+          "status": "passed",
+          "title": "MD-03 username longer than 20 is rejected",
+          "duration": 0.42841699999553384,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-04 username is trimmed",
+          "status": "passed",
+          "title": "MD-04 username is trimmed",
+          "duration": 0.28879199999937555,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-05 email must pass validator.isEmail",
+          "status": "passed",
+          "title": "MD-05 email must pass validator.isEmail",
+          "duration": 0.4203330000018468,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-06 email is lowercased",
+          "status": "passed",
+          "title": "MD-06 email is lowercased",
+          "duration": 0.23637500000040745,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-07 username and email have unique indexes",
+          "status": "passed",
+          "title": "MD-07 username and email have unique indexes",
+          "duration": 60.974624999995285,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-08 createdAt defaults to ~now; toJSON exposes the id virtual",
+          "status": "passed",
+          "title": "MD-08 createdAt defaults to ~now; toJSON exposes the id virtual",
+          "duration": 130.83454199999687,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-09 token is required",
+          "status": "passed",
+          "title": "MD-09 token is required",
+          "duration": 1.2441249999974389,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-10 user is required and is an ObjectId ref to User",
+          "status": "passed",
+          "title": "MD-10 user is required and is an ObjectId ref to User",
+          "duration": 1.7877909999951953,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-11 expiresAt is required",
+          "status": "passed",
+          "title": "MD-11 expiresAt is required",
+          "duration": 0.28441700000257697,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-12 token has a unique index",
+          "status": "passed",
+          "title": "MD-12 token has a unique index",
+          "duration": 60.12554200000159,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-13 TTL index on expiresAt with expireAfterSeconds: 0",
+          "status": "passed",
+          "title": "MD-13 TTL index on expiresAt with expireAfterSeconds: 0",
+          "duration": 59.863791999996465,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-14 there is an index on user",
+          "status": "passed",
+          "title": "MD-14 there is an index on user",
+          "duration": 59.74358399999619,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-15 amount is required",
+          "status": "passed",
+          "title": "MD-15 amount is required",
+          "duration": 1.2805829999997513,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-16 amount of 0 is rejected",
+          "status": "passed",
+          "title": "MD-16 amount of 0 is rejected",
+          "duration": 0.6494160000002012,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-17 negative amount is rejected",
+          "status": "passed",
+          "title": "MD-17 negative amount is rejected",
+          "duration": 0.2794579999972484,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-18 amount of 0.01 is accepted",
+          "status": "passed",
+          "title": "MD-18 amount of 0.01 is accepted",
+          "duration": 0.6871250000040163,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-19 date defaults to ~now; category and user are required refs",
+          "status": "passed",
+          "title": "MD-19 date defaults to ~now; category and user are required refs",
+          "duration": 0.41645799999969313,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-20 compound index { user: 1, date: 1 } exists",
+          "status": "passed",
+          "title": "MD-20 compound index { user: 1, date: 1 } exists",
+          "duration": 59.66337499999645,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058382870,
+      "endTime": 1789058383317.6633,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/models.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-01 dotenv is loaded before anything reads process.env; server boots with PORT",
+          "status": "passed",
+          "title": "ST-01 dotenv is loaded before anything reads process.env; server boots with PORT",
+          "duration": 5.056917000001704,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-02 connectDB() is called before app.listen(); server answers after connect",
+          "status": "passed",
+          "title": "ST-02 connectDB() is called before app.listen(); server answers after connect",
+          "duration": 2.422791999997571,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-03 a failed DB connection exits the process instead of staying up",
+          "status": "passed",
+          "title": "ST-03 a failed DB connection exits the process instead of staying up",
+          "duration": 3149.987083,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058374641,
+      "endTime": 1789058377798.987,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/startup.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-01 a rejecting handler forwards the error via next(err)",
+          "status": "passed",
+          "title": "EH-01 a rejecting handler forwards the error via next(err)",
+          "duration": 0.4904160000005504,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-02 a resolving handler does not call next",
+          "status": "passed",
+          "title": "EH-02 a resolving handler does not call next",
+          "duration": 0.5642079999961425,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-03 catchAsync logs nothing",
+          "status": "passed",
+          "title": "EH-03 catchAsync logs nothing",
+          "duration": 0.2412079999994603,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-04 a synchronously-throwing async handler is also caught",
+          "status": "passed",
+          "title": "EH-04 a synchronously-throwing async handler is also caught",
+          "duration": 0.2110000000029686,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-05 err.code 11000 -> 409, {error} shape, logger.warn [wording note]",
+          "status": "passed",
+          "title": "EH-05 err.code 11000 -> 409, {error} shape, logger.warn [wording note]",
+          "duration": 0.7929589999985183,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-06 err.status set -> that status + { error: err.message } + logger.warn",
+          "status": "passed",
+          "title": "EH-06 err.status set -> that status + { error: err.message } + logger.warn",
+          "duration": 0.2618750000037835,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-07 a 400 with err.status is logged at warn, not error",
+          "status": "passed",
+          "title": "EH-07 a 400 with err.status is logged at warn, not error",
+          "duration": 0.19920799999817973,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-08 no status/code -> 500 + generic body + logger.error",
+          "status": "passed",
+          "title": "EH-08 no status/code -> 500 + generic body + logger.error",
+          "duration": 0.18995900000300026,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-09 the 500 branch never puts err.message in the body",
+          "status": "passed",
+          "title": "EH-09 the 500 branch never puts err.message in the body",
+          "duration": 0.16950000000360887,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-10 every errorHandler body is exactly { error: <string> }",
+          "status": "passed",
+          "title": "EH-10 every errorHandler body is exactly { error: <string> }",
+          "duration": 0.526583999999275,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-11 errorHandler logs exactly once per call, in every branch",
+          "status": "passed",
+          "title": "EH-11 errorHandler logs exactly once per call, in every branch",
+          "duration": 0.32012500000564614,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058383962,
+      "endTime": 1789058383966.5266,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/errorHandling.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-01 no Authorization header -> 401, next not called",
+          "status": "passed",
+          "title": "RA-01 no Authorization header -> 401, next not called",
+          "duration": 8.863292000000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-02 header not 'Bearer ' -> 401, next not called",
+          "status": "passed",
+          "title": "RA-02 header not 'Bearer ' -> 401, next not called",
+          "duration": 0.2104170000002341,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-03 'Bearer ' with empty token -> 401, next not called",
+          "status": "passed",
+          "title": "RA-03 'Bearer ' with empty token -> 401, next not called",
+          "duration": 0.24649999999928696,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-04 valid token -> req.user is exactly { id, username }, next() once",
+          "status": "passed",
+          "title": "RA-04 valid token -> req.user is exactly { id, username }, next() once",
+          "duration": 1.9724579999992784,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-05 expired token -> 401, next not called",
+          "status": "passed",
+          "title": "RA-05 expired token -> 401, next not called",
+          "duration": 0.7144170000001395,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-06 verify-failure body must be { error: 'Not authenticated.' } [SPEC DIVERGENCE]",
+          "status": "failed",
+          "title": "RA-06 verify-failure body must be { error: 'Not authenticated.' } [SPEC DIVERGENCE]",
+          "duration": 2.298291999999492,
+          "failureMessages": [
+            "AssertionError: expected \"spy\" to be called with arguments: [ { error: 'Not authenticated.' } ]\u001b[90m\n\nReceived: \n\n\u001b[1m  1st spy call:\n\n\u001b[22m\u001b[2m  [\u001b[22m\n\u001b[2m    {\u001b[22m\n\u001b[32m-     \"error\": \"Not authenticated.\",\u001b[90m\n\u001b[31m+     \"error\": \"Invalid or expired token!\",\u001b[90m\n\u001b[2m    },\u001b[22m\n\u001b[2m  ]\u001b[22m\n\u001b[39m\u001b[90m\n\nNumber of calls: \u001b[1m1\u001b[22m\n\u001b[39m\n    at Proxy.<anonymous> (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/expect/dist/index.js:1355:10)\n    at Proxy.<anonymous> (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/chai/index.js:1686:25)\n    at /Users/adamshmuel/Dev/git/expenses/qa/tests/unit/requireAuth.test.ts:103:22\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-07 tampered signature -> 401, next not called, no req.user",
+          "status": "passed",
+          "title": "RA-07 tampered signature -> 401, next not called, no req.user",
+          "duration": 0.3692080000000715,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-08 the module touches no database (only requires jsonwebtoken)",
+          "status": "passed",
+          "title": "RA-08 the module touches no database (only requires jsonwebtoken)",
+          "duration": 0.16691700000046694,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-09 valid token missing username -> req.user is { id, username: undefined }",
+          "status": "passed",
+          "title": "RA-09 valid token missing username -> req.user is { id, username: undefined }",
+          "duration": 0.24125000000003638,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058336645,
+      "endTime": 1789058336660.2412,
+      "status": "failed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/requireAuth.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-01 signup: access token payload is exactly { id, username } (+iat/exp)",
+          "status": "passed",
+          "title": "US-01 signup: access token payload is exactly { id, username } (+iat/exp)",
+          "duration": 2.8886249999995925,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-02 signup: refresh token payload is exactly { userId } (+iat/exp)",
+          "status": "passed",
+          "title": "US-02 signup: refresh token payload is exactly { userId } (+iat/exp)",
+          "duration": 0.3752500000045984,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-03 the two tokens verify only under their own secret",
+          "status": "passed",
+          "title": "US-03 the two tokens verify only under their own secret",
+          "duration": 1.2862090000053286,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-04 access lifetime ~15m, refresh lifetime ~7d",
+          "status": "passed",
+          "title": "US-04 access lifetime ~15m, refresh lifetime ~7d",
+          "duration": 0.3153329999986454,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-05 signup: refresh row saved with expiresAt === now + 7 days",
+          "status": "passed",
+          "title": "US-05 signup: refresh row saved with expiresAt === now + 7 days",
+          "duration": 1.0665829999998095,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-06 signup hashes the password before createUser",
+          "status": "passed",
+          "title": "US-06 signup hashes the password before createUser",
+          "duration": 0.25541700000030687,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-07 signup return shape is { user, accessToken, refreshToken }",
+          "status": "passed",
+          "title": "US-07 signup return shape is { user, accessToken, refreshToken }",
+          "duration": 0.20249999999941792,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-08 signup propagates a repository E11000 throw unchanged",
+          "status": "passed",
+          "title": "US-08 signup propagates a repository E11000 throw unchanged",
+          "duration": 0.29487499999959255,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-09 login with correct credentials returns the token pair",
+          "status": "passed",
+          "title": "US-09 login with correct credentials returns the token pair",
+          "duration": 0.22845900000538677,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-10 unknown user and wrong password throw the SAME 401",
+          "status": "passed",
+          "title": "US-10 unknown user and wrong password throw the SAME 401",
+          "duration": 0.1929999999993015,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-11 refresh happy path: old row deleted, new pair issued, same user",
+          "status": "passed",
+          "title": "US-11 refresh happy path: old row deleted, new pair issued, same user",
+          "duration": 0.4187500000043656,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-12 refresh with a token not in the collection -> 401 'not recognized'",
+          "status": "passed",
+          "title": "US-12 refresh with a token not in the collection -> 401 'not recognized'",
+          "duration": 0.14658300000155577,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-13 refresh propagates a jwt.verify failure and aborts before the delete",
+          "status": "passed",
+          "title": "US-13 refresh propagates a jwt.verify failure and aborts before the delete",
+          "duration": 0.2202499999984866,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-14 the old refresh token cannot be used twice",
+          "status": "passed",
+          "title": "US-14 the old refresh token cannot be used twice",
+          "duration": 0.34429200000158744,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-15 logout deletes the given token",
+          "status": "passed",
+          "title": "US-15 logout deletes the given token",
+          "duration": 0.11849999999685679,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-16 logout with undefined is a safe no-op",
+          "status": "passed",
+          "title": "US-16 logout with undefined is a safe no-op",
+          "duration": 0.12616699999489356,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-17 issueTokenPair is not exported",
+          "status": "passed",
+          "title": "US-17 issueTokenPair is not exported",
+          "duration": 0.08537499999511056,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-18 login issues and stores a refresh row on success",
+          "status": "passed",
+          "title": "US-18 login issues and stores a refresh row on success",
+          "duration": 0.19895800000085728,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789058383946,
+      "endTime": 1789058383955.199,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/userService.test.ts"
+    }
+  ]
+}

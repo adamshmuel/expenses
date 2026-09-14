@@ -1,0 +1,20 @@
+{
+  "name": "expenses-qa",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone QA package for the Expenses backend. Depends on neither client/ nor backend/ dependency trees.",
+  "scripts": {
+    "test": "node scripts/run.mjs",
+    "test:vitest": "vitest run",
+    "test:e2e": "node ../node_modules/@playwright/test/cli.js test --config=e2e/playwright.config.ts",
+    "report": "node scripts/build-report.mjs"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4",
+    "zod": "^3.24.1",
+    "mongoose": "^9.9.5",
+    "jsonwebtoken": "^9.0.3",
+    "dotenv": "^17.4.2"
+  }
+}
