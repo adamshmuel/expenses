@@ -5,7 +5,14 @@ Status: **draft — needs Adam's approval.**
 ## Purpose
 
 Show the user what they have been spending, based on the expenses saved from the
-chat screen.
+chat screen. **Read-only.** Every change — recording, editing, deleting an
+expense; adding, renaming, deleting, or resetting a category — happens in the
+chat on `/home` ([01-ai-chat.md](01-ai-chat.md)). The dashboard has no edit or
+delete controls of its own.
+
+Because all changes happen elsewhere, on `/home`, the dashboard refetches its
+data whenever the user returns to it, so it never shows stale numbers after a
+change made in the chat.
 
 ## What it shows
 

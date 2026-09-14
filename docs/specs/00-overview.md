@@ -4,16 +4,19 @@ Status: **draft — needs Adam's approval.**
 
 ## What we are building
 
-A home budget app. The user writes an expense in plain language, an AI turns it
-into structured data, the user confirms it, and it is saved. A second screen
-shows statistics about what was saved.
+A home budget app. **The chat is the only way to change anything.** The user
+writes in plain language — recording an expense, editing or deleting one,
+adding or renaming a category, moving an expense to a different category — an
+AI turns it into a structured action, the user confirms it, and it is saved. A
+second screen shows the result: statistics and lists, to look at, never to
+edit directly.
 
 ## Screens
 
 | Route | What it does | Spec |
 |---|---|---|
-| `/home` | AI chat. The user types their expense or expenses. | [01-ai-chat.md](01-ai-chat.md) |
-| `/dashboard` | Statistics about the saved expenses. | [02-dashboard.md](02-dashboard.md) |
+| `/home` | AI chat. The only place the user creates, edits, or deletes anything — expenses and categories alike. | [01-ai-chat.md](01-ai-chat.md) |
+| `/dashboard` | Read-only statistics and lists, built from what was saved through the chat. | [02-dashboard.md](02-dashboard.md) |
 
 The API between the two sides is [03-api-contract.md](03-api-contract.md); the
 database behind it is [04-data-model.md](04-data-model.md), and the DAL

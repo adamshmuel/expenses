@@ -69,6 +69,7 @@ place in the server code so sign-up and reset can never drift apart.
 | category | ObjectId → Category | required |
 | user | ObjectId → User | required |
 | createdAt | Date | set automatically |
+| updatedAt | Date | set automatically, updated on every edit |
 
 Index on `user + date`. Every dashboard query is "this user, this period", so
 that index is the one that matters.
@@ -137,5 +138,8 @@ between users, so every query is filtered by the logged-in user first.
 
 1. Should an `Expense` record which `Message` created it? It would let the chat
    show "saved" next to an old message. Not needed for v1.
-2. Does an expense need an `updatedAt`, or is editing an expense out of scope
-   for v1? Editing is not in any approved spec yet.
+
+## Decided and closed
+
+- Editing is in scope for v1, through the chat — see
+  [01-ai-chat.md](01-ai-chat.md) §6. `Expense.updatedAt` tracks it.

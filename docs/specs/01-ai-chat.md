@@ -34,10 +34,11 @@ A password is never sent back to the client, in any response.
 ### Categories
 
 Every new user starts with a set of **default categories and subcategories**,
-the same for everyone. From there each user can:
+the same for everyone. From there each user can, through the chat (§6), same as
+expenses:
 
 1. add their own categories and subcategories
-2. edit them
+2. rename them
 3. delete them
 4. reset back to the defaults
 
@@ -108,35 +109,106 @@ the refresh token, and returns to `/login`.
 
 ## 6. `/home` — the chat
 
-The user records an expense by writing it the way they would say it, instead of
-filling in a form.
+**The chat is the only place the user changes anything.** There is no other
+screen with an edit, delete, or reset button, for an expense or for a
+category. The user writes what they want in plain language, and the AI turns
+it into one of seven intents:
 
-### The flow
+| Intent | Example |
+|---|---|
+| Create an expense | `spent 50 at the supermarket` |
+| Edit an expense | `change that IKEA expense to 200`, `move the coffee expense to Entertainment` |
+| Delete an expense | `delete the coffee from yesterday` |
+| Create a category | `add a subcategory called Pets under Home` |
+| Edit a category | `rename Fuel to Gas` |
+| Delete a category | `delete the Gym subcategory` |
+| Reset categories to defaults | `reset my categories` |
+
+`/dashboard` ([02-dashboard.md](02-dashboard.md)) shows the result. It never
+writes.
+
+Whichever intent it is, nothing changes in the database until the user
+confirms — this is the core rule of the screen.
+
+### Create — the flow
 
 1. On entering the page, the last messages are loaded and shown, oldest first.
 2. The user types a message. Example: `spent 50 at the supermarket`.
 3. The client sends the text to the server. **Request one.**
 4. The server saves the user's message, passes the text to `backend/ai/`, saves
    the reply as an assistant message, and returns both the reply and a list of
-   **draft** expenses: amount, store, date, category.
+   **drafts** — new expenses (amount, store, date, category) or a new category
+   (name, parent).
 5. The client shows the drafts and asks the user to confirm.
 6. On confirm, the client sends the drafts back to be saved. **Request two.**
 7. On cancel, nothing is saved. The messages stay in the history.
 
 Two requests, not one. Parsing and saving are separate so that nothing reaches
-the expenses collection without the user agreeing to it.
+the database without the user agreeing to it.
+
+### Edit and delete — the flow
+
+The user refers to an existing expense or category in plain language instead
+of picking it from a list.
+
+1. The client sends the text to the server, same as create. **Request one.**
+2. The server passes the text to `backend/ai/`, along with the user's
+   categories and recent expenses (see §8). The AI returns an intent (`edit` or
+   `delete`, for an expense or a category), plus `searchFilters` — the terms it
+   pulled out of the text to find what the user means (e.g. `{ text: "coffee",
+   from: <yesterday>, to: <yesterday> }` for an expense, `{ text: "Fuel" }` for
+   a category). An edit also carries `changes`, the new field values. Moving an
+   expense to a different category is an ordinary edit whose `changes.category`
+   is a category **name** — see §8.
+3. The server runs `searchFilters` through `queryExpenses` or
+   `getCategoriesByUser` ([08-expense-category-dal.md](08-expense-category-dal.md)),
+   against that user's own data only.
+4. The client shows what matched:
+   - **No match** — say so. Nothing to confirm.
+   - **One match** — show it and the proposed change (or "delete this?"), ask
+     to confirm.
+   - **Several matches** — show them as a numbered list, ask the user to pick
+     one first, then show the proposed change and ask to confirm.
+5. On confirm, the client sends the chosen id and the change back. **Request
+   two.** The server calls `updateExpense`/`deleteExpense` or
+   `updateCategory`/`deleteCategory`.
+6. On cancel, nothing changes.
+
+Same two-request shape as create, and the same confirm rule — picking a match
+is not confirming the change, it only narrows down which record the next
+confirmation applies to.
+
+### Reset categories — the flow
+
+There is nothing to search for or pick: the intent applies to all of the
+user's categories at once. Shortest of the seven intents.
+
+1. The client sends the text to the server. **Request one.**
+2. The server passes the text to `backend/ai/`, which returns `{ intent:
+   'reset-categories' }` and a reply asking the user to confirm — this is
+   destructive, every expense pointing at a deleted category moves to "Other".
+3. On confirm, the client asks the server to reset. **Request two.** The server
+   calls `deleteCategoriesByUser` then `createManyCategories` with the default
+   set ([04-data-model.md](04-data-model.md)).
+4. On cancel, nothing changes.
 
 ### Rules
 
-- **Never save without the user confirming.** This is the core rule of the
-  screen.
-- One message may contain several expenses. Show them as a numbered list and ask
-  to confirm **once**, not one by one.
+- **Never change the database without the user confirming.** For every intent,
+  expense or category alike.
+- One message may contain several new expenses. Show them as a numbered list
+  and ask to confirm **once**, not one by one.
 - The model never invents an amount. If the amount is missing from the text, the
   draft is incomplete and the app asks for it.
 - Default when the text does not say: the date is today.
-- A draft's category must be one of the user's existing categories, or clearly
-  marked as a new one the user is agreeing to create.
+- A draft expense's category must be one of the user's existing categories, or
+  clearly marked as a new one the user is agreeing to create.
+- An edit or delete can only ever match the logged-in user's own expenses or
+  categories — every DAL lookup is scoped by `userId` first.
+- Category rules from [04-data-model.md](04-data-model.md) apply the same as if
+  typed by hand: two levels only, no duplicate name under the same parent, and
+  "Other" cannot be renamed or deleted. A request that would break one of these
+  is refused in the chat reply, not silently adjusted.
 
 ## 7. Cases to handle
 
@@ -144,11 +216,14 @@ the expenses collection without the user agreeing to it.
 
 | Case | Behaviour |
 |---|---|
-| Text is not an expense at all | Say so. Save nothing |
-| Amount missing | Ask for the amount. Save nothing |
+| Text does not match any of the seven intents | Say so. Nothing changes |
+| Amount missing (create expense) | Ask for the amount. Save nothing |
 | Several expenses in one message | Numbered list, one confirmation |
+| Edit/delete matches nothing | Say so. Nothing to confirm |
+| Edit/delete matches several records | Numbered list, user picks one, then confirms the change |
+| A category action would break a rule (three levels, duplicate name, editing "Other") | Say so in the reply. Nothing changes |
 | The AI call fails or times out | Show an error. The user's text is not lost |
-| The user cancels | Nothing is saved |
+| The user cancels | Nothing changes |
 | No messages yet | An empty state, not a blank screen |
 
 ### Auth
@@ -167,13 +242,32 @@ the expenses collection without the user agreeing to it.
 
 One function. Claude writes it; Adam's server calls it.
 
-- **Input:** the user's text.
-- **Output:** a list of draft expenses (amount, store, description, date,
-  category), plus a short reply to show in the chat.
+- **Input:** the user's text, the user's categories, and the user's recent
+  expenses (e.g. last 30 days) — plain data the route already fetched via the
+  DAL ([08-expense-category-dal.md](08-expense-category-dal.md)). The category
+  list is what lets the AI resolve a category **by name** for both a new
+  expense's category and an edited expense's `changes.category` — the route
+  never does a second lookup for that; it matches the name against the same
+  list it already passed in.
+- **Output:** one of seven shapes, by intent — the intent name says which
+  entity (expense or category) and which action (create, edit, delete, reset):
+
+  | Intent | Output |
+  |---|---|
+  | `create-expense` | a list of draft expenses (amount, store, description, date, category) |
+  | `edit-expense` | `searchFilters` (to find the expense via `queryExpenses`) and `changes` — new field values; `changes.category`, if present, is a category **name**, not an id |
+  | `delete-expense` | `searchFilters` (to find the expense) |
+  | `create-category` | a draft category (name, parent — a main category name, or none) |
+  | `edit-category` | `searchFilters` (to find the category via `getCategoriesByUser`, matched by name) and `changes` (new name) |
+  | `delete-category` | `searchFilters` (to find the category) |
+  | `reset-categories` | nothing to search or match — applies to all of the user's categories |
+
+  Every response also carries a short reply to show in the chat.
 - It calls Gemini Flash Lite and asks for a fixed response shape, so the result
   is data and not free prose.
-- **It never touches the database.** It receives text, returns objects. Saving is
-  the server's job.
+- **It never touches the database.** It receives data, returns objects. Running
+  `searchFilters` as a query, resolving a category name to an id, and saving,
+  editing, or deleting, are all the server's job.
 - It never throws a raw provider error at the route. A failure comes back as a
   clear result the route can turn into a `502`.
 - The Gemini API key lives in `.env` and never reaches the client.
@@ -188,10 +282,10 @@ Why each part is here. Source:
 | Course topic | Demo | Where it is used |
 |---|---|---|
 | Express basics | 9 | The server itself |
-| Routes | 10 | `/users/*`, `/chat/*`, `/expenses` |
-| Route params | 11 | `PUT /categories/:id`, `DELETE /categories/:id` |
+| Routes | 10 | `/users/*`, `/chat/*`, `/expenses`, `/categories` |
+| Route params | 11 | `GET /expenses/:id`-style lookups used internally after a chat match |
 | Query string | 12 | `GET /chat/messages?limit=` |
-| CRUD | 13 | Create and read messages; create expenses |
+| CRUD | 13 | Create and read messages; create/edit/delete expenses and categories, all via chat |
 | Middleware | 14 | `requireAuth` on `/chat` and `/expenses` |
 | Router per resource | 15 | `routes/userRoute.js`, `routes/chat.js`, `routes/expenses.js` |
 | Error handling | 16 | `catchAsync` plus one central error handler |
@@ -230,15 +324,19 @@ still open for `/dashboard`.
 
 ## 10. Open questions
 
-1. Where category management lives. The four abilities above need a screen, and
-   it is not one of the four routes in this spec. Either a `/categories` route,
-   or a panel inside `/home`.
-2. How many messages `/home` loads on entry.
+1. How many messages `/home` loads on entry.
 
 ## Decided and closed
 
-- Chat history is **read-only**. `DELETE /chat/messages/:id` was dropped:
-  deleting a message does not delete the expense it created, so it looks like an
-  undo and is not one. See `.claude/rules/product-first.md`.
-- Categories start from a shared default set, and each user can add, edit,
-  delete, and reset them.
+- Chat **history** (the `Message` collection — what was typed and replied) is
+  **read-only**. `DELETE /chat/messages/:id` was dropped: deleting a message
+  does not delete the expense it created, so it looks like an undo and is not
+  one. See `.claude/rules/product-first.md`. This is separate from editing or
+  deleting an **expense** through the chat (§6), which is in scope — the
+  message log itself is still never edited or deleted, only the expense it
+  led to.
+- Categories start from a shared default set. There is no separate category
+  screen — every change to a category, like every change to an expense, goes
+  through the chat. See §6.
+- Expenses and categories can both be created, edited, and deleted through the
+  chat, all with confirmation first. See §6.

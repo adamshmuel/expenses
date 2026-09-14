@@ -172,15 +172,22 @@ To point the client at a different port, copy `client/.env.example` to
 ## 3. Not yet agreed
 
 These come from `01-ai-chat.md` and `02-dashboard.md` and are **not** built on
-either side:
+either side.
+
+**All writes go through the chat.** There is no `/categories` or `POST
+/expenses` REST endpoint — creating, editing, or deleting an expense or a
+category all happen by sending text to the chat and confirming, per
+[01-ai-chat.md](01-ai-chat.md) §6. `/dashboard` only ever reads.
 
 | Purpose | Likely route |
 |---|---|
-| Send a chat message, get drafts back | `POST /chat/messages` |
+| Send a chat message, get back drafts / matches / a reply | `POST /chat/messages` |
 | Load chat history | `GET /chat/messages?limit=` |
-| Save confirmed expenses | `POST /expenses` |
-| Category CRUD | `/categories` — deferred to v2 |
+| Confirm a pending create/edit/delete (expense or category) | `POST /chat/confirm` |
+| List categories (read-only, for the dashboard) | `GET /categories` |
+| List / filter expenses (read-only, for the dashboard) | `GET /expenses` |
 | Statistics | `GET /expenses/summary?period=` |
 
 The data model behind all of them is agreed and written up in
-[04-data-model.md](04-data-model.md).
+[04-data-model.md](04-data-model.md); the DAL functions behind the writes are
+in [08-expense-category-dal.md](08-expense-category-dal.md).
