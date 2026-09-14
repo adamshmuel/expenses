@@ -108,8 +108,10 @@ match isn't unique.
 | `createExpense(obj)` | Chat: save one confirmed new expense |
 | `createManyExpenses(docs)` | Chat: save several confirmed new expenses from one message, in one insert |
 | `queryExpenses(userId, filters)` | Dashboard: period filter (`from`, `to`). Chat edit/delete: matching text + date against the user's expenses (`text`, `from`, `to`) |
+| `findExpenseById(id)` | The ownership check `expenseService.editExpense`/`deleteExpense` run before acting on the id the user already picked ([09-expense-category-service.md](09-expense-category-service.md)) |
 | `updateExpense(id, obj)` | Chat: apply a confirmed edit. Returns the updated document (`{ new: true }`) |
 | `deleteExpense(id)` | Chat: apply a confirmed delete |
+| `reassignExpensesToCategory(userId, categoryId)` | `Expense.updateMany({ user: userId }, { category: categoryId })`. Used by `categoryService.resetToDefaults` ([09-expense-category-service.md](09-expense-category-service.md)) to point every one of this user's expenses at "Other" before their categories are wiped |
 | `getExpenseTotalByCategory(userId, from, to)` | Dashboard breakdown. A Mongo aggregation (`$group`/`$sum`), not a JS loop over fetched docs — matches [02-dashboard.md](02-dashboard.md) open question 2: totals are calculated by the database |
 
 `filters` on `queryExpenses` is a plain object. The function builds a Mongoose

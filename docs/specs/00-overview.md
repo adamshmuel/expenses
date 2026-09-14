@@ -19,8 +19,11 @@ edit directly.
 | `/dashboard` | Read-only statistics and lists, built from what was saved through the chat. | [02-dashboard.md](02-dashboard.md) |
 
 The API between the two sides is [03-api-contract.md](03-api-contract.md); the
-database behind it is [04-data-model.md](04-data-model.md), and the DAL
-contract for it is [08-expense-category-dal.md](08-expense-category-dal.md).
+database behind it is [04-data-model.md](04-data-model.md). The server layers
+behind it: auth in [05-user-layers.md](05-user-layers.md), and expenses and
+categories split across the DAL ([08-expense-category-dal.md](08-expense-category-dal.md))
+and the service/route layers on top of it
+([09-expense-category-service.md](09-expense-category-service.md)).
 
 ## Purpose
 
