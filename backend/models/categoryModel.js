@@ -137,7 +137,7 @@ categorySchema.pre("findOneAndDelete", async function (next) {
         return next(new Error("Protected categories cannot be deleted"));
     }
     const otherCategory = await this.model.findOne({ owner: docToDelete.owner, name: "Other" });
-    
+
     let categoryIdsToMove = [docToDelete._id];
 
     if (!docToDelete.parent) {
@@ -154,25 +154,42 @@ categorySchema.pre("findOneAndDelete", async function (next) {
     );
 
     if (!docToDelete.parent) {
-    await this.model.deleteMany({ parent: docToDelete._id });
-}
+        await this.model.deleteMany({ parent: docToDelete._id });
+    }
     next();
 });
 
+
 /**
  * Runs before a bulk Category delete via deleteMany.
- * Rejects the whole operation if any matched category is protected.
+ *
+ * A single-owner reset (`deleteMany({ owner: userId })`, i.e. the filter has
+ * exactly one key, `owner`) is let through even though it always matches the
+ * user's protected "Other" — the caller is expected to have already moved
+ * that user's expenses off every category being deleted (see
+ * `categoryService.resetToDefaults`, docs/specs/09-expense-category-service.md).
+ *
+ * Any other deleteMany call is rejected if it would match a protected
+ * category, same as the single-document delete hook above.
  */
 categorySchema.pre("deleteMany", async function (next) {
-    const docs = await this.model.find(this.getFilter());
+    const keys = Object.keys(this.getFilter());
+    const isSingleOwnerReset = keys.length === 1 && keys[0] === 'owner';
 
+    if (isSingleOwnerReset) {
+        return next();
+    }
+
+    const docs = await this.model.find(this.getFilter());
     const hasProtectedCategory = docs.some(doc => doc.isProtected === true);
 
     if (hasProtectedCategory) {
         return next(new Error("Protected categories cannot be deleted"));
     }
+
     next();
 });
+
 
 categorySchema.set("toJSON", { virtuals: true });
 
