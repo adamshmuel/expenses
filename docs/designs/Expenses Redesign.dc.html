@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/classical-27b402cc-0a47-4a17-891d-cd69c40784fb/styles.css">
+<script src="_ds/classical-27b402cc-0a47-4a17-891d-cd69c40784fb/_ds_bundle.js"></script>
+<style>
+  body { margin:0; background:#e2e0de; }
+  .fig { font-feature-settings:"tnum"; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  #dashboard .table { table-layout:fixed; }
+  #dashboard .table td, #dashboard .table th { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn, .nav .btn { white-space:nowrap; }
+  .dash-body { display:grid; gap:56px; align-items:start; grid-template-columns:repeat(auto-fit,minmax(400px,1fr)); }
+  .dash-main { padding:44px 56px 56px; }
+  @media (max-width: 1000px) { .dash-main { padding:32px 24px 40px; } .dash-body { gap:36px; } }
+  a { color: var(--color-accent); }
+  a:hover { color: var(--color-accent-700); }
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;gap:64px;padding:48px 40px 110px;max-width:1440px;margin:0 auto;font-family:var(--font-body);color:var(--color-text);">
+
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:70ch;">
+    <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent);">New design — Classical</div>
+    <h1 style="margin:0;font-family:var(--font-heading);font-weight:400;font-size:52px;line-height:1.05;letter-spacing:-0.015em;">Expenses, rebound as a ledger</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:var(--color-neutral-700);">Cormorant Garamond over Lora on a paper ground, gold as stroke only, hairline rules doing the work borders used to. Every number on the dashboard comes from <code>GET /expenses/summary</code> rolled up against <code>GET /categories</code>; every write still goes through the chat and a confirm.</p>
+  </div>
+
+  <hr class="hr" style="margin:0;">
+
+  <!-- ══════════ NAVBAR STATES ══════════ -->
+  <section style="display:flex;flex-direction:column;gap:18px;">
+    <h6 style="margin:0;color:var(--color-neutral-600);">Navbar — logged out, logged in</h6>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="background:var(--color-bg);border:1px solid var(--color-divider);">
+        <header class="nav" style="padding:16px 28px;">
+          <span class="nav-brand" style="display:flex;align-items:baseline;gap:10px;font-size:21px;">Expenses<span style="font-family:var(--font-body);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);">est. by hand</span></span>
+          <a href="#login">Log in</a>
+          <a href="#signup" class="btn btn-primary">Sign up</a>
+        </header>
+      </div>
+      <div style="background:var(--color-bg);border:1px solid var(--color-divider);">
+        <header class="nav" style="padding:16px 28px;">
+          <span class="nav-brand" style="display:flex;align-items:baseline;gap:10px;font-size:21px;">Expenses<span style="font-family:var(--font-body);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);">est. by hand</span></span>
+          <a href="#chat" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Chat</a>
+          <a href="#dashboard">Dashboard</a>
+          <span style="width:1px;height:20px;background:var(--color-divider);"></span>
+          <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-neutral-700);">
+            <span style="display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--color-accent);border-radius:50%;font-family:var(--font-heading);font-size:13px;color:var(--color-accent);">A</span>
+            adam
+          </span>
+          <button type="button" class="btn btn-ghost" style="font-family:var(--font-body);font-weight:400;color:var(--color-neutral-700);">Log out</button>
+        </header>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ LOGIN ══════════ -->
+  <section id="login" style="display:flex;flex-direction:column;gap:18px;">
+    <h6 style="margin:0;color:var(--color-neutral-600);">/login</h6>
+    <div style="border:1px solid var(--color-divider);background:var(--color-bg);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:660px;">
+
+      <aside style="display:flex;align-items:center;padding:64px 56px;background:#1e1c1a;color:#e8e4dd;position:relative;overflow:hidden;">
+        <span style="position:absolute;right:-18px;bottom:-56px;font-family:var(--font-heading);font-size:260px;line-height:1;color:rgba(182,130,53,0.13);pointer-events:none;">₪</span>
+        <div style="position:relative;width:100%;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:32px;">
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b68235;">You said</div>
+          <p style="margin:0;font-family:var(--font-heading);font-weight:400;font-size:34px;line-height:1.24;letter-spacing:-0.01em;color:#f0ece5;">“spent 50 at the supermarket and 32 on gas”</p>
+          <div style="border-top:1px solid rgba(232,228,221,0.28);padding-top:22px;display:flex;flex-direction:column;gap:13px;">
+            <div style="display:flex;align-items:baseline;gap:12px;font-size:14px;">
+              <span>Supermarket</span>
+              <span style="flex:1;border-bottom:1px dotted rgba(232,228,221,0.35);transform:translateY(-4px);"></span>
+              <span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#b9926a;">Groceries</span>
+              <span class="fig" style="min-width:74px;text-align:right;">50.00</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;font-size:14px;">
+              <span>Gas station</span>
+              <span style="flex:1;border-bottom:1px dotted rgba(232,228,221,0.35);transform:translateY(-4px);"></span>
+              <span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#b9926a;">Fuel</span>
+              <span class="fig" style="min-width:74px;text-align:right;">32.00</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;margin-top:10px;padding-top:16px;border-top:1px solid rgba(232,228,221,0.28);">
+              <span style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#b9926a;">Total</span>
+              <span style="flex:1;"></span>
+              <span class="fig" style="font-family:var(--font-heading);font-size:30px;line-height:1;padding-bottom:6px;border-bottom:3px double #e8e4dd;">₪ 82.00</span>
+            </div>
+          </div>
+          <p style="margin:0;max-width:40ch;font-size:13px;line-height:1.7;color:rgba(232,228,221,0.62);">Write it the way you would say it. Nothing is filed until you say so.</p>
+        </div>
+      </aside>
+
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:28px;width:100%;max-width:430px;margin:0 auto;padding:64px 44px;">
+        <div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);margin-bottom:10px;">Expenses</div>
+          <h2 style="margin:0;font-weight:400;font-size:40px;">Log in</h2>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #9a3524;border-bottom:1px solid #9a3524;color:#9a3524;font-size:13px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg>
+          <span>Username or password is incorrect.</span>
+        </div>
+
+        <form style="display:flex;flex-direction:column;gap:18px;">
+          <div class="field">
+            <label for="r-login-user">Username</label>
+            <input id="r-login-user" class="input" value="adam" style="min-height:42px;">
+          </div>
+          <div class="field">
+            <label for="r-login-pass">Password</label>
+            <input id="r-login-pass" class="input" type="password" value="password123" style="min-height:42px;">
+          </div>
+          <button type="button" class="btn btn-primary btn-block" style="min-height:42px;">Log in</button>
+        </form>
+
+        <hr class="hr" style="margin:0;">
+        <p style="margin:0;font-size:13px;color:var(--color-neutral-700);">No account yet? <a href="#signup">Sign up</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ SIGNUP ══════════ -->
+  <section id="signup" style="display:flex;flex-direction:column;gap:18px;">
+    <h6 style="margin:0;color:var(--color-neutral-600);">/signup — with a server field error</h6>
+    <div style="border:1px solid var(--color-divider);background:var(--color-bg);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:720px;">
+
+      <aside style="display:flex;align-items:center;padding:64px 56px;background:#1e1c1a;color:#e8e4dd;position:relative;overflow:hidden;">
+        <span style="position:absolute;right:-18px;bottom:-56px;font-family:var(--font-heading);font-size:260px;line-height:1;color:rgba(182,130,53,0.13);pointer-events:none;">₪</span>
+        <div style="position:relative;width:100%;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:30px;">
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b68235;">Your ledger begins with</div>
+          <p style="margin:0;font-family:var(--font-heading);font-weight:400;font-size:31px;line-height:1.24;color:#f0ece5;">Eight categories, ready to rename, replace or reset.</p>
+          <div style="border-top:1px solid rgba(232,228,221,0.28);padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:2px 28px;font-size:13.5px;">
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Food<span style="color:rgba(232,228,221,0.45);"> · 3</span></div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Health</div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Transport<span style="color:rgba(232,228,221,0.45);"> · 3</span></div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Clothing</div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Home<span style="color:rgba(232,228,221,0.45);"> · 3</span></div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(232,228,221,0.14);">Entertainment</div>
+            <div style="padding:7px 0;">Education</div>
+            <div style="padding:7px 0;">Other<span style="color:#b9926a;"> · kept</span></div>
+          </div>
+          <p style="margin:0;max-width:40ch;font-size:13px;line-height:1.7;color:rgba(232,228,221,0.62);">“Other” cannot be renamed or deleted — deleted categories move their expenses there rather than losing them.</p>
+        </div>
+      </aside>
+
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:26px;width:100%;max-width:430px;margin:0 auto;padding:64px 44px;">
+        <div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);margin-bottom:10px;">Expenses</div>
+          <h2 style="margin:0 0 8px;font-weight:400;font-size:40px;line-height:1.08;">Create your account</h2>
+          <p style="margin:0;font-size:13.5px;color:var(--color-neutral-700);">Then say what you spent. The app files it.</p>
+        </div>
+
+        <form style="display:flex;flex-direction:column;gap:18px;">
+          <div class="field">
+            <label for="r-su-user">Username</label>
+            <input id="r-su-user" class="input" value="adam" style="min-height:42px;">
+          </div>
+          <div class="field">
+            <label for="r-su-email">Email</label>
+            <input id="r-su-email" class="input" value="adam@example.com" style="min-height:42px;border-color:#9a3524;">
+            <span style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#9a3524;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg>
+              That email is already registered.
+            </span>
+          </div>
+          <div class="field">
+            <label for="r-su-pass">Password</label>
+            <input id="r-su-pass" class="input" type="password" value="password123" style="min-height:42px;">
+            <span style="display:block;margin-top:6px;font-size:12px;color:var(--color-neutral-600);">At least 8 characters.</span>
+          </div>
+          <div class="field">
+            <label for="r-su-confirm">Confirm password</label>
+            <input id="r-su-confirm" class="input" type="password" value="password123" style="min-height:42px;">
+          </div>
+          <button type="button" class="btn btn-primary btn-block" style="min-height:42px;">Create account</button>
+        </form>
+
+        <hr class="hr" style="margin:0;">
+        <p style="margin:0;font-size:13px;color:var(--color-neutral-700);">Already have an account? <a href="#login">Log in</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ CHAT ══════════ -->
+  <section id="chat" style="display:flex;flex-direction:column;gap:18px;">
+    <h6 style="margin:0;color:var(--color-neutral-600);">/home — the chat. Left: nothing filed yet. Right: two drafts waiting on a confirm.</h6>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:24px;">
+
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);display:flex;flex-direction:column;min-height:640px;">
+        <header class="nav" style="padding:16px 28px;">
+          <span class="nav-brand" style="font-size:19px;">Expenses</span>
+          <a href="#chat" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Chat</a>
+          <a href="#dashboard">Dashboard</a>
+        </header>
+        <main style="flex:1;display:flex;flex-direction:column;width:100%;max-width:620px;margin:0 auto;padding:40px 32px 28px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--color-text);">
+            <h3 style="margin:0;font-weight:400;font-size:28px;">The chat</h3>
+            <span style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-600);">Nothing is saved without a confirm</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:48px 0;text-align:center;">
+            <div style="width:54px;height:1px;background:var(--color-accent);"></div>
+            <p style="margin:0;font-family:var(--font-heading);font-size:25px;line-height:1.3;max-width:24ch;">Nothing here yet.</p>
+            <p style="margin:0;font-size:13.5px;color:var(--color-neutral-700);max-width:38ch;line-height:1.7;">Try “spent 50 at the supermarket”, or “rename Fuel to Gas”, or “delete the coffee from yesterday”.</p>
+          </div>
+          <form style="display:flex;gap:10px;padding-top:18px;border-top:1px solid var(--color-divider);">
+            <input class="input" placeholder="Write it the way you would say it." style="min-height:44px;">
+            <button type="button" class="btn btn-primary" disabled="disabled" style="min-height:44px;padding-inline:22px;">Send</button>
+          </form>
+        </main>
+      </div>
+
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);display:flex;flex-direction:column;min-height:640px;">
+        <header class="nav" style="padding:16px 28px;">
+          <span class="nav-brand" style="font-size:19px;">Expenses</span>
+          <a href="#chat" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Chat</a>
+          <a href="#dashboard">Dashboard</a>
+        </header>
+        <main style="flex:1;display:flex;flex-direction:column;width:100%;max-width:620px;margin:0 auto;padding:40px 32px 28px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--color-text);">
+            <h3 style="margin:0;font-weight:400;font-size:28px;">The chat</h3>
+            <span style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-600);">Nothing is saved without a confirm</span>
+          </div>
+
+          <ol style="flex:1;margin:0;padding:24px 0 0;list-style:none;display:flex;flex-direction:column;gap:22px;">
+            <li style="align-self:flex-end;max-width:40ch;padding:12px 16px;border:1px solid var(--color-neutral-400);border-radius:var(--radius-md);font-size:14.5px;line-height:1.55;">spent 50 at the supermarket and 32 on gas</li>
+            <li style="align-self:flex-start;max-width:46ch;display:flex;flex-direction:column;gap:6px;">
+              <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent);">Expenses</span>
+              <p style="margin:0;font-size:14.5px;line-height:1.65;">Two expenses, both dated today. Confirm and I will file them.</p>
+            </li>
+          </ol>
+
+          <div style="margin-top:22px;border:1px solid var(--color-text);padding:22px 24px 18px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--color-divider);">
+              <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent);">To be filed</span>
+              <span style="font-size:11px;color:var(--color-neutral-600);">15 Sep 2026</span>
+            </div>
+            <ol style="margin:0;padding:14px 0 0;list-style:none;display:flex;flex-direction:column;gap:11px;">
+              <li style="display:flex;align-items:baseline;gap:12px;font-size:14px;">
+                <span style="font-family:var(--font-heading);font-size:13px;color:var(--color-neutral-600);width:14px;">1</span>
+                <span>Supermarket</span>
+                <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                <span style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-accent-700);">Groceries</span>
+                <span class="fig" style="min-width:76px;text-align:right;">₪ 50.00</span>
+              </li>
+              <li style="display:flex;align-items:baseline;gap:12px;font-size:14px;">
+                <span style="font-family:var(--font-heading);font-size:13px;color:var(--color-neutral-600);width:14px;">2</span>
+                <span>Gas station</span>
+                <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                <span style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-accent-700);">Fuel</span>
+                <span class="fig" style="min-width:76px;text-align:right;">₪ 32.00</span>
+              </li>
+            </ol>
+            <div style="display:flex;align-items:baseline;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--color-divider);">
+              <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-neutral-600);">Total</span>
+              <span style="flex:1;"></span>
+              <span class="fig" style="font-family:var(--font-heading);font-size:22px;padding-bottom:4px;border-bottom:3px double var(--color-text);">₪ 82.00</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--color-divider);">
+              <button type="button" class="btn btn-primary">Confirm and file</button>
+              <button type="button" class="btn btn-ghost" style="color:var(--color-neutral-700);">Cancel</button>
+              <span style="margin-left:auto;font-size:11px;color:var(--color-neutral-600);">Nothing written yet</span>
+            </div>
+          </div>
+
+          <form style="display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--color-divider);">
+            <input class="input" placeholder="Write it the way you would say it." style="min-height:44px;">
+            <button type="button" class="btn btn-primary" style="min-height:44px;padding-inline:22px;">Send</button>
+          </form>
+        </main>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ DASHBOARD ══════════ -->
+  <section id="dashboard" style="display:flex;flex-direction:column;gap:18px;">
+    <h6 style="margin:0;color:var(--color-neutral-600);">/dashboard — read-only. Period row and the category rows are live: click a main category to open its subcategories.</h6>
+
+    <div style="border:1px solid var(--color-divider);background:var(--color-bg);display:flex;flex-direction:column;">
+      <header class="nav" style="padding:16px 28px;">
+        <span class="nav-brand" style="display:flex;align-items:baseline;gap:10px;font-size:21px;">Expenses<span style="font-family:var(--font-body);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);">est. by hand</span></span>
+        <a href="#chat">Chat</a>
+        <a href="#dashboard" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Dashboard</a>
+        <span style="width:1px;height:20px;background:var(--color-divider);"></span>
+        <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-neutral-700);">
+          <span style="display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--color-accent);border-radius:50%;font-family:var(--font-heading);font-size:13px;color:var(--color-accent);">A</span>
+          adam
+        </span>
+        <button type="button" class="btn btn-ghost" style="font-family:var(--font-body);font-weight:400;color:var(--color-neutral-700);">Log out</button>
+      </header>
+
+      <main class="dash-main" style="display:flex;flex-direction:column;gap:36px;">
+
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);margin-bottom:8px;">Statement</div>
+            <h2 style="margin:0;font-weight:400;font-size:38px;">{{ periodTitle }}</h2>
+            <p style="margin:6px 0 0;font-size:13px;color:var(--color-neutral-600);">{{ periodRange }} · read-only. Every change is made in the chat.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">
+            <div style="display:flex;border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden;">
+              <sc-for list="{{ periods }}" as="p" hint-placeholder-count="5">
+                <button type="button" onClick="{{ p.select }}" style="padding:8px 15px;font-family:var(--font-body);font-size:12.5px;background:transparent;border:0;border-left:1px solid var(--color-divider);cursor:pointer;white-space:nowrap;color:{{ p.color }};box-shadow:{{ p.ring }};">{{ p.label }}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ showRange }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-700);">
+                <span>{{ rangeLabel }}</span>
+                <input class="input" value="{{ rangeFrom }}" style="width:130px;min-height:32px;font-size:12.5px;">
+                <span>to</span>
+                <input class="input" value="{{ rangeTo }}" style="width:130px;min-height:32px;font-size:12.5px;">
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-end;gap:36px;padding:26px 0 22px;border-top:1px solid var(--color-text);border-bottom:1px solid var(--color-divider);flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Total spent</span>
+            <span class="fig" style="font-family:var(--font-heading);font-weight:400;font-size:64px;line-height:1;padding-bottom:8px;border-bottom:3px double var(--color-text);">{{ total }}</span>
+          </div>
+          <div style="display:flex;gap:36px;padding-bottom:10px;">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Expenses</span>
+              <span class="fig" style="font-family:var(--font-heading);font-size:24px;">{{ count }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Categories used</span>
+              <span class="fig" style="font-family:var(--font-heading);font-size:24px;">{{ catCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-body">
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;">
+              <h4 style="margin:0;font-weight:400;font-size:22px;">By category</h4>
+              <span style="font-size:11px;color:var(--color-neutral-600);">{{ openHint }}</span>
+            </div>
+            <div style="border-top:1px solid var(--color-text);">
+              <sc-for list="{{ groups }}" as="g" hint-placeholder-count="6">
+                <div>
+                  <button type="button" onClick="{{ g.toggle }}" style="width:100%;display:flex;align-items:baseline;gap:14px;padding:13px 0;background:transparent;border:0;border-bottom:1px solid var(--color-divider);font-family:var(--font-body);font-size:15px;color:var(--color-text);cursor:pointer;text-align:left;">
+                    <span style="width:13px;flex:none;font-size:10px;color:var(--color-accent);">{{ g.caret }}</span>
+                    <span>{{ g.name }}</span>
+                    <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                    <span class="fig" style="font-size:11.5px;color:var(--color-neutral-600);min-width:44px;text-align:right;">{{ g.share }}</span>
+                    <span class="fig" style="min-width:104px;text-align:right;">{{ g.amount }}</span>
+                  </button>
+                  <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:4px 0 10px 27px;display:flex;flex-direction:column;">
+                      <sc-for list="{{ g.subs }}" as="s" hint-placeholder-count="3">
+                        <div style="display:flex;align-items:baseline;gap:14px;padding:8px 0;border-bottom:1px solid var(--color-divider);font-size:13.5px;color:var(--color-neutral-700);">
+                          <span>{{ s.name }}</span>
+                          <span style="flex:1;border-bottom:1px dotted var(--color-neutral-300);transform:translateY(-4px);"></span>
+                          <span class="fig" style="min-width:104px;text-align:right;">{{ s.amount }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:baseline;gap:14px;padding:16px 0 0;">
+                <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-neutral-600);">Total</span>
+                <span style="flex:1;"></span>
+                <span class="fig" style="font-family:var(--font-heading);font-size:20px;min-width:104px;text-align:right;padding-bottom:4px;border-bottom:3px double var(--color-text);">{{ total }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;">
+              <h4 style="margin:0;font-weight:400;font-size:22px;">Recent expenses</h4>
+              <span style="font-size:11px;color:var(--color-neutral-600);">Newest first</span>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:74px;">Date</th>
+                  <th>Store</th>
+                  <th>Category</th>
+                  <th style="width:104px;text-align:right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{ recent }}" as="e" hint-placeholder-count="7">
+                  <tr>
+                    <td class="fig" style="color:var(--color-neutral-600);font-size:12.5px;">{{ e.date }}</td>
+                    <td>{{ e.store }}</td>
+                    <td style="font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--color-accent-700);">{{ e.category }}</td>
+                    <td class="fig" style="text-align:right;">{{ e.amount }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <p style="margin:4px 0 0;font-size:11.5px;color:var(--color-neutral-600);line-height:1.7;">To change or remove any of these, say so in the <a href="#chat">chat</a>. The dashboard never writes.</p>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:6px;">
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);padding:44px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Empty</span>
+        <p style="margin:0;font-family:var(--font-heading);font-size:24px;line-height:1.3;max-width:22ch;">Nothing filed in this period.</p>
+        <p style="margin:0;font-size:13px;color:var(--color-neutral-700);max-width:32ch;line-height:1.7;">Record your first expense in the chat and it will appear here.</p>
+        <a href="#chat" class="btn btn-primary" style="margin-top:4px;">Go to the chat</a>
+      </div>
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);padding:44px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Loading</span>
+        <div style="width:100%;max-width:240px;display:flex;flex-direction:column;gap:11px;padding-top:6px;">
+          <div style="height:1px;background:var(--color-neutral-300);"></div>
+          <div style="height:1px;background:var(--color-neutral-300);width:82%;"></div>
+          <div style="height:1px;background:var(--color-neutral-300);width:64%;"></div>
+          <div style="height:1px;background:var(--color-neutral-300);width:74%;"></div>
+        </div>
+        <p style="margin:8px 0 0;font-size:13px;color:var(--color-neutral-700);">Totting up…</p>
+      </div>
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);padding:44px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a3524;">Failed</span>
+        <p style="margin:0;font-family:var(--font-heading);font-size:24px;line-height:1.3;max-width:22ch;">The statement could not be fetched.</p>
+        <p style="margin:0;font-size:13px;color:var(--color-neutral-700);max-width:32ch;line-height:1.7;">The server did not answer. Nothing has been lost.</p>
+        <button type="button" class="btn btn-primary" style="margin-top:4px;">Try again</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 404 + MOBILE ══════════ -->
+  <section style="display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start;">
+    <div style="flex:1 1 420px;min-width:420px;display:flex;flex-direction:column;gap:18px;">
+      <h6 style="margin:0;color:var(--color-neutral-600);">404</h6>
+      <div style="border:1px solid var(--color-divider);background:var(--color-bg);min-height:420px;display:flex;flex-direction:column;">
+        <header class="nav" style="padding:16px 28px;">
+          <span class="nav-brand" style="font-size:19px;">Expenses</span>
+          <a href="#chat">Chat</a>
+          <a href="#dashboard">Dashboard</a>
+        </header>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:56px 24px;text-align:center;">
+          <span style="font-family:var(--font-heading);font-size:92px;line-height:1;color:var(--color-accent-300);">404</span>
+          <p style="margin:0;font-family:var(--font-heading);font-size:28px;">This page is not in the ledger.</p>
+          <a href="#chat" class="btn btn-primary" style="margin-top:6px;">Back to the chat</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:0 0 390px;display:flex;flex-direction:column;gap:18px;">
+      <h6 style="margin:0;color:var(--color-neutral-600);">Mobile — chat</h6>
+      <div style="width:390px;border:1px solid var(--color-divider);background:var(--color-bg);display:flex;flex-direction:column;min-height:720px;">
+        <header class="nav" style="padding:14px 18px;gap:14px;">
+          <span class="nav-brand" style="font-size:18px;">Expenses</span>
+          <a href="#chat" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Chat</a>
+          <a href="#dashboard">Dashboard</a>
+        </header>
+        <main style="flex:1;display:flex;flex-direction:column;padding:22px 18px 18px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--color-text);">
+            <h4 style="margin:0;font-weight:400;font-size:22px;">The chat</h4>
+            <span style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-neutral-600);">Confirm to file</span>
+          </div>
+          <ol style="flex:1;margin:0;padding:18px 0 0;list-style:none;display:flex;flex-direction:column;gap:18px;">
+            <li style="align-self:flex-end;max-width:28ch;padding:11px 14px;border:1px solid var(--color-neutral-400);border-radius:var(--radius-md);font-size:14px;line-height:1.55;">spent 50 at the supermarket and 32 on gas</li>
+            <li style="align-self:flex-start;max-width:30ch;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent);">Expenses</span>
+              <p style="margin:0;font-size:14px;line-height:1.6;">Two expenses, both dated today. Confirm and I will file them.</p>
+            </li>
+          </ol>
+          <div style="margin-top:18px;border:1px solid var(--color-text);padding:16px 16px 14px;">
+            <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent);padding-bottom:11px;border-bottom:1px solid var(--color-divider);">To be filed</div>
+            <div style="display:flex;flex-direction:column;gap:9px;padding-top:11px;">
+              <div style="display:flex;align-items:baseline;gap:9px;font-size:13.5px;">
+                <span>Supermarket</span>
+                <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                <span class="fig">₪ 50.00</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:9px;font-size:13.5px;">
+                <span>Gas station</span>
+                <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                <span class="fig">₪ 32.00</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--color-divider);">
+              <span style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-neutral-600);">Total</span>
+              <span style="flex:1;"></span>
+              <span class="fig" style="font-family:var(--font-heading);font-size:19px;padding-bottom:3px;border-bottom:3px double var(--color-text);">₪ 82.00</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button type="button" class="btn btn-primary" style="flex:1;min-height:44px;">Confirm</button>
+              <button type="button" class="btn btn-secondary" style="min-height:44px;">Cancel</button>
+            </div>
+          </div>
+          <form style="display:flex;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--color-divider);">
+            <input class="input" placeholder="Say what you spent." style="min-height:44px;">
+            <button type="button" class="btn btn-primary" style="min-height:44px;">Send</button>
+          </form>
+        </main>
+      </div>
+    </div>
+
+    <div style="flex:0 0 390px;display:flex;flex-direction:column;gap:18px;">
+      <h6 style="margin:0;color:var(--color-neutral-600);">Mobile — dashboard</h6>
+      <div style="width:390px;border:1px solid var(--color-divider);background:var(--color-bg);display:flex;flex-direction:column;min-height:720px;">
+        <header class="nav" style="padding:14px 18px;gap:14px;">
+          <span class="nav-brand" style="font-size:18px;">Expenses</span>
+          <a href="#chat">Chat</a>
+          <a href="#dashboard" aria-current="page" style="padding-bottom:2px;border-bottom:1px solid var(--color-accent);">Dashboard</a>
+        </header>
+        <main style="flex:1;display:flex;flex-direction:column;gap:22px;padding:22px 18px 24px;">
+          <div>
+            <div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent);margin-bottom:6px;">Statement</div>
+            <h4 style="margin:0;font-weight:400;font-size:24px;">This month</h4>
+          </div>
+          <div style="display:flex;gap:0;border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden;font-size:11.5px;">
+            <span style="flex:1;padding:8px 4px;text-align:center;">Today</span>
+            <span style="flex:1;padding:8px 4px;text-align:center;border-left:1px solid var(--color-divider);">Week</span>
+            <span style="flex:1;padding:8px 4px;text-align:center;border-left:1px solid var(--color-divider);color:var(--color-accent);box-shadow:inset 0 0 0 1px var(--color-accent);">Month</span>
+            <span style="flex:1;padding:8px 4px;text-align:center;border-left:1px solid var(--color-divider);">Pick</span>
+            <span style="flex:1;padding:8px 4px;text-align:center;border-left:1px solid var(--color-divider);">Custom</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding:16px 0;border-top:1px solid var(--color-text);border-bottom:1px solid var(--color-divider);">
+            <span style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-neutral-600);">Total spent</span>
+            <span class="fig" style="font-family:var(--font-heading);font-size:44px;line-height:1;padding-bottom:6px;border-bottom:3px double var(--color-text);align-self:flex-start;">₪ 6,679.10</span>
+          </div>
+          <div>
+            <h5 style="margin:0 0 10px;font-weight:400;font-size:17px;">By category</h5>
+            <div style="border-top:1px solid var(--color-text);">
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;">
+                <span style="width:11px;font-size:11px;color:var(--color-accent);">▾</span><span>Home</span>
+                <span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span>
+                <span class="fig">₪ 4,211.40</span>
+              </div>
+              <div style="padding:4px 0 8px 21px;">
+                <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--color-divider);font-size:13px;color:var(--color-neutral-700);"><span>Rent</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-300);transform:translateY(-4px);"></span><span class="fig">₪ 3,800.00</span></div>
+                <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--color-divider);font-size:13px;color:var(--color-neutral-700);"><span>Utilities</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-300);transform:translateY(-4px);"></span><span class="fig">₪ 312.40</span></div>
+                <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;font-size:13px;color:var(--color-neutral-700);"><span>Internet</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-300);transform:translateY(-4px);"></span><span class="fig">₪ 99.00</span></div>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;"><span style="width:11px;font-size:11px;color:var(--color-accent);">▸</span><span>Food</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 1,248.80</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;"><span style="width:11px;font-size:11px;color:var(--color-accent);">▸</span><span>Transport</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 553.00</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;"><span style="width:11px;"></span><span>Health</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 260.00</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;"><span style="width:11px;"></span><span>Clothing</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 189.90</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:14px;"><span style="width:11px;"></span><span>Entertainment</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 154.00</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;font-size:14px;"><span style="width:11px;"></span><span>Other</span><span style="flex:1;border-bottom:1px dotted var(--color-neutral-400);transform:translateY(-4px);"></span><span class="fig">₪ 62.00</span></div>
+            </div>
+          </div>
+          <div>
+            <h5 style="margin:0 0 10px;font-weight:400;font-size:17px;">Recent</h5>
+            <div style="border-top:1px solid var(--color-text);">
+              <div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-divider);font-size:13.5px;"><span class="fig" style="color:var(--color-neutral-600);font-size:12px;width:44px;">14 Sep</span><span>Supermarket</span><span style="flex:1;"></span><span class="fig">₪ 214.60</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-divider);font-size:13.5px;"><span class="fig" style="color:var(--color-neutral-600);font-size:12px;width:44px;">13 Sep</span><span>Paz</span><span style="flex:1;"></span><span class="fig">₪ 210.00</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;font-size:13.5px;"><span class="fig" style="color:var(--color-neutral-600);font-size:12px;width:44px;">12 Sep</span><span>Cafelix</span><span style="flex:1;"></span><span class="fig">₪ 18.00</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440}}">
+const MONEY = (n) =>
+  '₪ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Shaped exactly like what the client can build today: GET /expenses/summary
+// returns [{ _id: categoryId, total }] for leaf categories, and GET /categories
+// gives each category its name and parent. The rollup below is the client-side
+// join of those two.
+const DATA = {
+  today: {
+    title: 'Today', range: '15 September 2026', largest: 96.0,
+    groups: [
+      { name: 'Food', subs: [{ name: 'Groceries', amount: 96.0 }, { name: 'Coffee', amount: 18.0 }] },
+      { name: 'Transport', subs: [{ name: 'Parking', amount: 15.0 }] },
+    ],
+    recent: [
+      { date: '15 Sep', store: 'Supermarket', category: 'Groceries', amount: 96.0 },
+      { date: '15 Sep', store: 'Cafelix', category: 'Coffee', amount: 18.0 },
+      { date: '15 Sep', store: 'Ahuzat Hof', category: 'Parking', amount: 15.0 },
+    ],
+  },
+  week: {
+    title: 'This week', range: '14 – 15 September 2026', largest: 214.6,
+    groups: [
+      { name: 'Food', subs: [{ name: 'Groceries', amount: 310.6 }, { name: 'Restaurants', amount: 128.0 }, { name: 'Coffee', amount: 36.0 }] },
+      { name: 'Transport', subs: [{ name: 'Fuel', amount: 210.0 }, { name: 'Parking', amount: 15.0 }] },
+      { name: 'Health', subs: [], amount: 120.0 },
+      { name: 'Other', subs: [], amount: 24.0 },
+    ],
+    recent: [
+      { date: '15 Sep', store: 'Supermarket', category: 'Groceries', amount: 96.0 },
+      { date: '15 Sep', store: 'Cafelix', category: 'Coffee', amount: 18.0 },
+      { date: '15 Sep', store: 'Ahuzat Hof', category: 'Parking', amount: 15.0 },
+      { date: '14 Sep', store: 'Supermarket', category: 'Groceries', amount: 214.6 },
+      { date: '14 Sep', store: 'Paz', category: 'Fuel', amount: 210.0 },
+      { date: '14 Sep', store: 'Miznon', category: 'Restaurants', amount: 128.0 },
+      { date: '14 Sep', store: 'Super-Pharm', category: 'Health', amount: 120.0 },
+    ],
+  },
+  month: {
+    title: 'This month', range: '1 – 15 September 2026', largest: 3800.0,
+    groups: [
+      { name: 'Home', subs: [{ name: 'Rent', amount: 3800.0 }, { name: 'Utilities', amount: 312.4 }, { name: 'Internet', amount: 99.0 }] },
+      { name: 'Food', subs: [{ name: 'Groceries', amount: 842.3 }, { name: 'Restaurants', amount: 310.0 }, { name: 'Coffee', amount: 96.5 }] },
+      { name: 'Transport', subs: [{ name: 'Fuel', amount: 420.0 }, { name: 'Public transport', amount: 88.0 }, { name: 'Parking', amount: 45.0 }] },
+      { name: 'Health', subs: [], amount: 260.0 },
+      { name: 'Clothing', subs: [], amount: 189.9 },
+      { name: 'Entertainment', subs: [], amount: 154.0 },
+      { name: 'Other', subs: [], amount: 62.0 },
+    ],
+    recent: [
+      { date: '15 Sep', store: 'Supermarket', category: 'Groceries', amount: 96.0 },
+      { date: '15 Sep', store: 'Cafelix', category: 'Coffee', amount: 18.0 },
+      { date: '14 Sep', store: 'Paz', category: 'Fuel', amount: 210.0 },
+      { date: '13 Sep', store: 'Miznon', category: 'Restaurants', amount: 128.0 },
+      { date: '12 Sep', store: 'Bezeq', category: 'Internet', amount: 99.0 },
+      { date: '10 Sep', store: 'Castro', category: 'Clothing', amount: 189.9 },
+      { date: '05 Sep', store: 'Landlord', category: 'Rent', amount: 3800.0 },
+    ],
+  },
+};
+DATA.pick = { ...DATA.month, title: 'August 2026', range: '1 – 31 August 2026' };
+DATA.custom = { ...DATA.month, title: 'Custom range', range: '12 Aug – 15 Sep 2026' };
+
+const KEYS = [
+  ['today', 'Today'], ['week', 'This week'], ['month', 'This month'],
+  ['pick', 'Pick a month'], ['custom', 'Custom'],
+];
+
+class Component extends DCLogic {
+  state = { period: 'month', open: { Home: true } };
+
+  renderVals() {
+    const set = DATA[this.state.period];
+    const groups = set.groups.map((g) => {
+      const amount = g.subs.length ? g.subs.reduce((t, s) => t + s.amount, 0) : g.amount;
+      return { ...g, amount };
+    });
+    const total = groups.reduce((t, g) => t + g.amount, 0);
+
+    return {
+      periods: KEYS.map(([key, label]) => ({
+        label,
+        color: this.state.period === key ? 'var(--color-accent)' : 'var(--color-neutral-700)',
+        ring: this.state.period === key ? 'inset 0 0 0 1px var(--color-accent)' : 'none',
+        select: () => this.setState({ period: key }),
+      })),
+      periodTitle: set.title,
+      periodRange: set.range,
+      showRange: this.state.period === 'custom' || this.state.period === 'pick',
+      rangeLabel: this.state.period === 'pick' ? 'Month' : 'From',
+      rangeFrom: this.state.period === 'pick' ? '2026-08' : '2026-08-12',
+      rangeTo: '2026-09-15',
+
+      total: MONEY(total),
+      count: String(set.recent.length * 3),
+      catCount: String(groups.length),
+      largest: MONEY(set.largest),
+      openHint: 'Tap a category for its subcategories',
+
+      groups: groups.map((g) => ({
+        name: g.name,
+        amount: MONEY(g.amount),
+        share: Math.round((g.amount / total) * 100) + '%',
+        caret: g.subs.length ? (this.state.open[g.name] ? '▾' : '▸') : '',
+        open: !!(g.subs.length && this.state.open[g.name]),
+        subs: g.subs.map((s) => ({ name: s.name, amount: MONEY(s.amount) })),
+        toggle: () =>
+          g.subs.length &&
+          this.setState((s) => ({ open: { ...s.open, [g.name]: !s.open[g.name] } })),
+      })),
+
+      recent: set.recent.map((e) => ({ ...e, amount: MONEY(e.amount) })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
