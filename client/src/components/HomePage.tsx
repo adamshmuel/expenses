@@ -1,9 +1,10 @@
 // The AI chat — spec docs/specs/01-ai-chat.md §6-8. The only screen that
 // changes anything: every intent goes through a parse (request one) and an
 // explicit confirm (request two) before it touches the database.
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import {
+  loadChatHistory,
   sendChatMessage,
   confirmChatAction,
   selectMatch,
@@ -37,6 +38,11 @@ export const HomePage = () => {
 
   const isSending = status === 'sending'
   const isConfirming = status === 'confirming'
+
+  // Spec §5: the last 50 messages load once, on entering the page.
+  useEffect(() => {
+    dispatch(loadChatHistory())
+  }, [dispatch])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
