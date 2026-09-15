@@ -1,6 +1,6 @@
 # 05 — The user layers: repository, service, route
 
-Status: **draft — needs Adam's approval.**
+Status: **approved.**
 
 How the four auth endpoints from
 [03-api-contract.md](03-api-contract.md) are built on Adam's server, split

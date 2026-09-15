@@ -1,7 +1,6 @@
 # 03 — API contract
 
-Status: **v1 auth section is agreed. The client is built against it.**
-The chat and expense endpoints are still open.
+Status: **approved. Both sides are built against it.**
 
 This is the line between Adam's server and Claude's client. Neither side changes
 it alone.
@@ -169,24 +168,24 @@ Built and tested. No further client work is needed for these.
 To point the client at a different port, copy `client/.env.example` to
 `client/.env` and change `VITE_API_URL`.
 
-## 3. Not yet agreed
+## 3. Chat and expense/category endpoints
 
-These come from `01-ai-chat.md` and `02-dashboard.md` and are **not** built on
-either side.
+Built on both sides, per [01-ai-chat.md](01-ai-chat.md) §6 and
+[09-expense-category-service.md](09-expense-category-service.md) §4–5.
 
-**All writes go through the chat.** There is no `/categories` or `POST
+**All writes go through the chat.** There is no `POST /categories` or `POST
 /expenses` REST endpoint — creating, editing, or deleting an expense or a
 category all happen by sending text to the chat and confirming, per
 [01-ai-chat.md](01-ai-chat.md) §6. `/dashboard` only ever reads.
 
-| Purpose | Likely route |
+| Purpose | Route |
 |---|---|
 | Send a chat message, get back drafts / matches / a reply | `POST /chat/messages` |
 | Load chat history | `GET /chat/messages?limit=` |
 | Confirm a pending create/edit/delete (expense or category) | `POST /chat/confirm` |
 | List categories (read-only, for the dashboard) | `GET /categories` |
-| List / filter expenses (read-only, for the dashboard) | `GET /expenses` |
-| Statistics | `GET /expenses/summary?period=` |
+| List / filter expenses (read-only, for the dashboard) | `GET /expenses?from=&to=` |
+| Statistics | `GET /expenses/summary?from=&to=` |
 
 The data model behind all of them is agreed and written up in
 [04-data-model.md](04-data-model.md); the DAL functions behind the writes are

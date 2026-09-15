@@ -136,10 +136,12 @@ between users, so every query is filtered by the logged-in user first.
 
 ## Open questions
 
-1. Should an `Expense` record which `Message` created it? It would let the chat
-   show "saved" next to an old message. Not needed for v1.
+None.
 
 ## Decided and closed
 
 - Editing is in scope for v1, through the chat — see
   [01-ai-chat.md](01-ai-chat.md) §6. `Expense.updatedAt` tracks it.
+- `Expense` does **not** record which `Message` created it. The chat's own
+  assistant reply, right after a confirm, already tells the user it was saved
+  in the moment — a permanent marker on old history is not needed for v1.

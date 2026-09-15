@@ -1,6 +1,6 @@
 # 00 — Overview
 
-Status: **draft — needs Adam's approval.**
+Status: **approved.**
 
 ## What we are building
 
@@ -50,12 +50,15 @@ Three parts:
 The client never talks to the language model directly. It calls the server, and
 the server calls `backend/ai/`.
 
-## Open questions
+## Decided
 
-1. Which course technologies go into this project. The full subject list is in
-   [../reference/course-topics.md](../reference/course-topics.md) — next step is
-   to choose from it.
-2. Which language model provider. Gemini Flash Lite was mentioned as the
-   cheapest option; not yet decided.
-3. Whether the app has user accounts, and what the dashboard shows. Answered in
-   `02-dashboard.md` and `03-api-contract.md` once question 1 is settled.
+- **Course technologies:** the layered Express/Mongoose stack used throughout
+  the approved specs — DAL/BL/route layers, JWT + bcrypt auth,
+  express-validator, Winston, population, aggregation. The full mapping is
+  each spec's own "Course-topic coverage" table; the subject list it draws
+  from is [../reference/course-topics.md](../reference/course-topics.md).
+- **Language model provider:** Gemini Flash Lite, via `@google/genai` —
+  built in `backend/ai/`.
+- **User accounts:** yes, built — see [05-user-layers.md](05-user-layers.md).
+  What the dashboard shows is tracked separately in
+  [02-dashboard.md](02-dashboard.md).
