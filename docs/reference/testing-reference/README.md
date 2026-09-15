@@ -10,8 +10,11 @@ be tested**, split one file per area so no single file grows unbounded.
 
   | File | Area |
   |---|---|
-  | `2026-09-11-server-testable.md` | `backend/` (everything except `ai/`) |
-  | `2026-09-11-client-testable.md` | `client/` |
+  | `2026-09-11-server-testable.md` | `backend/` (everything except `ai/`), as of `e48ce5b` |
+  | `2026-09-11-client-testable.md` | `client/`, as of `e48ce5b` |
+  | `2026-09-15-ai-testable.md` | `backend/ai/` |
+  | `2026-09-15-server-additions-testable.md` | `backend/` growth since `e48ce5b` (chat/expense/category routes, services, models) |
+  | `2026-09-15-client-additions-testable.md` | `client/` growth since `e48ce5b` (chat UI committed; dashboard UI uncommitted — see file) |
 
 - **When a genuinely new area of the system appears** — `backend/ai/` once it's
   built, a mobile app, a second service — it gets its **own new dated file**,
@@ -24,6 +27,11 @@ be tested**, split one file per area so no single file grows unbounded.
 - The date in the filename is a creation timestamp, useful for knowing what's
   new at a glance. It is **not** a "last scanned" marker — each file's own
   header states when it was last re-derived.
+- **If a file gets too long, split it.** A single area file that grows past a
+  comfortable read is a context risk for the agent, not a badge of
+  thoroughness. Split it into more files (e.g. by sub-area, or by route vs.
+  model vs. service layer) rather than letting one file carry the whole area.
+  Update the table above to list each resulting file.
 
 ## What belongs in one of these files
 
