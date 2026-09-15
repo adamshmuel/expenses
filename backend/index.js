@@ -23,6 +23,9 @@ const logger = require("./.config/logger");
 const rateLimit = require('express-rate-limit');
 const { errorHandler } = require("./error_handling");
 const userRouter = require('./routes/userRoute');
+const chatRouter = require('./routes/chatRoute');
+const expensesRouter = require('./routes/expensesRoute');
+const categoriesRouter = require('./routes/categoriesRoute');
 const port = process.env.PORT || 3000;
 
 
@@ -51,6 +54,10 @@ app.use(globalLimiter);
 
 // --- Routers (no /api prefix) ---
 app.use("/users", userRouter);
+app.use("/chat", chatRouter);
+app.use("/expenses", expensesRouter);
+app.use("/categories", categoriesRouter);
+
 
 // --- Tail: 404, then the central error handler, registered last (spec 07 §4) ---
 app.use((req, res) => {

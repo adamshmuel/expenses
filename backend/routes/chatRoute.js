@@ -1,12 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { catchAsync } = require('../error_handling');
-const requireAuth = require('../middleware/requireAuth')
+const { catchAsync } = require('../error_handling.js');
+const requireAuth = require('../middleware/requireAuth.js')
 const categoryService = require('../bl/categoryService.js');
 const expenseService = require('../bl/expenseService.js');
-const { parseMessage } = require('../ai');
-const Message = require('../models/messageModel');
+const { parseMessage } = require('../ai/index.js');
+const Message = require('../models/messageModel.js');
 
+
+
+/**
+ * GET /chat/messages?limit= — chat history (docs/specs/01-ai-chat.md §5, §9).
+ * Read-only. Returns this user's most recent `limit` messages (default 50),
+ * oldest first — fetched newest-first so `.limit` keeps the right end, then
+ * reversed for display order.
+ */
+router.get('/messages', requireAuth, catchAsync(async (req, res) => {
+    const limit = Number(req.query.limit) || 50;
+    const messages = await Message.find({ author: req.user.id })
+        .sort({ createdAt: -1 })
+        .limit(limit);
+
+    res.json(messages.reverse());
+}));
 
 /**
  * Request one of the chat flow (see docs/specs/09-expense-category-service.md
@@ -16,7 +32,7 @@ const Message = require('../models/messageModel');
  * matches to choose from for an edit/delete. No database write happens here
  * beyond the two chat messages — the actual change waits for /chat/confirm.
  */
-router.post('/chat/messages', requireAuth, catchAsync(async (req, res) => {
+router.post('/messages', requireAuth, catchAsync(async (req, res) => {
 
     await Message.create({
         text: req.body.text,
@@ -52,6 +68,7 @@ router.post('/chat/messages', requireAuth, catchAsync(async (req, res) => {
         intent: result.intent,
         drafts: result.drafts,
         draft: result.draft,
+        changes: result.changes,
         matches
     });
 }));
@@ -63,7 +80,7 @@ router.post('/chat/messages', requireAuth, catchAsync(async (req, res) => {
  * Calls the one matching service function and returns what changed. Never
  * calls the AI again — the text was already parsed in request one.
  */
-router.post('/chat/confirm', requireAuth, catchAsync(async (req, res) => {
+router.post('/confirm', requireAuth, catchAsync(async (req, res) => {
 
     const { intent, id, changes, drafts, draft } = req.body;
 
