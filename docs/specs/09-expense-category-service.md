@@ -1,6 +1,6 @@
 # 09 — The expense and category layers: repository, service, route
 
-Status: **draft — needs Adam's approval.**
+Status: **approved.**
 
 How the chat's seven intents ([01-ai-chat.md](01-ai-chat.md) §6) and the
 read-only dashboard endpoints are built, split into the same three layers as

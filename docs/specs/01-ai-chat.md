@@ -1,6 +1,6 @@
 # 01 — Home and auth
 
-Status: **draft — needs Adam's approval.**
+Status: **approved.**
 
 Covers the first half of the app: the AI chat and the login screens around it.
 `/dashboard` is specified separately in [02-dashboard.md](02-dashboard.md).
@@ -132,7 +132,8 @@ confirms — this is the core rule of the screen.
 
 ### Create — the flow
 
-1. On entering the page, the last messages are loaded and shown, oldest first.
+1. On entering the page, the last 50 messages are loaded and shown, oldest
+   first. No pagination — a flat, fixed limit.
 2. The user types a message. Example: `spent 50 at the supermarket`.
 3. The client sends the text to the server. **Request one.**
 4. The server saves the user's message, passes the text to `backend/ai/`, saves
@@ -324,7 +325,7 @@ still open for `/dashboard`.
 
 ## 10. Open questions
 
-1. How many messages `/home` loads on entry.
+None.
 
 ## Decided and closed
 
