@@ -169,13 +169,13 @@ const seedDefaultCategories = async (userId) => {
  * @returns {Promise<import('mongoose').Document[]>} the newly created default categories
  */
 const resetToDefaults = async (userId) => {
-
-    const otherCategory = await categoryRepository.findOtherCategory(userId);
-    await expenseRepository.reassignExpensesToCategory(userId, otherCategory._id);
     await categoryRepository.deleteCategoriesByUser(userId);
-    return seedDefaultCategories(userId);
-
+    const newCategories = await seedDefaultCategories(userId);
+    const newOther = newCategories.find(c => c.name === "Other");
+    await expenseRepository.reassignExpensesToCategory(userId, newOther._id);
+    return newCategories;
 }
+
 
 
 module.exports = {

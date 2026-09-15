@@ -1,4 +1,5 @@
 const Expense = require('../models/expenseModel');
+const mongoose = require("mongoose");
 
 /**
  * Data-access layer for expenses.
@@ -29,6 +30,23 @@ const createManyExpenses = (docs) => {
     return Expense.insertMany(docs);
 }
 
+/** Push a date-only `to` bound to the end of that calendar day, so filters
+ *  like $lte: "2026-09-15" include the whole day, not just its midnight. */
+const endOfDay = (date) => {
+    const d = new Date(date);
+    d.setUTCHours(23, 59, 59, 999)
+    return d;
+}
+
+/** Parse a date-only `from` bound as midnight UTC of that calendar day, to
+ *  match how the end-of-day bound is parsed. */
+const startOfDay = (date) => {
+    const d = new Date(date);
+    d.setUTCHours(0, 0, 0, 0)
+    return d;
+}
+
+
 /**
  * Find a user's expenses, filtered by date range and/or free text.
  *
@@ -43,8 +61,8 @@ const queryExpenses = (userId, filters) => {
     const query = { user: userId };
     if (filters.from || filters.to) {
         query.date = {};
-        if (filters.from) query.date.$gte = filters.from;
-        if (filters.to) query.date.$lte = filters.to;
+        if (filters.from) query.date.$gte = startOfDay(filters.from);
+        if (filters.to) query.date.$lte = endOfDay(filters.to);
     }
     if (filters.text) {
         const pattern = new RegExp(filters.text, 'i');
@@ -63,11 +81,11 @@ const queryExpenses = (userId, filters) => {
  */
 const getExpenseTotalByCategory = (userId, from, to) => {
 
-    const match = { user: userId };
+    const match = { user: new mongoose.Types.ObjectId(userId) };
     if (from || to) {
         match.date = {};
-        if (from) match.date.$gte = from;
-        if (to) match.date.$lte = to;
+        if (from) match.date.$gte = startOfDay(from);
+        if (to) match.date.$lte = endOfDay(to);
     }
 
     const results = Expense.aggregate([

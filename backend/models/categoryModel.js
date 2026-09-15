@@ -44,26 +44,24 @@ categorySchema.index({ owner: 1 });
  * Rejects it if `isProtected` is set on anything but "Other", or if its
  * `parent` is itself a subcategory (which would make three levels deep).
  */
-categorySchema.pre("save", async function (next) {
+categorySchema.pre("save", async function () {
     if (this.isProtected === true && this.name !== "Other") {
-        return next(new Error("Only the 'Other' category can be protected"));
+        throw new Error("Only the 'Other' category can be protected");
     }
 
     if (!this.parent) {
-        return next();
+        return;
     }
 
     const parentCategory = await mongoose.model("Category").findById(this.parent);
 
     if (!parentCategory) {
-        return next(new Error("Parent category does not exist"));
+        throw new Error("Parent category does not exist");
     }
 
     if (parentCategory.parent) {
-        return next(new Error("A subcategory cannot have a parent that is itself a subcategory"));
+        throw new Error("A subcategory cannot have a parent that is itself a subcategory");
     }
-
-    next();
 });
 
 /**
@@ -71,7 +69,7 @@ categorySchema.pre("save", async function (next) {
  * Rejects the update if it would rename or unprotect a protected category,
  * or set a `parent` that is itself a subcategory.
  */
-categorySchema.pre("findOneAndUpdate", async function (next) {
+categorySchema.pre("findOneAndUpdate", async function () {
 
     const update = this.getUpdate();
 
@@ -87,16 +85,16 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
     const docToUpdate = await this.model.findOne(this.getFilter());
 
     if (!docToUpdate) {
-        return next();
+        return ;
     }
 
     if (docToUpdate.isProtected === true) {
         if (nameValue !== undefined && nameValue !== "Other") {
-            return next(new Error("Protected categories cannot be renamed"));
+            throw new Error("Protected categories cannot be renamed");
         }
 
         if (isProtectedValue === false) {
-            return next(new Error("Protected categories cannot be unprotected"));
+            throw new Error("Protected categories cannot be unprotected");
         }
     }
 
@@ -104,15 +102,13 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
         const parentCategory = await mongoose.model("Category").findById(parentValue);
 
         if (!parentCategory) {
-            return next(new Error("Parent category does not exist"));
+            throw new Error("Parent category does not exist");
         }
 
         if (parentCategory.parent) {
-            return next(new Error("A subcategory cannot have a parent that is itself a subcategory"));
+            throw new Error("A subcategory cannot have a parent that is itself a subcategory");
         }
     }
-
-    next();
 });
 
 /**
@@ -125,16 +121,16 @@ categorySchema.pre("findOneAndUpdate", async function (next) {
  *    move to "Other" too, and the subcategories are then deleted;
  *  - the category being deleted itself always has its expenses moved.
  */
-categorySchema.pre("findOneAndDelete", async function (next) {
+categorySchema.pre("findOneAndDelete", async function () {
 
     const docToDelete = await this.model.findOne(this.getFilter());
 
     if (!docToDelete) {
-        return next();
+        return;
     }
 
     if (docToDelete.isProtected === true) {
-        return next(new Error("Protected categories cannot be deleted"));
+        throw new Error("Protected categories cannot be deleted");
     }
     const otherCategory = await this.model.findOne({ owner: docToDelete.owner, name: "Other" });
 
@@ -156,7 +152,6 @@ categorySchema.pre("findOneAndDelete", async function (next) {
     if (!docToDelete.parent) {
         await this.model.deleteMany({ parent: docToDelete._id });
     }
-    next();
 });
 
 
@@ -172,22 +167,20 @@ categorySchema.pre("findOneAndDelete", async function (next) {
  * Any other deleteMany call is rejected if it would match a protected
  * category, same as the single-document delete hook above.
  */
-categorySchema.pre("deleteMany", async function (next) {
+categorySchema.pre("deleteMany", async function () {
     const keys = Object.keys(this.getFilter());
     const isSingleOwnerReset = keys.length === 1 && keys[0] === 'owner';
 
     if (isSingleOwnerReset) {
-        return next();
+        return;
     }
 
     const docs = await this.model.find(this.getFilter());
     const hasProtectedCategory = docs.some(doc => doc.isProtected === true);
 
     if (hasProtectedCategory) {
-        return next(new Error("Protected categories cannot be deleted"));
+        throw new Error("Protected categories cannot be deleted");
     }
-
-    next();
 });
 
 

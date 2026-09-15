@@ -84,6 +84,17 @@ const deleteCategoriesByUser = (userId) => {
     return Category.deleteMany({owner: userId})
 }
 
+
+/**
+ * Delete categories by their ids.
+ * @param {string[]} ids
+ * @returns {Promise<import('mongoose').mongo.DeleteResult>}
+ */
+const deleteCategoriesByIds = (ids) => {
+    return Category.deleteMany({ _id: { $in: ids } })
+}
+
+
 module.exports = {
     getCategoriesByUser,
     findCategoryById,
@@ -92,5 +103,6 @@ module.exports = {
     updateCategory,
     deleteCategory,
     createManyCategories,
-    deleteCategoriesByUser
+    deleteCategoriesByUser,
+    deleteCategoriesByIds
 }
