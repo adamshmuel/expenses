@@ -105,3 +105,32 @@ export type ChatConfirmRequest =
 export interface ChatConfirmResult {
   changed: unknown
 }
+
+// ---------------------------------------------------------------------------
+// Dashboard (docs/specs/02-dashboard.md) — read-only.
+// ---------------------------------------------------------------------------
+
+/** `GET /categories` — a main category has no `parent`; a subcategory's
+ *  `parent` is its main category's id. */
+export interface DashboardCategory {
+  _id: string
+  name: string
+  parent?: string | null
+}
+
+/** One entry of `GET /expenses/summary`: a Mongo `$group`/`$sum` per
+ *  category id, main or sub. */
+export interface CategoryTotal {
+  _id: string
+  total: number
+}
+
+/** One entry of `GET /expenses?from=&to=` — the recent-expenses list. */
+export interface DashboardExpense {
+  _id: string
+  amount: number
+  store?: string
+  description?: string
+  date: string
+  category: string
+}

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Lora:wght@400;600&display=swap');
+
 /* ---------------------------------------------------------------------------
    Expenses — visual language
    Money is printed on paper: statements, till slips, ledger columns. Every
@@ -624,5 +626,525 @@ a:hover {
 
   .navbar__left {
     gap: 20px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Dashboard — "Classical" redesign (docs/designs/Expenses Redesign.dc.html).
+   Scoped entirely under .dashboard-page: its own palette, serif type, and
+   radii, deliberately different from the ink/paper tokens above. This is a
+   Dashboard-only pass — see the build report for what would need to happen
+   for the rest of the app to move onto these tokens.
+--------------------------------------------------------------------------- */
+
+.dashboard-page {
+  --db-bg: #f3f2f2;
+  --db-text: #201f1d;
+  --db-accent: #b68235;
+  --db-accent-700: #7d5411;
+  --db-error: #9a3524;
+  --db-divider: color-mix(in srgb, #201f1d 16%, transparent);
+  --db-neutral-300: #d7d3d3;
+  --db-neutral-400: #bab6b6;
+  --db-neutral-600: #7d7979;
+  --db-neutral-700: #605d5d;
+  --db-radius-md: 4px;
+  --db-heading: 'Cormorant Garamond', ui-serif, Georgia, serif;
+  --db-body: 'Lora', ui-serif, Georgia, serif;
+
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  background: var(--db-bg);
+  color: var(--db-text);
+  font-family: var(--db-body);
+  padding: 44px 56px 56px;
+}
+
+.dashboard-page h1,
+.dashboard-page h2 {
+  margin: 0;
+  font-family: var(--db-heading);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* Tabular figures, set in the same serif as the rest of the page — the
+   redesign's amounts are not monospace, unlike the rest of the app. */
+.dashboard-fig {
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dashboard-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--db-accent);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.dashboard-title {
+  margin-top: 8px;
+  font-size: 38px;
+}
+
+.dashboard-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--db-neutral-600);
+}
+
+.dashboard-period {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.dashboard-period__tabs {
+  display: flex;
+  border: 1px solid var(--db-divider);
+  border-radius: var(--db-radius-md);
+  overflow: hidden;
+}
+
+.dashboard-period__tab {
+  padding: 8px 15px;
+  font-family: var(--db-body);
+  font-size: 12.5px;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--db-divider);
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--db-neutral-700);
+}
+
+.dashboard-period__tab:first-child {
+  border-left: 0;
+}
+
+.dashboard-period__tab[aria-pressed='true'] {
+  color: var(--db-accent);
+  box-shadow: inset 0 0 0 1px var(--db-accent);
+}
+
+.dashboard-period__range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--db-neutral-700);
+}
+
+.dashboard-period__range .input {
+  width: 150px;
+  min-height: 32px;
+  font-size: 12.5px;
+  font-family: var(--db-body);
+  border-radius: var(--db-radius-md);
+  border-color: var(--db-divider);
+  color: var(--db-text);
+}
+
+.dashboard-totals {
+  display: flex;
+  align-items: flex-end;
+  gap: 36px;
+  padding: 26px 0 22px;
+  border-top: 1px solid var(--db-text);
+  border-bottom: 1px solid var(--db-divider);
+  flex-wrap: wrap;
+}
+
+.dashboard-totals__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-totals__figure {
+  align-self: flex-start;
+  font-family: var(--db-heading);
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 1;
+  padding-bottom: 8px;
+  border-bottom: 3px double var(--db-text);
+}
+
+.dashboard-stats {
+  display: flex;
+  gap: 36px;
+  padding-bottom: 10px;
+}
+
+.dashboard-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dashboard-stat__figure {
+  font-family: var(--db-heading);
+  font-weight: 400;
+  font-size: 24px;
+}
+
+.dashboard-body {
+  display: grid;
+  gap: 56px;
+  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+/* A grid item's automatic minimum width is its content's min-content size by
+   default — the recent-expenses table's own min-width (below) would
+   otherwise inflate this column's track and overflow the page. */
+.dashboard-body > * {
+  min-width: 0;
+}
+
+.dashboard-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dashboard-section__head h2 {
+  font-size: 22px;
+}
+
+.dashboard-hint {
+  font-size: 11px;
+  color: var(--db-neutral-600);
+  white-space: nowrap;
+}
+
+.dashboard-categories {
+  border-top: 1px solid var(--db-text);
+}
+
+.dashboard-category-row {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 13px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--db-divider);
+  font-family: var(--db-body);
+  font-size: 15px;
+  color: var(--db-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.dashboard-caret {
+  width: 13px;
+  flex: none;
+  font-size: 10px;
+  color: var(--db-accent);
+}
+
+.dashboard-category-row__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-leader {
+  flex: 1 1 auto;
+  min-width: 16px;
+  border-bottom: 1px dotted var(--db-neutral-400);
+  transform: translateY(-4px);
+}
+
+.dashboard-leader--sub {
+  border-bottom-color: var(--db-neutral-300);
+}
+
+.dashboard-category-row__share {
+  font-size: 11.5px;
+  color: var(--db-neutral-600);
+  min-width: 44px;
+  text-align: right;
+}
+
+.dashboard-category-row__amount {
+  min-width: 104px;
+  text-align: right;
+}
+
+.dashboard-subcategories {
+  padding: 4px 0 10px 27px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-sub-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--db-divider);
+  font-size: 13.5px;
+  color: var(--db-neutral-700);
+}
+
+.dashboard-sub-row .dashboard-fig {
+  min-width: 104px;
+  text-align: right;
+}
+
+.dashboard-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 16px 0 0;
+}
+
+.dashboard-total-row__figure {
+  font-family: var(--db-heading);
+  font-size: 20px;
+  min-width: 104px;
+  text-align: right;
+  padding-bottom: 4px;
+  border-bottom: 3px double var(--db-text);
+}
+
+.dashboard-table-scroll {
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13.5px;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px 6px 8px 0;
+  border-bottom: 1px solid var(--db-divider);
+  text-align: left;
+}
+
+.dashboard-table th {
+  padding-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--db-text);
+  font-weight: 400;
+  color: var(--db-neutral-600);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard-table__date {
+  width: 64px;
+  color: var(--db-neutral-600);
+  font-size: 12.5px;
+}
+
+.dashboard-table__category {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--db-accent-700);
+}
+
+.dashboard-table__amount {
+  width: 96px;
+  text-align: right;
+}
+
+.dashboard-note {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  color: var(--db-neutral-600);
+  line-height: 1.7;
+}
+
+.dashboard-note a {
+  color: var(--db-accent);
+}
+
+.dashboard-panel {
+  border: 1px solid var(--db-divider);
+  background: var(--db-bg);
+  padding: 44px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.dashboard-panel__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--db-neutral-600);
+}
+
+.dashboard-panel__eyebrow--error {
+  color: var(--db-error);
+}
+
+.dashboard-panel__headline {
+  margin: 0;
+  font-family: var(--db-heading);
+  font-size: 24px;
+  line-height: 1.3;
+  max-width: 34ch;
+}
+
+.dashboard-panel__text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--db-neutral-700);
+  max-width: 32ch;
+  line-height: 1.7;
+}
+
+.dashboard-panel__bars {
+  width: 100%;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding-top: 6px;
+}
+
+.dashboard-panel__bars div {
+  height: 1px;
+  background: var(--db-neutral-300);
+}
+
+.dashboard-panel__bars div:nth-child(2) {
+  width: 82%;
+}
+
+.dashboard-panel__bars div:nth-child(3) {
+  width: 64%;
+}
+
+.dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  margin-top: 4px;
+  font-family: var(--db-heading);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: var(--db-radius-md);
+  cursor: pointer;
+}
+
+.dashboard-btn--primary {
+  color: var(--db-accent);
+  background: transparent;
+  border: 1px solid var(--db-accent);
+}
+
+.dashboard-btn--primary:hover {
+  background: color-mix(in srgb, var(--db-accent) 12%, transparent);
+}
+
+.dashboard-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.dashboard-page :focus-visible {
+  outline: 2px solid var(--db-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1000px) {
+  .dashboard-page {
+    padding: 32px 24px 40px;
+    gap: 24px;
+  }
+
+  .dashboard-body {
+    gap: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* auto-fit + minmax(400px, 1fr) floors each column at 400px — below that,
+     the column (and the page) forces horizontal overflow. A plain single
+     column has no such floor. */
+  .dashboard-body {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-period {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .dashboard-period__tabs {
+    width: 100%;
+  }
+
+  .dashboard-period__tab {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+  }
+
+  .dashboard-totals__figure {
+    font-size: 44px;
+  }
+
+  /* The mobile artboard drops the share column entirely — there isn't room
+     for name, share and amount to stay readable at this width. */
+  .dashboard-category-row__share {
+    display: none;
+  }
+
+  .dashboard-category-row,
+  .dashboard-sub-row,
+  .dashboard-total-row {
+    gap: 10px;
+  }
+
+  .dashboard-category-row__amount,
+  .dashboard-sub-row .dashboard-fig,
+  .dashboard-total-row__figure {
+    min-width: 0;
   }
 }
