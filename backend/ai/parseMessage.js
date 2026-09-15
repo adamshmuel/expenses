@@ -8,6 +8,7 @@
 const { GoogleGenAI } = require("@google/genai");
 const { buildPrompt } = require("./prompt");
 const { responseSchema } = require("./schema");
+const logger = require("../.config/logger");
 
 // The "-latest" alias always points at Google's current Flash Lite model, so
 // this stays "the current model" without needing to be bumped by hand.
@@ -54,15 +55,21 @@ async function parseMessage(text, categories, recentExpenses, options = {}) {
         responseSchema,
       },
     });
-  } catch {
+  } catch (error) {
+    logger.error(`AI call failed: ${error.message}`, { area: "ai" });
     throw AI_UNAVAILABLE_ERROR;
   }
 
+  let parsed;
   try {
-    return JSON.parse(response.text);
-  } catch {
+    parsed = JSON.parse(response.text);
+  } catch (error) {
+    logger.error(`AI response was not valid JSON: ${error.message}`, { area: "ai" });
     throw AI_UNAVAILABLE_ERROR;
   }
+
+  logger.info(`AI parsed intent: ${parsed.intent}`, { area: "ai" });
+  return parsed;
 }
 
 module.exports = { parseMessage };
