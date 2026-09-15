@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './authSlice'
+import chatReducer from './chatSlice'
 
 /** A fresh store. The app makes one; each test makes its own. */
 export const makeStore = () =>
   configureStore({
     reducer: {
       auth: authReducer,
+      chat: chatReducer,
     },
   })
 

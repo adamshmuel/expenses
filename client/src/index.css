@@ -472,6 +472,124 @@ a:hover {
   color: var(--muted);
 }
 
+/* ---------- Chat ---------- */
+
+.chat-page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px 32px;
+}
+
+.chat-page h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.chat-empty {
+  margin: 0;
+  padding: 40px 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.chat-thread {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-bubble {
+  max-width: 42ch;
+  padding: 11px 15px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--card);
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.chat-bubble--user {
+  align-self: flex-end;
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.chat-bubble--assistant {
+  align-self: flex-start;
+}
+
+/* The .card base gives the border, padding and background; this only adds
+   the extra spacing a confirm step needs between its body and its actions. */
+.chat-confirm {
+  gap: 16px;
+}
+
+.chat-confirm p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chat-drafts,
+.chat-matches {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.chat-matches button {
+  font-size: 15px;
+  text-align: left;
+}
+
+.chat-confirm__actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+/* Amounts, printed the way a receipt sets its figures. */
+.figure {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: -0.02em;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-form .input {
+  flex: 1 1 auto;
+}
+
+/* Visible to screen readers only — the placeholder text carries the visual
+   label. */
+.chat-form__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 900px) {
