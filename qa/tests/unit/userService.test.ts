@@ -7,6 +7,13 @@
  * and 'jsonwebtoken' at load time. We seed Node's require.cache with stubs for
  * userRepository and bcrypt (see harness/cjs-stub.ts); jsonwebtoken stays REAL
  * so token payloads can be decoded/verified.
+ *
+ * Since the 2026-09-15 pass, signup() also calls categoryService.seedDefaultCategories
+ * (docs/specs/09-expense-category-service.md §2) -- stubbed here too, so this
+ * stays a true unit test (no real DB write) and isn't coupled to that
+ * function's own behaviour, which is covered separately (real DB) in
+ * qa/specs/int-categoryService.md CI-01/CI-02, and the resulting category
+ * count after a real signup in qa/specs/api-expenses-categories.md ER-02.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { resolve, dirname } from "node:path";
@@ -33,6 +40,9 @@ const bcrypt = {
   hash: vi.fn(async (v: string) => `HASHED::${v}`),
   compare: vi.fn(),
 };
+const categoryService = {
+  seedDefaultCategories: vi.fn(),
+};
 
 let userService: any;
 
@@ -42,12 +52,14 @@ beforeEach(() => {
   Object.values(repo).forEach((f) => f.mockReset());
   bcrypt.hash.mockReset().mockImplementation(async (v: string) => `HASHED::${v}`);
   bcrypt.compare.mockReset();
+  categoryService.seedDefaultCategories.mockReset().mockResolvedValue([]);
   repo.saveRefreshToken.mockResolvedValue({});
   repo.deleteRefreshToken.mockResolvedValue({ deletedCount: 1 });
 
   userService = loadCjsWithStubs(BACKEND, "./bl/userService.js", {
     "../dal/userRepository.js": repo,
     bcrypt: bcrypt,
+    "./categoryService.js": categoryService,
   });
 });
 
@@ -221,6 +233,13 @@ describe("bl/userService.js", () => {
 
   it("US-17 issueTokenPair is not exported", () => {
     expect(Object.keys(userService).sort()).toEqual(["login", "logout", "refresh", "signup"]);
+  });
+
+  it("US-19 signup seeds default categories for the new user", async () => {
+    repo.createUser.mockResolvedValue(FAKE_USER);
+    await userService.signup({ username: "amir", email: "a@x.io", password: "password123" });
+    expect(categoryService.seedDefaultCategories).toHaveBeenCalledTimes(1);
+    expect(categoryService.seedDefaultCategories).toHaveBeenCalledWith(FAKE_USER._id);
   });
 
   it("US-18 login issues and stores a refresh row on success", async () => {

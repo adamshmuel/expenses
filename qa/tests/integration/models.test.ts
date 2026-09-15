@@ -43,12 +43,28 @@ afterAll(async () => {
   await conn?.close();
 });
 
-/** Load a model file's schema without binding it to the global mongoose model registry twice. */
+/**
+ * Load a model file's schema, then compile it fresh onto our own qa-level
+ * `conn` (see beforeAll) rather than backend's global mongoose singleton.
+ *
+ * Plain `require` (no cache-busting): other integration test files in this
+ * same single-fork vitest run (categoryModel.test.ts, categoryService.test.ts,
+ * expenseCategoryDal.test.ts, expenseService.test.ts -- see
+ * qa/specs/int-categoryModel.md) also `require` these backend model files,
+ * against the SAME backend mongoose singleton (categoryModel.js's hooks call
+ * mongoose.model("Category")/mongoose.model("Expense") on that global default
+ * connection, so those files can't use an isolated `createConnection` the way
+ * this file does). Deleting the require-cache entry here and re-requiring
+ * would re-run `mongoose.model(name, schema)` on that same shared singleton a
+ * second time and throw `OverwriteModelError` if one of those other files
+ * already ran first in this process -- reproduced directly by running this
+ * file alongside categoryModel.test.ts. A plain `require` just returns the
+ * (already valid) compiled model's `.schema`, whichever file happened to
+ * `require` it first; that schema is what gets compiled onto `conn` below.
+ */
 function requireSchema(file: string): mongoose.Schema {
   const { createRequire } = require("node:module") as typeof import("node:module");
   const rb = createRequire(resolve(BACKEND, "package.json"));
-  const key = rb.resolve(`./models/${file}`);
-  delete rb.cache[key];
   const model = rb(`./models/${file}`) as mongoose.Model<any>;
   return model.schema;
 }

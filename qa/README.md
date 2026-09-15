@@ -52,6 +52,10 @@ design-time case next to its actual result.
 | XC-13 | `helmet()` is middleware #1 (07 §2) | `compression()` is #1, `helmet()` #2 |
 | EH-05 | 409 body `"<field> already exists."` (06 §3.2) | `"That username or email is already taken."` |
 
-RA-06 and XC-11 assert the spec and therefore **fail** until either the code or
-the spec is changed. XC-13 and EH-05 pass on the behaviour that matters and are
-recorded as notes.
+XC-13 and EH-05 pass on the behaviour that matters and are recorded as notes.
+RA-06 and XC-11's test bodies were already updated, before the 2026-09-15
+pass, to assert the code's current wording rather than the spec's, so both
+now **pass** — the wording gap from the spec text is still open, just no
+longer an asserted-and-failing test. See `qa/specs/README.md` for the current
+detail and the two **real bugs** (not wording divergences) found in the
+2026-09-15 pass.

@@ -101,3 +101,8 @@ Doubles:
 - **Purpose:** login creates a `RefreshToken` row (spec 04 "RefreshToken": "Login creates one").
 - **Method:** as US-09, inspect `userRepository.saveRefreshToken`.
 - **Expected:** called once with `{ token: <refreshToken>, user: "u1", expiresAt: <Date ~7d out> }`.
+
+### US-19 — `signup` seeds default categories for the new user
+- **Purpose:** every new user starts with the shared default category set, created as part of signup, not a separate step the route has to remember (spec `09-expense-category-service.md` §2 "Used by two callers: `userService.signup`..."). Unit-level: proves the *call* happens with the right argument; the actual category tree it produces is covered against a real DB in `qa/specs/int-categoryService.md` (CI-01/CI-02) and the count after a real HTTP signup in `qa/specs/api-expenses-categories.md` (ER-02).
+- **Method:** `categoryService.seedDefaultCategories` stubbed to resolve `[]`. `userRepository.createUser` resolves `FAKE_USER` (`_id: "u1"`). Call `signup({ username, email, password })`.
+- **Expected:** `categoryService.seedDefaultCategories` called exactly once, with `"u1"` (the new user's `_id`).

@@ -40,6 +40,9 @@ export default defineConfig({
     // and Chromium could not reach it, even though the server was up.
     baseURL: `http://127.0.0.1:${CLIENT_PORT}`,
     trace: "retain-on-failure",
+    // Headed so Adam can watch the browser drive the app during a run,
+    // rather than just reading the pass/fail report afterward.
+    headless: false,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [

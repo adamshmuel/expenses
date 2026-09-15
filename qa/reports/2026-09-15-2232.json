@@ -1,0 +1,2622 @@
+{
+  "numTotalTestSuites": 59,
+  "numPassedTestSuites": 56,
+  "numFailedTestSuites": 3,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 217,
+  "numPassedTests": 215,
+  "numFailedTests": 2,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1789500669778,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-01 valid signup returns 201",
+          "status": "passed",
+          "title": "SU-01 valid signup returns 201",
+          "duration": 1313.9334159999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-02 success body matches AuthSuccess exactly (no extra keys)",
+          "status": "passed",
+          "title": "SU-02 success body matches AuthSuccess exactly (no extra keys)",
+          "duration": 443.9869159999944,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-03 body contains no password and no bcrypt hash",
+          "status": "passed",
+          "title": "SU-03 body contains no password and no bcrypt hash",
+          "duration": 444.5417080000043,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-04 body contains no createdAt",
+          "status": "passed",
+          "title": "SU-04 body contains no createdAt",
+          "duration": 444.9279999999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-05 body contains no refreshToken",
+          "status": "passed",
+          "title": "SU-05 body contains no refreshToken",
+          "duration": 443.4998329999944,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-06 Set-Cookie sets an HttpOnly refreshToken with the right attributes",
+          "status": "passed",
+          "title": "SU-06 Set-Cookie sets an HttpOnly refreshToken with the right attributes",
+          "duration": 437.32833400000527,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-07 user.id is a 24-hex ObjectId; username/email echo the request (email lowercased)",
+          "status": "passed",
+          "title": "SU-07 user.id is a 24-hex ObjectId; username/email echo the request (email lowercased)",
+          "duration": 413.16304200000013,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-08 username shorter than 3 -> 400 with the errors shape, field 'username'",
+          "status": "passed",
+          "title": "SU-08 username shorter than 3 -> 400 with the errors shape, field 'username'",
+          "duration": 121.4642920000042,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-09 invalid email -> 400, field 'email'",
+          "status": "passed",
+          "title": "SU-09 invalid email -> 400, field 'email'",
+          "duration": 122.54483400000026,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-10 password shorter than 8 -> 400, field 'password'",
+          "status": "passed",
+          "title": "SU-10 password shorter than 8 -> 400, field 'password'",
+          "duration": 122.64279199999874,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-11 every field in a multi-error response matches a body key exactly",
+          "status": "passed",
+          "title": "SU-11 every field in a multi-error response matches a body key exactly",
+          "duration": 123.10950000000594,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/signup"
+          ],
+          "fullName": "POST /users/signup SU-12 duplicate username -> 400 (async validator) OR 409 (unique-index race), always a valid shape",
+          "status": "passed",
+          "title": "SU-12 duplicate username -> 400 (async validator) OR 409 (unique-index race), always a valid shape",
+          "duration": 563.0984999999928,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500739754,
+      "endTime": 1789500744749.0984,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/01-signup.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-01 no cookie -> 401 with the general error shape",
+          "status": "passed",
+          "title": "RF-01 no cookie -> 401 with the general error shape",
+          "duration": 7.239458999996714,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-02 the no-cookie 401 is NOT written to logs/error.log",
+          "status": "passed",
+          "title": "RF-02 the no-cookie 401 is NOT written to logs/error.log",
+          "duration": 403.68520899999567,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-03 a valid cookie -> 200 with { user, accessToken }",
+          "status": "passed",
+          "title": "RF-03 a valid cookie -> 200 with { user, accessToken }",
+          "duration": 709.6530839999978,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-04 refresh issues a NEW refresh cookie (rotation)",
+          "status": "passed",
+          "title": "RF-04 refresh issues a NEW refresh cookie (rotation)",
+          "duration": 1787.133332999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-05 the previous refresh token stops working after one rotation",
+          "status": "passed",
+          "title": "RF-05 the previous refresh token stops working after one rotation",
+          "duration": 2065.3932910000003,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-06 a tampered cookie -> 401 and the cookie is cleared",
+          "status": "passed",
+          "title": "RF-06 a tampered cookie -> 401 and the cookie is cleared",
+          "duration": 484.7074999999968,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-07 the RefreshToken collection grows by net zero per rotation",
+          "status": "passed",
+          "title": "RF-07 the RefreshToken collection grows by net zero per rotation",
+          "duration": 1242.2349169999943,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-08 refresh returns the correct user",
+          "status": "passed",
+          "title": "RF-08 refresh returns the correct user",
+          "duration": 682.8198329999941,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/refresh"
+          ],
+          "fullName": "POST /users/refresh RF-09 an unknown but well-formed token -> 401",
+          "status": "passed",
+          "title": "RF-09 an unknown but well-formed token -> 401",
+          "duration": 63.40404200000194,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500708935,
+      "endTime": 1789500716382.404,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/02-refresh.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-01 logout returns 204 with no body",
+          "status": "passed",
+          "title": "LO-01 logout returns 204 with no body",
+          "duration": 1405.7924170000042,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-02 logout clears the refreshToken cookie",
+          "status": "passed",
+          "title": "LO-02 logout clears the refreshToken cookie",
+          "duration": 514.8783339999936,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-03 after logout the old refresh token no longer works on /refresh",
+          "status": "passed",
+          "title": "LO-03 after logout the old refresh token no longer works on /refresh",
+          "duration": 559.2352920000121,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-04 logout with no cookie is still 204 (safe / idempotent)",
+          "status": "passed",
+          "title": "LO-04 logout with no cookie is still 204 (safe / idempotent)",
+          "duration": 61.752040999999736,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/logout"
+          ],
+          "fullName": "POST /users/logout LO-05 logout twice with the same cookie is safe",
+          "status": "passed",
+          "title": "LO-05 logout twice with the same cookie is safe",
+          "duration": 557.997125000009,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500754925,
+      "endTime": 1789500758024.997,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/03-logout.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-01 every error body is one of exactly two shapes",
+          "status": "passed",
+          "title": "XC-01 every error body is one of exactly two shapes",
+          "duration": 126.11912499999744,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-02 field values in a validation error match request body keys exactly",
+          "status": "passed",
+          "title": "XC-02 field values in a validation error match request body keys exactly",
+          "duration": 122.966207999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-03 no successful response body ever contains password or a bcrypt hash",
+          "status": "passed",
+          "title": "XC-03 no successful response body ever contains password or a bcrypt hash",
+          "duration": 0.11424999999871943,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-04 refreshToken never appears in a JSON body, only in Set-Cookie",
+          "status": "passed",
+          "title": "XC-04 refreshToken never appears in a JSON body, only in Set-Cookie",
+          "duration": 0.07166700001107529,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-05 helmet security headers present on a success response",
+          "status": "passed",
+          "title": "XC-05 helmet security headers present on a success response",
+          "duration": 443.953582999995,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-06 helmet headers present on an error response too",
+          "status": "passed",
+          "title": "XC-06 helmet headers present on an error response too",
+          "duration": 1.560750000004191,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-07 CORS: exact client origin echoed, credentials allowed",
+          "status": "passed",
+          "title": "XC-07 CORS: exact client origin echoed, credentials allowed",
+          "duration": 123.13537499999802,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-08 CORS preflight (OPTIONS) is answered for the client origin",
+          "status": "passed",
+          "title": "XC-08 CORS preflight (OPTIONS) is answered for the client origin",
+          "duration": 3.2642919999925653,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-09 a foreign origin does not get its origin echoed",
+          "status": "passed",
+          "title": "XC-09 a foreign origin does not get its origin echoed",
+          "duration": 121.55583299999125,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-10 an unmatched path returns 404 with the general error shape",
+          "status": "passed",
+          "title": "XC-10 an unmatched path returns 404 with the general error shape",
+          "duration": 2.8076250000012806,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-11 the 404 body message is 'Not Found'",
+          "status": "passed",
+          "title": "XC-11 the 404 body message is 'Not Found'",
+          "duration": 2.3513329999987036,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-12 JSON body parsing and cookie parsing are wired (middleware-order effect)",
+          "status": "passed",
+          "title": "XC-12 JSON body parsing and cookie parsing are wired (middleware-order effect)",
+          "duration": 185.51025000000664,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-13 middleware order: helmet vs compression [DESIGN NOTE]",
+          "status": "passed",
+          "title": "XC-13 middleware order: helmet vs compression [DESIGN NOTE]",
+          "duration": 2.142333999989205,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "cross-cutting HTTP behaviours"
+          ],
+          "fullName": "cross-cutting HTTP behaviours XC-14 a global rate limiter is present and looser than the login limiter",
+          "status": "passed",
+          "title": "XC-14 a global rate limiter is present and looser than the login limiter",
+          "duration": 10.13458399999945,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500748962,
+      "endTime": 1789500750108.1345,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/04-crosscutting.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-01 valid credentials return 200",
+          "status": "passed",
+          "title": "LI-01 valid credentials return 200",
+          "duration": 2633.7714589999996,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-02 success body matches AuthSuccess exactly and equals signup's shape",
+          "status": "passed",
+          "title": "LI-02 success body matches AuthSuccess exactly and equals signup's shape",
+          "duration": 1751.4611249999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-03 login sets a fresh HttpOnly refreshToken cookie",
+          "status": "passed",
+          "title": "LI-03 login sets a fresh HttpOnly refreshToken cookie",
+          "duration": 1757.8946250000008,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — success shape"
+          ],
+          "fullName": "POST /users/login — success shape LI-04 no password / hash / refreshToken in the body",
+          "status": "passed",
+          "title": "LI-04 no password / hash / refreshToken in the body",
+          "duration": 1741.4934169999997,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — validation"
+          ],
+          "fullName": "POST /users/login — validation LI-05 missing username -> 400 with the errors shape",
+          "status": "passed",
+          "title": "LI-05 missing username -> 400 with the errors shape",
+          "duration": 4.82050000000163,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — validation"
+          ],
+          "fullName": "POST /users/login — validation LI-06 missing password -> 400",
+          "status": "passed",
+          "title": "LI-06 missing password -> 400",
+          "duration": 2.173208000000159,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — generic 401"
+          ],
+          "fullName": "POST /users/login — generic 401 LI-07 wrong password and unknown username produce the IDENTICAL 401 body",
+          "status": "passed",
+          "title": "LI-07 wrong password and unknown username produce the IDENTICAL 401 body",
+          "duration": 194.19800000000032,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — finding F-1: same-second re-login collision"
+          ],
+          "fullName": "POST /users/login — finding F-1: same-second re-login collision LI-10 two logins by the same user within one second: the second returns 409 [FINDING]",
+          "status": "passed",
+          "title": "LI-10 two logins by the same user within one second: the second returns 409 [FINDING]",
+          "duration": 1754.1935419999973,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — strict rate limit"
+          ],
+          "fullName": "POST /users/login — strict rate limit LI-08 the 6th login attempt in the window returns 429",
+          "status": "passed",
+          "title": "LI-08 the 6th login attempt in the window returns 429",
+          "duration": 570.3328330000004,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /users/login — strict rate limit"
+          ],
+          "fullName": "POST /users/login — strict rate limit LI-09 a 429 from the login limiter uses the general error shape",
+          "status": "passed",
+          "title": "LI-09 a 429 from the login limiter uses the general error shape",
+          "duration": 3.3398339999985183,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500680790,
+      "endTime": 1789500697027.3398,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/05-login.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-01 no Authorization header -> 401",
+          "status": "passed",
+          "title": "CC-01 no Authorization header -> 401",
+          "duration": 3.802457999998296,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-02 create-expense with a single draft saves one expense",
+          "status": "passed",
+          "title": "CC-02 create-expense with a single draft saves one expense",
+          "duration": 1546.1864999999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-03 create-expense with drafts.length > 1 uses the batch path",
+          "status": "passed",
+          "title": "CC-03 create-expense with drafts.length > 1 uses the batch path",
+          "duration": 615.5088340000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-04 edit-expense updates the named field",
+          "status": "passed",
+          "title": "CC-04 edit-expense updates the named field",
+          "duration": 698.6690420000014,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-05 edit-expense with changes.category (a name) moves the expense",
+          "status": "passed",
+          "title": "CC-05 edit-expense with changes.category (a name) moves the expense",
+          "duration": 835.5840830000016,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-06 delete-expense removes it",
+          "status": "passed",
+          "title": "CC-06 delete-expense removes it",
+          "duration": 766.1660420000007,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-07 edit/delete on someone else's expense id -> 404",
+          "status": "passed",
+          "title": "CC-07 edit/delete on someone else's expense id -> 404",
+          "duration": 1151.4154170000038,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-08 create-category saves a new main category",
+          "status": "passed",
+          "title": "CC-08 create-category saves a new main category",
+          "duration": 637.7574999999997,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-09 edit-category renames it",
+          "status": "passed",
+          "title": "CC-09 edit-category renames it",
+          "duration": 752.4725420000032,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-10 delete-category removes it and reassigns its expenses to Other",
+          "status": "passed",
+          "title": "CC-10 delete-category removes it and reassigns its expenses to Other",
+          "duration": 1264.3978750000024,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-11 reset-categories wipes and reseeds, and existing expenses land on the new Other",
+          "status": "passed",
+          "title": "CC-11 reset-categories wipes and reseeds, and existing expenses land on the new Other",
+          "duration": 901.4491659999985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/confirm"
+          ],
+          "fullName": "POST /chat/confirm CC-12 an unrecognized intent falls through the switch, still 200 with no 'changed' payload",
+          "status": "passed",
+          "title": "CC-12 an unrecognized intent falls through the switch, still 200 with no 'changed' payload",
+          "duration": 448.6429169999974,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500697815,
+      "endTime": 1789500707438.6428,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/06-chat-confirm.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "GET /chat/messages"
+          ],
+          "fullName": "GET /chat/messages CM-01 no Authorization header -> 401",
+          "status": "passed",
+          "title": "CM-01 no Authorization header -> 401",
+          "duration": 3.411166999998386,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /chat/messages"
+          ],
+          "fullName": "GET /chat/messages CM-03 returns oldest-first",
+          "status": "passed",
+          "title": "CM-03 returns oldest-first",
+          "duration": 1236.4925829999993,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /chat/messages"
+          ],
+          "fullName": "GET /chat/messages CM-04 omitting limit still returns everything under the 50 default",
+          "status": "passed",
+          "title": "CM-04 omitting limit still returns everything under the 50 default",
+          "duration": 1122.7486250000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /chat/messages"
+          ],
+          "fullName": "GET /chat/messages CM-05 a smaller limit returns the most recent N, still oldest-first",
+          "status": "passed",
+          "title": "CM-05 a smaller limit returns the most recent N, still oldest-first",
+          "duration": 1103.4235419999895,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /chat/messages"
+          ],
+          "fullName": "GET /chat/messages CM-06 scoped to the logged-in user only",
+          "status": "passed",
+          "title": "CM-06 scoped to the logged-in user only",
+          "duration": 1553.7775419999962,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "POST /chat/messages"
+          ],
+          "fullName": "POST /chat/messages CM-02 no Authorization header -> 401 (the AI is never reached)",
+          "status": "passed",
+          "title": "CM-02 no Authorization header -> 401 (the AI is never reached)",
+          "duration": 122.27850000000035,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500733779,
+      "endTime": 1789500738921.2786,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/07-chat-messages.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "GET /categories"
+          ],
+          "fullName": "GET /categories ER-01 no Authorization header -> 401",
+          "status": "passed",
+          "title": "ER-01 no Authorization header -> 401",
+          "duration": 2.3955839999999853,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /categories"
+          ],
+          "fullName": "GET /categories ER-02 returns only the logged-in user's categories",
+          "status": "passed",
+          "title": "ER-02 returns only the logged-in user's categories",
+          "duration": 1949.118416,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses"
+          ],
+          "fullName": "GET /expenses ER-03 no Authorization header -> 401",
+          "status": "passed",
+          "title": "ER-03 no Authorization header -> 401",
+          "duration": 2.144792000000052,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses"
+          ],
+          "fullName": "GET /expenses ER-04 narrows by date range (a range that excludes today)",
+          "status": "passed",
+          "title": "ER-04 narrows by date range (a range that excludes today)",
+          "duration": 623.1816670000003,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses"
+          ],
+          "fullName": "GET /expenses ER-10 narrowing with to=today still includes an expense created today -- FINDING: to is compared as a bare string/midnight Date, excluding same-day records",
+          "status": "failed",
+          "title": "ER-10 narrowing with to=today still includes an expense created today -- FINDING: to is compared as a bare string/midnight Date, excluding same-day records",
+          "duration": 635.2762079999998,
+          "failureMessages": [
+            "AssertionError: expected [] to have a length of 1 but got +0\n    at Proxy.<anonymous> (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/expect/dist/index.js:1257:20)\n    at Proxy.<anonymous> (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/chai/index.js:1686:25)\n    at /Users/adamshmuel/Dev/git/expenses/qa/tests/api/08-expenses-categories.test.ts:77:20\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses"
+          ],
+          "fullName": "GET /expenses ER-05 with no from/to returns everything for the user",
+          "status": "passed",
+          "title": "ER-05 with no from/to returns everything for the user",
+          "duration": 735.7545839999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses"
+          ],
+          "fullName": "GET /expenses ER-06 scoped to the logged-in user only",
+          "status": "passed",
+          "title": "ER-06 scoped to the logged-in user only",
+          "duration": 1288.5303749999994,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses/summary"
+          ],
+          "fullName": "GET /expenses/summary ER-07 no Authorization header -> 401",
+          "status": "passed",
+          "title": "ER-07 no Authorization header -> 401",
+          "duration": 3.4524170000004233,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses/summary"
+          ],
+          "fullName": "GET /expenses/summary ER-08 totals match what was actually saved -- FINDING: getExpenseTotalByCategory never matches (string userId vs ObjectId)",
+          "status": "passed",
+          "title": "ER-08 totals match what was actually saved -- FINDING: getExpenseTotalByCategory never matches (string userId vs ObjectId)",
+          "duration": 929.9105410000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses/summary"
+          ],
+          "fullName": "GET /expenses/summary ER-09 scoped to the logged-in user only -- FINDING: masked by the same bug, totals are 0 either way",
+          "status": "passed",
+          "title": "ER-09 scoped to the logged-in user only -- FINDING: masked by the same bug, totals are 0 either way",
+          "duration": 1167.1244160000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "GET /expenses/summary"
+          ],
+          "fullName": "GET /expenses/summary ER-11 with to=today still includes an expense created today -- FINDING: raw aggregate compares a bare string to a Date, so it never matches; the dashboard's own 'this month' range always sends to=today and always gets []",
+          "status": "failed",
+          "title": "ER-11 with to=today still includes an expense created today -- FINDING: raw aggregate compares a bare string to a Date, so it never matches; the dashboard's own 'this month' range always sends to=today and always gets []",
+          "duration": 616.367416,
+          "failureMessages": [
+            "AssertionError: expected +0 to be 10 // Object.is equality\n    at /Users/adamshmuel/Dev/git/expenses/qa/tests/api/08-expenses-categories.test.ts:137:19\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/adamshmuel/Dev/git/expenses/qa/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500671222,
+      "endTime": 1789500679176.3674,
+      "status": "failed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/api/08-expenses-categories.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-01 pre(save) rejects isProtected:true on anything but Other",
+          "status": "passed",
+          "title": "CH-01 pre(save) rejects isProtected:true on anything but Other",
+          "duration": 515.3548750000045,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-02 pre(save) rejects a parent that does not exist",
+          "status": "passed",
+          "title": "CH-02 pre(save) rejects a parent that does not exist",
+          "duration": 1183.2155829999974,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-03 pre(save) rejects a parent that is itself a subcategory (blocks 3 levels)",
+          "status": "passed",
+          "title": "CH-03 pre(save) rejects a parent that is itself a subcategory (blocks 3 levels)",
+          "duration": 306.4340000000011,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-04 pre(save) allows a valid main category",
+          "status": "passed",
+          "title": "CH-04 pre(save) allows a valid main category",
+          "duration": 184.1660419999971,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-05 pre(save) allows a valid subcategory",
+          "status": "passed",
+          "title": "CH-05 pre(save) allows a valid subcategory",
+          "duration": 303.8529170000038,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-06 pre(findOneAndUpdate) blocks renaming a protected category",
+          "status": "passed",
+          "title": "CH-06 pre(findOneAndUpdate) blocks renaming a protected category",
+          "duration": 243.94829199999367,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-07 pre(findOneAndUpdate) blocks unprotecting a protected category",
+          "status": "passed",
+          "title": "CH-07 pre(findOneAndUpdate) blocks unprotecting a protected category",
+          "duration": 251.69724999999744,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-08 pre(findOneAndUpdate) blocks setting a nonexistent parent",
+          "status": "passed",
+          "title": "CH-08 pre(findOneAndUpdate) blocks setting a nonexistent parent",
+          "duration": 299.69533399999636,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-09 pre(findOneAndUpdate) blocks setting a parent that is itself a subcategory",
+          "status": "passed",
+          "title": "CH-09 pre(findOneAndUpdate) blocks setting a parent that is itself a subcategory",
+          "duration": 427.7136249999967,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-10 pre(findOneAndUpdate) allows a normal rename of a non-protected category",
+          "status": "passed",
+          "title": "CH-10 pre(findOneAndUpdate) allows a normal rename of a non-protected category",
+          "duration": 306.4482500000013,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-11 pre(findOneAndDelete) rejects deleting a protected category",
+          "status": "passed",
+          "title": "CH-11 pre(findOneAndDelete) rejects deleting a protected category",
+          "duration": 252.23070900000312,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-12 pre(findOneAndDelete) on a subcategory reassigns its expenses to Other before deleting",
+          "status": "passed",
+          "title": "CH-12 pre(findOneAndDelete) on a subcategory reassigns its expenses to Other before deleting",
+          "duration": 764.0449579999986,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-13 pre(findOneAndDelete) on a main category reassigns own + subs' expenses, deletes subs too",
+          "status": "passed",
+          "title": "CH-13 pre(findOneAndDelete) on a main category reassigns own + subs' expenses, deletes subs too",
+          "duration": 1362.958292000003,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-14 pre(deleteMany) rejects a filter that would remove a protected category",
+          "status": "passed",
+          "title": "CH-14 pre(deleteMany) rejects a filter that would remove a protected category",
+          "duration": 423.46429199999693,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-15 pre(deleteMany) allows a filter matching only unprotected categories",
+          "status": "passed",
+          "title": "CH-15 pre(deleteMany) allows a filter matching only unprotected categories",
+          "duration": 543.3518750000003,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/categoryModel.js hooks"
+          ],
+          "fullName": "models/categoryModel.js hooks CH-16 pre(deleteMany) lets the single-key {owner} reset filter through even though it matches Other",
+          "status": "passed",
+          "title": "CH-16 pre(deleteMany) lets the single-key {owner} reset filter through even though it matches Other",
+          "duration": 438.982041999996,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500717443,
+      "endTime": 1789500725252.982,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/categoryModel.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js (integration)"
+          ],
+          "fullName": "bl/categoryService.js (integration) CI-01 seedDefaultCategories produces 8 mains with the right sub counts",
+          "status": "passed",
+          "title": "CI-01 seedDefaultCategories produces 8 mains with the right sub counts",
+          "duration": 135.84658399999898,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js (integration)"
+          ],
+          "fullName": "bl/categoryService.js (integration) CI-02 'Other' comes out isProtected:true; every other main does not",
+          "status": "passed",
+          "title": "CI-02 'Other' comes out isProtected:true; every other main does not",
+          "duration": 120.65945799999463,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js (integration)"
+          ],
+          "fullName": "bl/categoryService.js (integration) CI-03 resetToDefaults reassigns every expense to the NEW Other before wiping categories",
+          "status": "passed",
+          "title": "CI-03 resetToDefaults reassigns every expense to the NEW Other before wiping categories",
+          "duration": 694.9511250000069,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js (integration)"
+          ],
+          "fullName": "bl/categoryService.js (integration) CI-04 resetToDefaults leaves no orphaned category ids and matches seedDefaultCategories's shape",
+          "status": "passed",
+          "title": "CI-04 resetToDefaults leaves no orphaned category ids and matches seedDefaultCategories's shape",
+          "duration": 432.9924170000013,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500763224,
+      "endTime": 1789500764608.9924,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/categoryService.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-01 a good URI connects and logs one info line, exits 0",
+          "status": "passed",
+          "title": "DB-01 a good URI connects and logs one info line, exits 0",
+          "duration": 4120.338792000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-02 a bad URI logs an error line and exits non-zero",
+          "status": "passed",
+          "title": "DB-02 a bad URI logs an error line and exits non-zero",
+          "duration": 3131.3561659999978,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/db.js — connectDB()"
+          ],
+          "fullName": ".config/db.js — connectDB() DB-03 db.js exports only { connectDB } and registers no models",
+          "status": "passed",
+          "title": "DB-03 db.js exports only { connectDB } and registers no models",
+          "duration": 18.864375000004657,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500725401,
+      "endTime": 1789500732671.8643,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/db.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "dal/categoryRepository.js additions"
+          ],
+          "fullName": "dal/categoryRepository.js additions DL-01 findOtherCategory finds the seeded Other; null if absent",
+          "status": "passed",
+          "title": "DL-01 findOtherCategory finds the seeded Other; null if absent",
+          "duration": 714.3458329999994,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/categoryRepository.js additions"
+          ],
+          "fullName": "dal/categoryRepository.js additions DL-02 createManyCategories bulk-inserts, parent refs round-trip",
+          "status": "passed",
+          "title": "DL-02 createManyCategories bulk-inserts, parent refs round-trip",
+          "duration": 132.17079099999683,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/categoryRepository.js additions"
+          ],
+          "fullName": "dal/categoryRepository.js additions DL-03 deleteCategoriesByUser removes only that user's categories",
+          "status": "passed",
+          "title": "DL-03 deleteCategoriesByUser removes only that user's categories",
+          "duration": 297.8865829999995,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-04 getExpenseTotalByCategory totals are correct per category",
+          "status": "passed",
+          "title": "DL-04 getExpenseTotalByCategory totals are correct per category",
+          "duration": 125.78687499999069,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-05 getExpenseTotalByCategory narrows correctly by a date range",
+          "status": "passed",
+          "title": "DL-05 getExpenseTotalByCategory narrows correctly by a date range",
+          "duration": 124.18608299999323,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-06 getExpenseTotalByCategory for a user with zero expenses resolves []",
+          "status": "passed",
+          "title": "DL-06 getExpenseTotalByCategory for a user with zero expenses resolves []",
+          "duration": 60.803625000000466,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-07 findExpenseById -- match / null",
+          "status": "passed",
+          "title": "DL-07 findExpenseById -- match / null",
+          "duration": 182.27829099999508,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-08 reassignExpensesToCategory moves every one of a user's expenses, and only that user's",
+          "status": "passed",
+          "title": "DL-08 reassignExpensesToCategory moves every one of a user's expenses, and only that user's",
+          "duration": 388.1158329999889,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-09 queryExpenses text filter matches store/description, partial + case-insensitive",
+          "status": "passed",
+          "title": "DL-09 queryExpenses text filter matches store/description, partial + case-insensitive",
+          "duration": 183.81054200000654,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "dal/expenseRepository.js additions"
+          ],
+          "fullName": "dal/expenseRepository.js additions DL-10 queryExpenses text and date-range filters combine (both narrow)",
+          "status": "passed",
+          "title": "DL-10 queryExpenses text and date-range filters combine (both narrow)",
+          "duration": 122.56941700000607,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500758941,
+      "endTime": 1789500761274.5693,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/expenseCategoryDal.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js -- createManyExpenses (integration)"
+          ],
+          "fullName": "bl/expenseService.js -- createManyExpenses (integration) EI-01 a batch where every draft's category resolves saves all of them",
+          "status": "passed",
+          "title": "EI-01 a batch where every draft's category resolves saves all of them",
+          "duration": 271.7348750000092,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js -- createManyExpenses (integration)"
+          ],
+          "fullName": "bl/expenseService.js -- createManyExpenses (integration) EI-02 one bad category name in a batch fails the whole batch -- no partial save",
+          "status": "passed",
+          "title": "EI-02 one bad category name in a batch fails the whole batch -- no partial save",
+          "duration": 178.29370799999742,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500764739,
+      "endTime": 1789500765189.2937,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/expenseService.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-01 an error line reaches both error.log and app.log",
+          "status": "passed",
+          "title": "LG-01 an error line reaches both error.log and app.log",
+          "duration": 0.8257919999887235,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-02 a warn line reaches app.log but NOT error.log",
+          "status": "passed",
+          "title": "LG-02 a warn line reaches app.log but NOT error.log",
+          "duration": 0.2601250000006985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-03 a line tagged { area: 'ai' } reaches ai.log",
+          "status": "passed",
+          "title": "LG-03 a line tagged { area: 'ai' } reaches ai.log",
+          "duration": 0.12441699999908451,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-04 a line without area:'ai' does NOT reach ai.log",
+          "status": "passed",
+          "title": "LG-04 a line without area:'ai' does NOT reach ai.log",
+          "duration": 0.1582499999931315,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-05 an AI line also appears in app.log",
+          "status": "passed",
+          "title": "LG-05 an AI line also appears in app.log",
+          "duration": 0.09341600000334438,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-06 a line with empty meta prints no trailing {}",
+          "status": "passed",
+          "title": "LG-06 a line with empty meta prints no trailing {}",
+          "duration": 0.25433399999747053,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            ".config/logger.js"
+          ],
+          "fullName": ".config/logger.js LG-07 exception and rejection handlers are configured",
+          "status": "passed",
+          "title": "LG-07 exception and rejection handlers are configured",
+          "duration": 0.1698340000002645,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765725,
+      "endTime": 1789500765727.2544,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/logger.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-01 username is required",
+          "status": "passed",
+          "title": "MD-01 username is required",
+          "duration": 4.46875,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-02 username shorter than 3 is rejected",
+          "status": "passed",
+          "title": "MD-02 username shorter than 3 is rejected",
+          "duration": 0.50700000001234,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-03 username longer than 20 is rejected",
+          "status": "passed",
+          "title": "MD-03 username longer than 20 is rejected",
+          "duration": 0.3768339999951422,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-04 username is trimmed",
+          "status": "passed",
+          "title": "MD-04 username is trimmed",
+          "duration": 0.2372919999907026,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-05 email must pass validator.isEmail",
+          "status": "passed",
+          "title": "MD-05 email must pass validator.isEmail",
+          "duration": 0.28391699999338016,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-06 email is lowercased",
+          "status": "passed",
+          "title": "MD-06 email is lowercased",
+          "duration": 0.072041999999783,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-07 username and email have unique indexes",
+          "status": "passed",
+          "title": "MD-07 username and email have unique indexes",
+          "duration": 57.700792000003275,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/userModel.js"
+          ],
+          "fullName": "models/userModel.js MD-08 createdAt defaults to ~now; toJSON exposes the id virtual",
+          "status": "passed",
+          "title": "MD-08 createdAt defaults to ~now; toJSON exposes the id virtual",
+          "duration": 123.61233300001186,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-09 token is required",
+          "status": "passed",
+          "title": "MD-09 token is required",
+          "duration": 0.6971250000060536,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-10 user is required and is an ObjectId ref to User",
+          "status": "passed",
+          "title": "MD-10 user is required and is an ObjectId ref to User",
+          "duration": 1.5741669999988517,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-11 expiresAt is required",
+          "status": "passed",
+          "title": "MD-11 expiresAt is required",
+          "duration": 0.2349170000088634,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-12 token has a unique index",
+          "status": "passed",
+          "title": "MD-12 token has a unique index",
+          "duration": 60.40449999998964,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-13 TTL index on expiresAt with expireAfterSeconds: 0",
+          "status": "passed",
+          "title": "MD-13 TTL index on expiresAt with expireAfterSeconds: 0",
+          "duration": 57.545624999998836,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/refreshTokenModel.js"
+          ],
+          "fullName": "models/refreshTokenModel.js MD-14 there is an index on user",
+          "status": "passed",
+          "title": "MD-14 there is an index on user",
+          "duration": 57.51366699999198,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-15 amount is required",
+          "status": "passed",
+          "title": "MD-15 amount is required",
+          "duration": 0.6367500000051223,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-16 amount of 0 is rejected",
+          "status": "passed",
+          "title": "MD-16 amount of 0 is rejected",
+          "duration": 0.33941699999559205,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-17 negative amount is rejected",
+          "status": "passed",
+          "title": "MD-17 negative amount is rejected",
+          "duration": 0.1910829999978887,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-18 amount of 0.01 is accepted",
+          "status": "passed",
+          "title": "MD-18 amount of 0.01 is accepted",
+          "duration": 0.35816699999850243,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-19 date defaults to ~now; category and user are required refs",
+          "status": "passed",
+          "title": "MD-19 date defaults to ~now; category and user are required refs",
+          "duration": 0.27345900000364054,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "models/expenseModel.js"
+          ],
+          "fullName": "models/expenseModel.js MD-20 compound index { user: 1, date: 1 } exists",
+          "status": "passed",
+          "title": "MD-20 compound index { user: 1, date: 1 } exists",
+          "duration": 57.35208300000522,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500762612,
+      "endTime": 1789500763036.352,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/models.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-01 dotenv is loaded before anything reads process.env; server boots with PORT",
+          "status": "passed",
+          "title": "ST-01 dotenv is loaded before anything reads process.env; server boots with PORT",
+          "duration": 5.051542000001064,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-02 connectDB() is called before app.listen(); server answers after connect",
+          "status": "passed",
+          "title": "ST-02 connectDB() is called before app.listen(); server answers after connect",
+          "duration": 2.112582999994629,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "index.js start-up"
+          ],
+          "fullName": "index.js start-up ST-03 a failed DB connection exits the process instead of staying up",
+          "status": "passed",
+          "title": "ST-03 a failed DB connection exits the process instead of staying up",
+          "duration": 3171.784832999998,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500750928,
+      "endTime": 1789500754106.785,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/integration/startup.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "backend/ai/prompt.js"
+          ],
+          "fullName": "backend/ai/prompt.js AI-01 buildPrompt embeds categories/recentExpenses verbatim",
+          "status": "passed",
+          "title": "AI-01 buildPrompt embeds categories/recentExpenses verbatim",
+          "duration": 0.09845800000766758,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/prompt.js"
+          ],
+          "fullName": "backend/ai/prompt.js AI-02 buildPrompt defaults undefined/null to [], never the string 'undefined'",
+          "status": "passed",
+          "title": "AI-02 buildPrompt defaults undefined/null to [], never the string 'undefined'",
+          "duration": 0.04908299999078736,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/prompt.js"
+          ],
+          "fullName": "backend/ai/prompt.js AI-03 buildPrompt mentions every one of the 8 INTENTS values",
+          "status": "passed",
+          "title": "AI-03 buildPrompt mentions every one of the 8 INTENTS values",
+          "duration": 0.0680830000055721,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/prompt.js"
+          ],
+          "fullName": "backend/ai/prompt.js AI-04 INTENTS is exactly the 8 values, and the single shared source for prompt.js + schema.js",
+          "status": "passed",
+          "title": "AI-04 INTENTS is exactly the 8 values, and the single shared source for prompt.js + schema.js",
+          "duration": 0.03491700001177378,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/schema.js"
+          ],
+          "fullName": "backend/ai/schema.js AI-05 responseSchema.required is exactly ['intent', 'reply']",
+          "status": "passed",
+          "title": "AI-05 responseSchema.required is exactly ['intent', 'reply']",
+          "duration": 0.01887499999429565,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js"
+          ],
+          "fullName": "backend/ai/parseMessage.js AI-06 parseMessage sends the actual prompt/schema buildPrompt/responseSchema produce",
+          "status": "passed",
+          "title": "AI-06 parseMessage sends the actual prompt/schema buildPrompt/responseSchema produce",
+          "duration": 0.1627500000031432,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js"
+          ],
+          "fullName": "backend/ai/parseMessage.js AI-07 happy path returns JSON.parse(response.text) unchanged",
+          "status": "passed",
+          "title": "AI-07 happy path returns JSON.parse(response.text) unchanged",
+          "duration": 0.059166999999433756,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js"
+          ],
+          "fullName": "backend/ai/parseMessage.js AI-08 a generateContent throw becomes the clean 502, never the raw provider error",
+          "status": "passed",
+          "title": "AI-08 a generateContent throw becomes the clean 502, never the raw provider error",
+          "duration": 0.08529200000339188,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js"
+          ],
+          "fullName": "backend/ai/parseMessage.js AI-09 an unparseable response.text becomes the same clean 502",
+          "status": "passed",
+          "title": "AI-09 an unparseable response.text becomes the same clean 502",
+          "duration": 0.04791700000350829,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js",
+            "default client (options.client omitted)"
+          ],
+          "fullName": "backend/ai/parseMessage.js default client (options.client omitted) AI-10 getDefaultClient() is a lazy singleton, built once across repeated calls",
+          "status": "passed",
+          "title": "AI-10 getDefaultClient() is a lazy singleton, built once across repeated calls",
+          "duration": 0.2877079999889247,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/parseMessage.js",
+            "default client (options.client omitted)"
+          ],
+          "fullName": "backend/ai/parseMessage.js default client (options.client omitted) AI-11 the default client is never constructed when options.client is supplied",
+          "status": "passed",
+          "title": "AI-11 the default client is never constructed when options.client is supplied",
+          "duration": 0.14424999999755528,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "backend/ai/index.js"
+          ],
+          "fullName": "backend/ai/index.js AI-12 exports exactly { parseMessage }",
+          "status": "passed",
+          "title": "AI-12 exports exactly { parseMessage }",
+          "duration": 0.023458000010577962,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765815,
+      "endTime": 1789500765816.1443,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/ai.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-01 findByName matches case-insensitively",
+          "status": "passed",
+          "title": "CS-01 findByName matches case-insensitively",
+          "duration": 0.25679200000013225,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-02 findByName scopes by parent when given",
+          "status": "passed",
+          "title": "CS-02 findByName scopes by parent when given",
+          "duration": 0.1180410000088159,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-03 findByName returns zero, one, or several matches",
+          "status": "passed",
+          "title": "CS-03 findByName returns zero, one, or several matches",
+          "duration": 0.1547079999872949,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-04 createCategory with no parent creates a main category",
+          "status": "passed",
+          "title": "CS-04 createCategory with no parent creates a main category",
+          "duration": 0.1517500000045402,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-05 createCategory with a nonexistent parent -> 400",
+          "status": "passed",
+          "title": "CS-05 createCategory with a nonexistent parent -> 400",
+          "duration": 0.09637500000826549,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-06 createCategory with a parent owned by another user -> 400",
+          "status": "passed",
+          "title": "CS-06 createCategory with a parent owned by another user -> 400",
+          "duration": 0.07579200000327546,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-07 createCategory with a parent that is itself a subcategory -> 400 (two-level rule)",
+          "status": "passed",
+          "title": "CS-07 createCategory with a parent that is itself a subcategory -> 400 (two-level rule)",
+          "duration": 0.07283299999835435,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-08 createCategory duplicate name under the same parent -> 409",
+          "status": "passed",
+          "title": "CS-08 createCategory duplicate name under the same parent -> 409",
+          "duration": 0.08104100001219194,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-09 updateCategory on a missing or foreign category -> 404",
+          "status": "passed",
+          "title": "CS-09 updateCategory on a missing or foreign category -> 404",
+          "duration": 0.11412499999278225,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-10 updateCategory on isProtected -> 400",
+          "status": "passed",
+          "title": "CS-10 updateCategory on isProtected -> 400",
+          "duration": 0.0750829999888083,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-11 updateCategory duplicate name under the same parent (excluding self) -> 409",
+          "status": "passed",
+          "title": "CS-11 updateCategory duplicate name under the same parent (excluding self) -> 409",
+          "duration": 0.08987500000512227,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-12 updateCategory renaming to its own current name does NOT 409 (self-exclusion)",
+          "status": "passed",
+          "title": "CS-12 updateCategory renaming to its own current name does NOT 409 (self-exclusion)",
+          "duration": 0.09208299999590963,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/categoryService.js"
+          ],
+          "fullName": "bl/categoryService.js CS-13 deleteCategory: 404 missing/foreign, 400 protected, happy path delegates",
+          "status": "passed",
+          "title": "CS-13 deleteCategory: 404 missing/foreign, 400 protected, happy path delegates",
+          "duration": 0.1385840000002645,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765791,
+      "endTime": 1789500765792.1387,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/categoryService.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-01 a rejecting handler forwards the error via next(err)",
+          "status": "passed",
+          "title": "EH-01 a rejecting handler forwards the error via next(err)",
+          "duration": 0.48270799999590963,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-02 a resolving handler does not call next",
+          "status": "passed",
+          "title": "EH-02 a resolving handler does not call next",
+          "duration": 0.31216699999640696,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-03 catchAsync logs nothing",
+          "status": "passed",
+          "title": "EH-03 catchAsync logs nothing",
+          "duration": 0.1607919999951264,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — catchAsync"
+          ],
+          "fullName": "error_handling.js — catchAsync EH-04 a synchronously-throwing async handler is also caught",
+          "status": "passed",
+          "title": "EH-04 a synchronously-throwing async handler is also caught",
+          "duration": 0.14704199999687262,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-05 err.code 11000 -> 409, {error} shape, logger.warn [wording note]",
+          "status": "passed",
+          "title": "EH-05 err.code 11000 -> 409, {error} shape, logger.warn [wording note]",
+          "duration": 0.7345000000059372,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-06 err.status set -> that status + { error: err.message } + logger.warn",
+          "status": "passed",
+          "title": "EH-06 err.status set -> that status + { error: err.message } + logger.warn",
+          "duration": 0.2746669999905862,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-07 a 400 with err.status is logged at warn, not error",
+          "status": "passed",
+          "title": "EH-07 a 400 with err.status is logged at warn, not error",
+          "duration": 0.21237500000279397,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-08 no status/code -> 500 + generic body + logger.error",
+          "status": "passed",
+          "title": "EH-08 no status/code -> 500 + generic body + logger.error",
+          "duration": 0.19866699998965487,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-09 the 500 branch never puts err.message in the body",
+          "status": "passed",
+          "title": "EH-09 the 500 branch never puts err.message in the body",
+          "duration": 0.656208999993396,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-10 every errorHandler body is exactly { error: <string> }",
+          "status": "passed",
+          "title": "EH-10 every errorHandler body is exactly { error: <string> }",
+          "duration": 0.4556250000023283,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "error_handling.js — errorHandler"
+          ],
+          "fullName": "error_handling.js — errorHandler EH-11 errorHandler logs exactly once per call, in every branch",
+          "status": "passed",
+          "title": "EH-11 errorHandler logs exactly once per call, in every branch",
+          "duration": 0.3205420000012964,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765774,
+      "endTime": 1789500765778.3206,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/errorHandling.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-01 resolveCategory (via createExpense): zero matches -> 400",
+          "status": "passed",
+          "title": "ES-01 resolveCategory (via createExpense): zero matches -> 400",
+          "duration": 0.17775000000256114,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-02 resolveCategory: more than one match -> 400 with candidates",
+          "status": "passed",
+          "title": "ES-02 resolveCategory: more than one match -> 400 with candidates",
+          "duration": 0.09100000000034925,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-03 createExpense resolves the category name to an id before saving",
+          "status": "passed",
+          "title": "ES-03 createExpense resolves the category name to an id before saving",
+          "duration": 0.10041699999419507,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-04 editExpense on a missing or foreign expense -> 404",
+          "status": "passed",
+          "title": "ES-04 editExpense on a missing or foreign expense -> 404",
+          "duration": 0.10362500000337604,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-05 editExpense resolves changes.category to an id when present",
+          "status": "passed",
+          "title": "ES-05 editExpense resolves changes.category to an id when present",
+          "duration": 0.07054100000823382,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-06 editExpense with no changes.category passes changes through untouched",
+          "status": "passed",
+          "title": "ES-06 editExpense with no changes.category passes changes through untouched",
+          "duration": 0.07683299999916926,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-07 deleteExpense on a missing or foreign expense -> 404",
+          "status": "passed",
+          "title": "ES-07 deleteExpense on a missing or foreign expense -> 404",
+          "duration": 0.0715840000048047,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-08 deleteExpense happy path delegates to the repository",
+          "status": "passed",
+          "title": "ES-08 deleteExpense happy path delegates to the repository",
+          "duration": 0.05316699999093544,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/expenseService.js"
+          ],
+          "fullName": "bl/expenseService.js ES-09 getForUser is a rule-free passthrough of filters",
+          "status": "passed",
+          "title": "ES-09 getForUser is a rule-free passthrough of filters",
+          "duration": 0.06366699999489356,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765821,
+      "endTime": 1789500765821.1777,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/expenseService.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-01 no Authorization header -> 401, next not called",
+          "status": "passed",
+          "title": "RA-01 no Authorization header -> 401, next not called",
+          "duration": 0.4187499999970896,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-02 header not 'Bearer ' -> 401, next not called",
+          "status": "passed",
+          "title": "RA-02 header not 'Bearer ' -> 401, next not called",
+          "duration": 0.13749999999708962,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-03 'Bearer ' with empty token -> 401, next not called",
+          "status": "passed",
+          "title": "RA-03 'Bearer ' with empty token -> 401, next not called",
+          "duration": 0.12370799999916926,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-04 valid token -> req.user is exactly { id, username }, next() once",
+          "status": "passed",
+          "title": "RA-04 valid token -> req.user is exactly { id, username }, next() once",
+          "duration": 0.3073329999897396,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-05 expired token -> 401, next not called",
+          "status": "passed",
+          "title": "RA-05 expired token -> 401, next not called",
+          "duration": 0.28012500000477303,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-06 verify-failure body must be { error: 'Invalid or expired token!' }",
+          "status": "passed",
+          "title": "RA-06 verify-failure body must be { error: 'Invalid or expired token!' }",
+          "duration": 0.21795900000142865,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-07 tampered signature -> 401, next not called, no req.user",
+          "status": "passed",
+          "title": "RA-07 tampered signature -> 401, next not called, no req.user",
+          "duration": 0.1875419999996666,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-08 the module touches no database (only requires jsonwebtoken)",
+          "status": "passed",
+          "title": "RA-08 the module touches no database (only requires jsonwebtoken)",
+          "duration": 0.17270900000585243,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "middleware/requireAuth.js"
+          ],
+          "fullName": "middleware/requireAuth.js RA-09 valid token missing username -> req.user is { id, username: undefined }",
+          "status": "passed",
+          "title": "RA-09 valid token missing username -> req.user is { id, username: undefined }",
+          "duration": 0.17079099999682512,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765783,
+      "endTime": 1789500765785.1875,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/requireAuth.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-01 signup: access token payload is exactly { id, username } (+iat/exp)",
+          "status": "passed",
+          "title": "US-01 signup: access token payload is exactly { id, username } (+iat/exp)",
+          "duration": 14.963750000009895,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-02 signup: refresh token payload is exactly { userId } (+iat/exp)",
+          "status": "passed",
+          "title": "US-02 signup: refresh token payload is exactly { userId } (+iat/exp)",
+          "duration": 0.3991670000104932,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-03 the two tokens verify only under their own secret",
+          "status": "passed",
+          "title": "US-03 the two tokens verify only under their own secret",
+          "duration": 0.9053330000024289,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-04 access lifetime ~15m, refresh lifetime ~7d",
+          "status": "passed",
+          "title": "US-04 access lifetime ~15m, refresh lifetime ~7d",
+          "duration": 0.27599999999802094,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-05 signup: refresh row saved with expiresAt === now + 7 days",
+          "status": "passed",
+          "title": "US-05 signup: refresh row saved with expiresAt === now + 7 days",
+          "duration": 0.9457499999989523,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-06 signup hashes the password before createUser",
+          "status": "passed",
+          "title": "US-06 signup hashes the password before createUser",
+          "duration": 0.71670799999265,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-07 signup return shape is { user, accessToken, refreshToken }",
+          "status": "passed",
+          "title": "US-07 signup return shape is { user, accessToken, refreshToken }",
+          "duration": 0.3255000000062864,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-08 signup propagates a repository E11000 throw unchanged",
+          "status": "passed",
+          "title": "US-08 signup propagates a repository E11000 throw unchanged",
+          "duration": 0.2580410000082338,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-09 login with correct credentials returns the token pair",
+          "status": "passed",
+          "title": "US-09 login with correct credentials returns the token pair",
+          "duration": 0.2514999999984866,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-10 unknown user and wrong password throw the SAME 401",
+          "status": "passed",
+          "title": "US-10 unknown user and wrong password throw the SAME 401",
+          "duration": 0.1633750000037253,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-11 refresh happy path: old row deleted, new pair issued, same user",
+          "status": "passed",
+          "title": "US-11 refresh happy path: old row deleted, new pair issued, same user",
+          "duration": 0.7362920000014128,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-12 refresh with a token not in the collection -> 401 'not recognized'",
+          "status": "passed",
+          "title": "US-12 refresh with a token not in the collection -> 401 'not recognized'",
+          "duration": 0.14441599999554455,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-13 refresh propagates a jwt.verify failure and aborts before the delete",
+          "status": "passed",
+          "title": "US-13 refresh propagates a jwt.verify failure and aborts before the delete",
+          "duration": 0.24312499999359716,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-14 the old refresh token cannot be used twice",
+          "status": "passed",
+          "title": "US-14 the old refresh token cannot be used twice",
+          "duration": 0.3059169999905862,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-15 logout deletes the given token",
+          "status": "passed",
+          "title": "US-15 logout deletes the given token",
+          "duration": 0.11395900000934489,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-16 logout with undefined is a safe no-op",
+          "status": "passed",
+          "title": "US-16 logout with undefined is a safe no-op",
+          "duration": 0.11208299999998417,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-17 issueTokenPair is not exported",
+          "status": "passed",
+          "title": "US-17 issueTokenPair is not exported",
+          "duration": 0.0816249999916181,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-19 signup seeds default categories for the new user",
+          "status": "passed",
+          "title": "US-19 signup seeds default categories for the new user",
+          "duration": 0.15683399999397807,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "bl/userService.js"
+          ],
+          "fullName": "bl/userService.js US-18 login issues and stores a refresh row on success",
+          "status": "passed",
+          "title": "US-18 login issues and stores a refresh row on success",
+          "duration": 0.16029100000741892,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1789500765746,
+      "endTime": 1789500765767.1604,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/adamshmuel/Dev/git/expenses/qa/tests/unit/userService.test.ts"
+    }
+  ]
+}
