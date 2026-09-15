@@ -25,7 +25,11 @@ To be confirmed by Adam. The candidates, smallest first:
 | 3 | List of recent expenses | Also proves the data is really saved |
 | 4 | Comparison with the previous period | Extra, only if there is time |
 
-Period selector: today / this week / this month.
+Period selector: today / this week / this month / a past month (month picker) /
+a custom date range (two date pickers). All five feed the same `from`/`to`
+range into `getExpenseTotalByCategory` ([08-expense-category-dal.md](08-expense-category-dal.md),
+[09-expense-category-service.md](09-expense-category-service.md) §5) — purely a
+client-side choice of how `from`/`to` gets computed, no server change.
 
 ## Cases the screen must handle
 
