@@ -4,8 +4,8 @@ const { catchAsync } = require('../error_handling.js');
 const requireAuth = require('../middleware/requireAuth.js')
 const categoryService = require('../bl/categoryService.js');
 const expenseService = require('../bl/expenseService.js');
+const messageService = require('../bl/messageService.js');
 const { parseMessage } = require('../ai/index.js');
-const Message = require('../models/messageModel.js');
 
 
 
@@ -17,31 +17,27 @@ const Message = require('../models/messageModel.js');
  */
 router.get('/messages', requireAuth, catchAsync(async (req, res) => {
     const limit = Number(req.query.limit) || 50;
-    const messages = await Message.find({ author: req.user.id })
-        .sort({ createdAt: -1 })
-        .limit(limit);
-
-    res.json(messages.reverse());
+    res.json(await messageService.getHistory(req.user.id, limit));
 }));
 
 /**
  * Request one of the chat flow (see docs/specs/09-expense-category-service.md
  * §4). Saves the user's message, sends it to the AI along with the user's
- * categories and last 30 days of expenses, and returns the parsed intent
+ * categories, last 30 days of expenses, and the last 10 chat messages (so a
+ * short follow-up — "bike", "yes" — is read against what was just asked,
+ * not as a new message with no context), and returns the parsed intent
  * plus whatever the user needs to confirm: drafts for a create, or search
  * matches to choose from for an edit/delete. No database write happens here
  * beyond the two chat messages — the actual change waits for /chat/confirm.
  */
 router.post('/messages', requireAuth, catchAsync(async (req, res) => {
 
-    await Message.create({
-        text: req.body.text,
-        role: "user",
-        author: req.user.id
-    });
+    await messageService.saveMessage(req.user.id, req.body.text, "user");
     const categories = await categoryService.getForUser(req.user.id);
     const recent = await expenseService.getForUser(req.user.id, { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) });
-    const result = await parseMessage(req.body.text, categories, recent);
+    const history = await messageService.getHistory(req.user.id, 10);
+    const result = await parseMessage(req.body.text, categories, recent, history);
+
 
     let matches;
 
@@ -57,11 +53,7 @@ router.post('/messages', requireAuth, catchAsync(async (req, res) => {
         // create-expense, create-category, reset-categories: nothing to do here
     }
 
-    const reply = await Message.create({
-        text: result.reply,
-        role: "assistant",
-        author: req.user.id
-    });
+    const reply = await messageService.saveMessage(req.user.id, result.reply, "assistant");
 
     res.json({
         reply: reply.text,
