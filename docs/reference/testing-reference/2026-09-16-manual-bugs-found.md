@@ -178,7 +178,19 @@ The original failure-case write-up follows.
   the pattern established; the confirm handler simply doesn't use it.
   `client/` is not at fault — it renders the history the server returns, and
   the server returns nothing to render.
-- **Not yet fixed.**
+- **Fixed 2026-09-16.** `/chat/confirm` now persists an assistant message in
+  both outcomes: `"Done."` after a successful change, and the thrown error's
+  own `message` when one fails (the switch is wrapped in try/catch, which
+  records and then re-throws, so the HTTP status the client receives is
+  unchanged). Verified both ways — a confirmed expense's "Done." survives
+  navigating away and back, and a deliberately failing confirm
+  (`category: "ghost-category-zzz"`, driven straight at the endpoint since
+  the UI now refuses to offer that draft at all) leaves
+  `No category named "ghost-category-zzz". Create it first?` in the
+  `messages` collection.
+- **Still open, smaller**: the messages carry no request id or timestamp
+  handle, so a chat line still cannot be tied to its server log entry. See
+  [[Bug 3]].
 
 ## Bug 6 — typing "yes" to confirm does nothing useful
 
