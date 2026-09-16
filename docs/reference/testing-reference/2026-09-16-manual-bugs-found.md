@@ -42,10 +42,20 @@ fix was made.
   test for `name` (or a category's own `name`) being `undefined` or missing.
   The gap is in the **invited test list itself**, not in execution of what
   was already invited.
-- **Open question for QA**: what makes `name` undefined here in practice —
-  is `resolveCategory` ever called with `categoryNameOrId` undefined (e.g. the
-  AI's parsed draft omitting `category`), or is it a category document in the
-  DB missing its own `name` field? Either path reaches the same crash site.
+- **Open question, now answered.** A temporary log inside the filter printed
+  `{ name: undefined, categoryName: 'Food' }` — so it is the *argument* that
+  is undefined, never a category document missing its own name. It happens
+  when the AI returns a create-expense draft with no `category` at all (the
+  message "paid 50" gives no category signal), and the client then offers
+  Confirm anyway. See bug 7 in
+  `2026-09-16-chat-flow-bugs-and-fixes.md` for that half.
+- **Fixed 2026-09-16** (commit `6a5c48d`). `resolveCategory` now rejects a
+  missing category name with a 400 ("Which category should this go under?")
+  before `findByName` is reached, matching how that function already reports
+  its other two failure cases. **Note this fix alone did not unblock the
+  user** — it turned a 500 into a 400, and four further bugs (7-10 in the
+  companion file) sat behind it. The flow only worked end to end after all
+  five were fixed.
 
 ## Bug 2 — chat draft card rendered raw JSON/HTML fragments to the user
 
@@ -117,7 +127,13 @@ fix was made.
 - **Why QA coverage likely missed it**: a date-defaulting test would likely
   check that a date is *present*, not that it equals the real current date —
   same "well-typed but wrong content" blind spot as Bug 2.
-- **Not yet fixed.**
+- **Fixed 2026-09-16** (commit `6a5c48d`). `buildPrompt` now takes a `today`
+  argument — injectable so tests can pin it, defaulting to the real clock —
+  and states the date in the rules, with an instruction to resolve relative
+  dates ("yesterday") against it. Tests in `backend/ai/__tests__/` assert the
+  date reaches the prompt; they were watched failing first. Verified in the
+  database afterwards: an expense recorded on 2026-09-16 stores
+  `2026-09-16`, and appears on the dashboard's Today view.
 
 ## Bug 5 — no confirm outcome is ever written to the chat history (success or failure)
 
