@@ -71,6 +71,13 @@ router.post('/messages', requireAuth, catchAsync(async (req, res) => {
  * confirmed draft(s) (create) or the chosen id and change (edit/delete/reset).
  * Calls the one matching service function and returns what changed. Never
  * calls the AI again — the text was already parsed in request one.
+ *
+ * Either way, the outcome is written to the chat as an assistant message:
+ * "Done." when the change went through, the thrown error's own message when
+ * it did not. The chat is this app's record of what happened, so a change
+ * that left no line in it would be invisible after a reload. The catch
+ * re-throws once it has saved, so the status the client receives is
+ * unchanged — the message is a record, not a replacement for the error.
  */
 router.post('/confirm', requireAuth, catchAsync(async (req, res) => {
 
@@ -78,32 +85,38 @@ router.post('/confirm', requireAuth, catchAsync(async (req, res) => {
 
     let changed;
 
-    switch (intent) {
-        case "create-expense":
-            changed = drafts.length > 1
-                ? await expenseService.createManyExpenses(req.user.id, drafts)
-                : await expenseService.createExpense(req.user.id, drafts[0]);
-            break;
-        case "create-category":
-            changed = await categoryService.createCategory(req.user.id, draft);
-            break;
-        case "edit-expense":
-            changed = await expenseService.editExpense(req.user.id, id, changes);
-            break;
-        case "delete-expense":
-            changed = await expenseService.deleteExpense(req.user.id, id);
-            break;
-        case "edit-category":
-            changed = await categoryService.updateCategory(req.user.id, id, changes);
-            break;
-        case "delete-category":
-            changed = await categoryService.deleteCategory(req.user.id, id);
-            break;
-        case "reset-categories":
-            changed = await categoryService.resetToDefaults(req.user.id);
-            break;
+    try {
+        switch (intent) {
+            case "create-expense":
+                changed = drafts.length > 1
+                    ? await expenseService.createManyExpenses(req.user.id, drafts)
+                    : await expenseService.createExpense(req.user.id, drafts[0]);
+                break;
+            case "create-category":
+                changed = await categoryService.createCategory(req.user.id, draft);
+                break;
+            case "edit-expense":
+                changed = await expenseService.editExpense(req.user.id, id, changes);
+                break;
+            case "delete-expense":
+                changed = await expenseService.deleteExpense(req.user.id, id);
+                break;
+            case "edit-category":
+                changed = await categoryService.updateCategory(req.user.id, id, changes);
+                break;
+            case "delete-category":
+                changed = await categoryService.deleteCategory(req.user.id, id);
+                break;
+            case "reset-categories":
+                changed = await categoryService.resetToDefaults(req.user.id);
+                break;
+        }
+    } catch (error) {
+        await messageService.saveMessage(req.user.id, error.message ?? "That didn't work.", "assistant");
+        throw error;
     }
 
+    await messageService.saveMessage(req.user.id, "Done.", "assistant");
     res.json({ changed });
 }));
 
