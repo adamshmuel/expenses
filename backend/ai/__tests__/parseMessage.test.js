@@ -1,7 +1,9 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { mock } = require("node:test");
 
 const { parseMessage } = require("../parseMessage");
+const logger = require("../../.config/logger");
 
 const categories = [
   { name: "Food", parent: null },
@@ -215,4 +217,73 @@ test("malformed model output: throws the shared { status: 502, message } shape",
       return true;
     },
   );
+});
+
+test("malformed model output: logs the raw response text as evidence", async (t) => {
+  const errorMock = t.mock.method(logger, "error", () => {});
+  const rawText = "not valid json, in fact { this is half a json blob";
+  const client = {
+    models: {
+      generateContent: async () => ({ text: rawText }),
+    },
+  };
+
+  await assert.rejects(() => parseMessage("spent 50", categories, recentExpenses, { client }));
+
+  assert.equal(errorMock.mock.callCount(), 1);
+  const [message, meta] = errorMock.mock.calls[0].arguments;
+  assert.match(message, /not valid JSON/i);
+  assert.equal(meta.area, "ai");
+  assert.equal(meta.rawResponse, rawText);
+});
+
+test("malformed model output: truncates a huge raw response to 2000 characters in the log", async (t) => {
+  const errorMock = t.mock.method(logger, "error", () => {});
+  const rawText = "x".repeat(5000);
+  const client = {
+    models: {
+      generateContent: async () => ({ text: rawText }),
+    },
+  };
+
+  await assert.rejects(() => parseMessage("spent 50", categories, recentExpenses, { client }));
+
+  const [, meta] = errorMock.mock.calls[0].arguments;
+  assert.equal(meta.rawResponse.length, 2000);
+});
+
+test("suspicious parsed field: logs a warning with the raw response when a store name looks like leaked JSON/HTML", async (t) => {
+  const warnMock = t.mock.method(logger, "warn", () => {});
+  const rawText = JSON.stringify({
+    intent: "create-expense",
+    reply: "Add this?",
+    drafts: [{ amount: 50, store: 'supermarket", "category": "Groceries" } ] }</body></html>', category: "Groceries" }],
+  });
+  const client = {
+    models: {
+      generateContent: async () => ({ text: rawText }),
+    },
+  };
+
+  const result = await parseMessage("spent 50 at the supermarket", categories, recentExpenses, { client });
+
+  assert.equal(result.intent, "create-expense");
+  assert.equal(warnMock.mock.callCount(), 1);
+  const [message, meta] = warnMock.mock.calls[0].arguments;
+  assert.match(message, /suspicious/i);
+  assert.equal(meta.area, "ai");
+  assert.equal(meta.rawResponse, rawText);
+});
+
+test("clean parsed fields: does not log a warning", async (t) => {
+  const warnMock = t.mock.method(logger, "warn", () => {});
+  const client = fakeClient({
+    intent: "create-expense",
+    reply: "Add this?",
+    drafts: [{ amount: 50, store: "Supermarket", category: "Groceries" }],
+  });
+
+  await parseMessage("spent 50 at the supermarket", categories, recentExpenses, { client });
+
+  assert.equal(warnMock.mock.callCount(), 0);
 });

@@ -14,6 +14,36 @@ const logger = require("../.config/logger");
 // this stays "the current model" without needing to be bumped by hand.
 const MODEL = "gemini-flash-lite-latest";
 
+// One giant response must not bloat ai.log forever — keep only enough to
+// diagnose what went wrong.
+const RAW_RESPONSE_LOG_CAP = 2000;
+
+// Same "does this look like leaked JSON/HTML instead of natural text" check
+// as the client's isSaneText (client/src/store/chatSlice.ts) — a JS port for
+// the server side, since bug 2 and this are the same underlying symptom.
+const MAX_FREE_TEXT_LENGTH = 200;
+const HTML_FRAGMENT_PATTERN = /<\/|<html|<body/i;
+const JSON_FRAGMENT_PATTERN = /"\s*,\s*"[^"]+"\s*:|[{}]/;
+
+function looksSuspicious(value) {
+  if (!value) return false;
+  return value.length > MAX_FREE_TEXT_LENGTH || HTML_FRAGMENT_PATTERN.test(value) || JSON_FRAGMENT_PATTERN.test(value);
+}
+
+/** True when any of the model's own free-text output fields (drafts[].store/
+ *  description, draft.name, changes.store/description/name, ...) looks like
+ *  a leaked JSON/HTML fragment rather than real text. */
+function hasSuspiciousField(parsed) {
+  const fields = [
+    ...(parsed.drafts ?? []).flatMap((draft) => [draft.store, draft.description]),
+    parsed.draft?.name,
+    parsed.changes?.store,
+    parsed.changes?.description,
+    parsed.changes?.name,
+  ];
+  return fields.some(looksSuspicious);
+}
+
 const AI_UNAVAILABLE_ERROR = {
   status: 502,
   message: "Could not reach the AI right now. Please try again.",
@@ -77,12 +107,18 @@ async function parseMessage(text, categories, recentExpenses, history, options =
     throw AI_UNAVAILABLE_ERROR;
   }
 
+  const rawResponse = String(response.text).slice(0, RAW_RESPONSE_LOG_CAP);
+
   let parsed;
   try {
     parsed = JSON.parse(response.text);
   } catch (error) {
-    logger.error(`AI response was not valid JSON: ${error.message}`, { area: "ai" });
+    logger.error(`AI response was not valid JSON: ${error.message}`, { area: "ai", rawResponse });
     throw AI_UNAVAILABLE_ERROR;
+  }
+
+  if (hasSuspiciousField(parsed)) {
+    logger.warn("AI response has a suspicious field (looks like leaked JSON/HTML)", { area: "ai", rawResponse });
   }
 
   logger.info(`AI parsed intent: ${parsed.intent}`, { area: "ai" });
