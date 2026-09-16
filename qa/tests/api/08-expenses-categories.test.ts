@@ -68,7 +68,7 @@ describe("GET /expenses", () => {
     expect(r.body).toEqual([]);
   });
 
-  it("ER-10 narrowing with to=today still includes an expense created today -- FINDING: to is compared as a bare string/midnight Date, excluding same-day records", async () => {
+  it("ER-10 narrowing with to=today still includes an expense created today", async () => {
     const { accessToken } = await signupUser();
     await createExpense(accessToken, 10, "Food");
     const today = new Date().toISOString().slice(0, 10);
@@ -128,7 +128,7 @@ describe("GET /expenses/summary", () => {
     expect(total).toBe(5);
   });
 
-  it("ER-11 with to=today still includes an expense created today -- FINDING: raw aggregate compares a bare string to a Date, so it never matches; the dashboard's own 'this month' range always sends to=today and always gets []", async () => {
+  it("ER-11 with to=today still includes an expense created today", async () => {
     const { accessToken } = await signupUser();
     await createExpense(accessToken, 10, "Food");
     const today = new Date().toISOString().slice(0, 10);

@@ -2,14 +2,13 @@
 
 _State: items 1-21 (auth surface) have test specs and automation, delivered
 2026-09-10/11. Items 22-33 (chat, expense/category DAL/BL, `backend/ai/`,
-the chat+dashboard client↔server journey), plus the Dashboard (uncommitted
-at the time items 22-33 were roadmapped, committed-equivalent by the time
-this pass ran), now **all have test specs and automation** — delivered
-2026-09-15, see "Delivered (third run, 2026-09-15)" below. Two real bugs were
-found in the process. A same-day pass fixed 3 of those bugs (all uncommitted
-in the working tree — see "Delivered (fourth run, 2026-09-15)" below) and
-surfaced one new one (a same-day date-range bug, ER-10/ER-11/DJ-01) — see
-`qa/specs/README.md` for the full before/after.
+the chat+dashboard client↔server journey), plus the Dashboard, now **all
+have test specs and automation** — delivered 2026-09-15, see "Delivered
+(third run, 2026-09-15)" below. Four real bugs were found and fixed across
+that date's passes (categoryModel.js hooks, getExpenseTotalByCategory
+ObjectId cast, resetToDefaults ordering, and a same-day date-range cast bug)
+— all fixed, committed, and re-verified as of "Delivered (fifth run,
+2026-09-15)" below. See `qa/specs/README.md` for the full before/after.
 `backend/package.json` `test` is a stub; the QA package at `qa/` is a
 standalone Vitest project. Client logic already has Vitest + RTL coverage in
 `client/` and is not re-tested here._
@@ -100,10 +99,10 @@ clearly — free the port by hand and rerun. See
 | 27 | `backend/models/categoryModel.js` hooks (`pre("save")`, `pre("findOneAndUpdate")`, `pre("findOneAndDelete")`, `pre("deleteMany")`) | integration | two-level depth rejected on create/update; protected-"Other" rejected on rename/delete; cascade-to-"Other" reassignment fires on both a subcategory delete and a main-category delete (subs deleted too); the single-key `{owner}` `deleteMany` exception lets a real reset through while any other shape still rejects a batch containing a protected category | 3 | 2 | B3 | **delivered** — `qa/specs/int-categoryModel.md` (CH-01..CH-16). All 16 pass. **Fixed** (was a real bug: every hook threw `TypeError: next is not a function` — an async hook calling a `next` callback Mongoose never supplies). See `qa/specs/README.md`. |
 | 28 | `POST /chat/messages`, `POST /chat/confirm` | api | request one never writes the actual change, only the two chat messages; request two's 7-branch intent switch calls the right service function with `req.user.id`; `create-expense`'s `drafts.length>1` boundary; matches/searches are scoped to the logged-in user only; a `backend/ai/` 502 propagates as a clean 502 response. | 3 | 3 | B1,B3,B7 | **delivered, partial** — `/chat/confirm` fully covered (`qa/specs/api-chat-confirm.md`, CC-01..CC-12), all pass; CC-08..11 now assert the real success shape (was: confirmed the categoryModel.js bug, fixed since). `/chat/messages` covered only for GET history + auth boundary (`qa/specs/api-chat-messages.md`, CM-01..CM-06) — request one's AI-dependent behaviour stays blocked on B7 (not worked around; see the E2E note for FJ-01, the one real AI call this pass). |
 | 29 | `backend/dal/categoryRepository.js`, `backend/dal/expenseRepository.js` | integration | each function's documented behaviour (see the new DAL rows in the server testable-surface file) — `queryExpenses`'s `from`/`to`/`text` filter combinations, `getExpenseTotalByCategory`'s aggregation correctness, `reassignExpensesToCategory` scoping | 2 | 2 | B3 | **delivered** — `qa/specs/int-expenseCategoryDal.md` (DL-01..DL-10). All pass — DL-03 fixed (was the categoryModel.js hook bug). |
-| 30 | `GET /expenses`, `GET /expenses/summary`, `GET /categories` | api | scoped to `req.user.id`; `/summary` skips the service layer (sanctioned by spec 09 §5); malformed `from`/`to` query-string behaviour | 2 | 2 | B1,B3 | **delivered** — `qa/specs/api-expenses-categories.md` (ER-01..ER-11). ER-08/09 fixed (were the `getExpenseTotalByCategory` string-vs-ObjectId bug). **New finding, still open**: ER-10/ER-11 — same-day `to=<today>` requests silently drop today's expenses in both `GET /expenses` and `GET /expenses/summary` (a bare date string compares as midnight, or isn't cast at all in the raw aggregate) — see `qa/specs/README.md`. |
+| 30 | `GET /expenses`, `GET /expenses/summary`, `GET /categories` | api | scoped to `req.user.id`; `/summary` skips the service layer (sanctioned by spec 09 §5); malformed `from`/`to` query-string behaviour | 2 | 2 | B1,B3 | **delivered** — `qa/specs/api-expenses-categories.md` (ER-01..ER-11). All pass — ER-08/09 (ObjectId cast) and ER-10/ER-11 (same-day date-boundary cast) were both real bugs, both fixed and re-verified. See `qa/specs/README.md`. |
 | 31 | `backend/ai/parseMessage.js`, `prompt.js`, `schema.js` | unit | already substantially covered by Adam's own `__tests__/parseMessage.test.js` (9 tests, fake-client pattern) — `qa/` adds: the actual prompt/schema sent to `generateContent` matches `buildPrompt`/`responseSchema`'s output; `getDefaultClient()`'s lazy-singleton behaviour; `INTENTS` is the single shared source for both `prompt.js` and `schema.js`'s enum | 2 | 1 | — | **delivered** — `qa/specs/unit-ai.md` (AI-01..AI-12) |
 | 32 | `bl/userService.js` — `signup()`'s new `seedDefaultCategories` call | integration | a successful signup leaves the user with exactly 8 main + 9 sub default categories already saved | 2 | 1 | B3 | new — add to `qa/specs/unit-userService.md` |
-| 33 | Client ↔ server chat + dashboard journey: type an expense → confirm → see it on the dashboard | e2e | the flagship journey — proves "chat is the only place anything changes; dashboard always refetches" end to end. | 3 | 3 | B1,B3,B7 | **delivered** — `qa/specs/e2e-chat-dashboard-journey.md`. FJ-01 (real chat UI + one real, deliberate Gemini call) PASSES. DJ-01 (dashboard reflects seeded data) still FAILS — root cause changed (was the now-fixed ObjectId bug, now the open ER-10/ER-11 same-day date bug), same user-visible symptom. Dashboard was still uncommitted when this pass started; tested anyway per explicit instruction. |
+| 33 | Client ↔ server chat + dashboard journey: type an expense → confirm → see it on the dashboard | e2e | the flagship journey — proves "chat is the only place anything changes; dashboard always refetches" end to end. | 3 | 3 | B1,B3,B7 | **delivered** — `qa/specs/e2e-chat-dashboard-journey.md`. FJ-01 (real chat UI + one real, deliberate Gemini call) and DJ-01 (dashboard reflects seeded data) both PASS. DJ-01's locators were also fixed (see fifth run below — the total and category names each legitimately appear twice on the page). |
 
 ## Delivered — inventory only (2026-09-15, first pass this date)
 
@@ -225,6 +224,54 @@ tests) + Playwright e2e 3 passed / 1 failed (4 tests) = **218 passed / 3
 failed / 0 skipped across 221 tests**. All 3 failures are the new, understood,
 documented ER-10/ER-11/DJ-01 finding — zero unexpected failures. Report:
 `qa/reports/latest.html` (dated copy: `qa/reports/2026-09-15-2232.html`).
+
+## Delivered (fifth run, 2026-09-15, same day — re-verify all 4 fixes + full regression)
+
+All 4 bugs from the fourth run are now committed (`62cb457` fixes the
+categoryModel.js/date/ObjectId/resetToDefaults bugs, `ece6439` adds AI-call
+logging, `2d0d99e` commits the dashboard build). Re-verified each fix by
+reading the actual diff against what the previous pass described, then
+re-ran the affected tests plus the full suite:
+
+1. **Date-boundary bug (ER-10, ER-11, DJ-01) — FIXED, confirmed.**
+   `expenseRepository.js` now wraps `from`/`to` with `startOfDay`/`endOfDay`
+   (UTC) helpers in both `queryExpenses` and `getExpenseTotalByCategory`,
+   and `from` is cast too. ER-10/ER-11 pass. DJ-01 also passes, but only
+   after a **test-code fix**: `page.getByText("₪ 50.00")` and
+   `page.getByText("Food"/"Transport")` were unscoped locators, and
+   `DashboardPage.tsx` legitimately renders the total figure twice (top
+   summary card + category list's own total row) and each category name
+   twice (the "By category" breakdown + the "Recent expenses" table) — a
+   Playwright strict-mode violation in the test, not a product bug, exactly
+   as flagged. Fixed by scoping to `.dashboard-totals__figure` and to the
+   "By category" region. See `qa/e2e/tests/chat-dashboard-journey.spec.ts`.
+2. **`getExpenseTotalByCategory` ObjectId cast (ER-08, ER-09) — FIXED,
+   confirmed.** Already passing since the fourth run; re-confirmed this run.
+3. **`categoryModel.js` next-callback bug (CH-01..16) — FIXED, confirmed.**
+   All four hooks now `throw`/`return` instead of taking/calling `next`.
+   Re-confirmed passing.
+4. **`resetToDefaults` ordering bug — FIXED, confirmed.** Deletes old
+   categories first, then seeds, then reassigns to the new "Other". CI-03/04
+   re-confirmed passing.
+
+**Full regression:** vitest 217/217 passed, Playwright e2e 4/4 passed
+(UJ-01, UJ-02, FJ-01, DJ-01) — **221 passed / 0 failed / 0 skipped**, zero
+regressions. One transient failure was seen and diagnosed, not counted as a
+bug: FJ-01 (the one test that makes a real Gemini API call) failed once with
+a Gemini-side `503 UNAVAILABLE "high demand"` logged to `backend/logs/ai.log`
+via the new logging — confirmed external/transient by re-running immediately
+after, which passed cleanly.
+
+`qa/scripts/build-report.mjs` and `qa/scripts/testcases.mjs` had stale
+hardcoded narrative (a `REAL_BUGS` list and prose describing ER-10/ER-11/DJ-01
+as currently open) left over from the fourth run — updated to reflect the
+fix, moved into the fixed-bugs table. `qa/specs/api-expenses-categories.md`
+and `qa/specs/README.md` updated the same way. `docs/reference/testing-reference/`
+derivation-state markers updated from "uncommitted working tree" to the real
+commit hashes (`62cb457`, `ece6439`, `2d0d99e`) — no content changes needed,
+the diffs already matched what was documented.
+
+Report: `qa/reports/latest.html` (dated copy: `qa/reports/2026-09-15-2259.html`).
 
 ## Out of scope (and why)
 

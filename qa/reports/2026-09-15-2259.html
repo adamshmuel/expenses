@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Expenses QA report — 2026-09-15-2302</title>
+<title>Expenses QA report — 2026-09-15-2259</title>
 <style>
   :root{
     --bg:#f7f7f5; --card:#fff; --ink:#1b1b1a; --mut:#6b6b68; --line:#e2e2dd;
@@ -88,7 +88,7 @@
 <body>
 <div class="wrap">
   <h1>Expenses — QA run against specs 01–09</h1>
-  <p class="sub">Tue Sep 15 2026 23:02:46 GMT+0300 (Israel Daylight Time) · auth + chat + expense/category + AI + dashboard surface, plus browser E2E (client ↔ server) · test DB <span class="mono">expenses_qa_test</span> (dropped on teardown) · duration ~106.8s</p>
+  <p class="sub">Tue Sep 15 2026 22:59:15 GMT+0300 (Israel Daylight Time) · auth + chat + expense/category + AI + dashboard surface, plus browser E2E (client ↔ server) · test DB <span class="mono">expenses_qa_test</span> (dropped on teardown) · duration ~106.6s</p>
 
   <div class="toolbar">
     <label><input type="checkbox" id="ofilter"> Show failures &amp; skips only</label>
@@ -1141,11 +1141,11 @@
   <div class="panel"><div class="fld"><span class="k">Purpose</span><span class="v">spec §5 -- summary scoped to the logged-in user.</span></div><div class="fld"><span class="k">Under test</span><span class="v">GET /expenses/summary scoping (no date filter).</span></div><div class="fld"><span class="k">Method (setup + exact inputs + action)</span><span class="v">User A creates one expense (5), user B creates one (100). GET /expenses/summary as A.</span></div><div class="fld"><span class="k">Expected result</span><span class="v">Rows total 5, never 105. FIXED (was 0 for both users, same bug as ER-08; now passes).</span></div><div class="fld"><span class="k">Actual result (this run)</span><span class="v">PASSED — all assertions held.</span></div><div class="fld"><span class="k">Source test file</span><span class="v mono">qa/tests/api/08-expenses-categories.test.ts</span></div><div class="fld"><span class="k">Test spec</span><span class="v mono">qa/specs/api-expenses-categories.md</span></div><div class="fld"><span class="k">Governing spec</span><span class="v mono">docs/specs/09-expense-category-service.md — §5</span></div></div>
 </details>
 <details class="row passed">
-  <summary><span class="tid">ER-10</span><span class="ttl">narrowing with to=today still includes an expense created today</span><span class="badge b-pass">PASS</span></summary>
+  <summary><span class="tid">ER-10</span><span class="ttl">narrowing with to=today still includes an expense created today -- FINDING: to is compared as a bare string/midnight Date, excluding same-day records</span><span class="badge b-pass">PASS</span></summary>
   <div class="panel"><div class="fld"><span class="k">Purpose</span><span class="v">spec §5 -- a date range including today must include an expense recorded today.</span></div><div class="fld"><span class="k">Under test</span><span class="v">GET /expenses?from=&amp;to= same-day boundary.</span></div><div class="fld"><span class="k">Method (setup + exact inputs + action)</span><span class="v">Create one expense (server-stamped date = now). GET /expenses?from=&lt;today&gt;&amp;to=&lt;today&gt;.</span></div><div class="fld"><span class="k">Expected result</span><span class="v">200, the expense is present.</span></div><div class="fld div"><span class="k">Spec/code note</span><span class="v">FIXED -- 200, the expense is present. queryExpenses now wraps from/to with startOfDay/endOfDay (UTC) helpers before comparing against the date field, instead of comparing raw strings. Was: Model.find() auto-cast the bare &#39;YYYY-MM-DD&#39; string to midnight UTC that day, so $lte excluded anything recorded later the same day.</span></div><div class="fld"><span class="k">Actual result (this run)</span><span class="v">PASSED — all assertions held.</span></div><div class="fld"><span class="k">Source test file</span><span class="v mono">qa/tests/api/08-expenses-categories.test.ts</span></div><div class="fld"><span class="k">Test spec</span><span class="v mono">qa/specs/api-expenses-categories.md</span></div><div class="fld"><span class="k">Governing spec</span><span class="v mono">docs/specs/09-expense-category-service.md — §5</span></div></div>
 </details>
 <details class="row passed">
-  <summary><span class="tid">ER-11</span><span class="ttl">with to=today still includes an expense created today</span><span class="badge b-pass">PASS</span></summary>
+  <summary><span class="tid">ER-11</span><span class="ttl">with to=today still includes an expense created today -- FINDING: raw aggregate compares a bare string to a Date, so it never matches; the dashboard&#39;s own &#39;this month&#39; range always sends to=today and always gets []</span><span class="badge b-pass">PASS</span></summary>
   <div class="panel"><div class="fld"><span class="k">Purpose</span><span class="v">spec §5 -- a date range including today must include an expense recorded today, in the summary too.</span></div><div class="fld"><span class="k">Under test</span><span class="v">GET /expenses/summary?from=&amp;to= same-day boundary.</span></div><div class="fld"><span class="k">Method (setup + exact inputs + action)</span><span class="v">Create one expense (amount 10, date = now). GET /expenses/summary?from=&lt;today&gt;&amp;to=&lt;today&gt;.</span></div><div class="fld"><span class="k">Expected result</span><span class="v">200, total 10.</span></div><div class="fld div"><span class="k">Spec/code note</span><span class="v">FIXED -- 200, total 10. getExpenseTotalByCategory&#39;s raw .aggregate() $match now wraps from/to with the same startOfDay/endOfDay helpers before comparing. Was: the raw aggregate compared the bare string to against a BSON Date and never matched.</span></div><div class="fld"><span class="k">Actual result (this run)</span><span class="v">PASSED — all assertions held.</span></div><div class="fld"><span class="k">Source test file</span><span class="v mono">qa/tests/api/08-expenses-categories.test.ts</span></div><div class="fld"><span class="k">Test spec</span><span class="v mono">qa/specs/api-expenses-categories.md</span></div><div class="fld"><span class="k">Governing spec</span><span class="v mono">docs/specs/09-expense-category-service.md — §5</span></div></div>
 </details>
   </section>
@@ -1170,7 +1170,7 @@
 </details>
   </section>
 
-  <p class="sub" style="margin-top:40px">Generated by <span class="mono">qa/scripts/build-report.mjs</span>. Raw runner output alongside this file as <span class="mono">2026-09-15-2302.json</span>. Design-time cases: <span class="mono">qa/specs/*.md</span> (inlined here via <span class="mono">qa/scripts/testcases.mjs</span>).</p>
+  <p class="sub" style="margin-top:40px">Generated by <span class="mono">qa/scripts/build-report.mjs</span>. Raw runner output alongside this file as <span class="mono">2026-09-15-2259.json</span>. Design-time cases: <span class="mono">qa/specs/*.md</span> (inlined here via <span class="mono">qa/scripts/testcases.mjs</span>).</p>
 </div>
 <script>
   document.getElementById('ofilter').addEventListener('change', function(e){

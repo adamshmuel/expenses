@@ -55,12 +55,7 @@ test("FJ-01 type an expense in chat, confirm, it is really saved", async ({ page
 });
 
 // DJ-01 -- deterministic, no AI: seeds via POST /chat/confirm directly (same
-// as CC-02), only drives the browser for the dashboard side. Still expected
-// to FAIL -- the ObjectId bug that originally broke this (ER-08/09) is fixed,
-// but both expenses here are dated today, and GET /expenses + /expenses/summary
-// both drop same-day data when `to` is today (a bare "YYYY-MM-DD" compares as
-// midnight, excluding anything later that day) -- see
-// qa/specs/api-expenses-categories.md ER-10/ER-11 and qa/specs/README.md.
+// as CC-02), only drives the browser for the dashboard side.
 test("DJ-01 expenses recorded via chat are reflected on the dashboard", async ({ page }) => {
   const signedUp = await signup(makeUser());
   const accessToken = signedUp.body.accessToken as string;
@@ -89,11 +84,14 @@ test("DJ-01 expenses recorded via chat are reflected on the dashboard", async ({
   await expect(page).toHaveURL(/\/dashboard$/);
 
   // Per spec 02, with real recorded spend this period the empty state must
-  // not show and the total must reflect it. (See the FINDING above: this is
-  // expected to fail -- the dashboard still shows its empty state, now
-  // because of the ER-10/ER-11 same-day date-range bug, not the fixed
-  // ObjectId one.)
-  await expect(page.getByText("₪ 50.00")).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByText("Food")).toBeVisible();
-  await expect(page.getByText("Transport")).toBeVisible();
+  // not show and the total must reflect it. The total figure appears twice
+  // by design (top summary card + the category list's own total row), and
+  // each category name appears twice too (the "By category" breakdown +
+  // the "Recent expenses" table) -- so scope to the "By category" section
+  // specifically. A bare text locator here is a strict-mode violation, not
+  // a product bug.
+  await expect(page.locator(".dashboard-totals__figure")).toHaveText("₪ 50.00", { timeout: 8_000 });
+  const byCategory = page.getByRole("region", { name: "By category" });
+  await expect(byCategory.getByText("Food")).toBeVisible();
+  await expect(byCategory.getByText("Transport")).toBeVisible();
 });

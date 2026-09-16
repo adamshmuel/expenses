@@ -107,20 +107,19 @@ const DIVERGENCES = ["RA-06", "XC-11", "XC-13", "EH-05"];
 // Findings surfaced during the run that are not spec assertions (test passes,
 // but the behaviour is a bug or a gap worth Adam's attention).
 const FINDINGS = ["LI-10", "CC-12"];
-// Real bugs found in an earlier pass (2026-09-15, first run) and FIXED before
-// this run: categoryModel.js's 4 hooks (CH-01..16 + everything that depended
-// on them: CI-03/04, DL-03, CC-08..11), and getExpenseTotalByCategory's
-// ObjectId cast (ER-08/09, no date filter). All now PASS -- kept out of
-// REAL_BUGS below since they are no longer failures. See qa/specs/README.md
-// "Findings, fixed since the 2026-09-15 pass" for detail.
+// Real bugs found across the 2026-09-15 passes, all FIXED as of this run:
+// categoryModel.js's 4 hooks (CH-01..16 + everything that depended on them:
+// CI-03/04, DL-03, CC-08..11), getExpenseTotalByCategory's ObjectId cast
+// (ER-08/09, no date filter), and the date-boundary cast bug found right
+// after that fix (ER-10/ER-11, DJ-01). All now PASS -- kept out of REAL_BUGS
+// below since none are currently failing. See qa/specs/README.md "Findings,
+// fixed since the 2026-09-15 pass" for detail.
 //
-// Real bugs found THIS run and still open: these tests assert the SPEC's
-// correct behaviour and are EXPECTED TO FAIL until Adam fixes the underlying
-// code -- unlike DIVERGENCES (a wording/ordering nuance), these are genuine
-// breakage. Styled the same as DIVERGENCES in the report (not "unexpected").
-const REAL_BUGS = [
-  "ER-10", "ER-11", "DJ-01",
-];
+// Real bugs found and still open, this run: none. Tests here would assert
+// the SPEC's correct behaviour and be EXPECTED TO FAIL until Adam fixes the
+// underlying code -- unlike DIVERGENCES (a wording/ordering nuance), these
+// would be genuine breakage.
+const REAL_BUGS = [];
 // A "blocker" here = a test that could not run for an environment reason (none expected;
 // filled from skips whose case notes say so). We also list design-phase blockers B1..B6.
 const DESIGN_BLOCKERS = [
@@ -146,9 +145,9 @@ const SPEC_COVERAGE = [
   { spec: "06-server-modules.md", covered: "§1 logger transports incl. ai.log filter + crash handlers (LG-01..LG-07). §2 connectDB shape + exit-on-failure (DB-01..DB-03). §3 catchAsync (forward only, no log) + errorHandler (409 / .status / 500, log levels, one place) (EH-01..EH-11). §4 requireAuth contract (RA-01..RA-09).", notCovered: "§5 .env variable list is verified only indirectly (the server boots with the real vars). .env.example existence — REPORTED GAP (blocker B4)." },
   { spec: "07-server-entry.md", covered: "§1 start-up order (ST-01..ST-03). §2 middleware stack effects: helmet headers (XC-05/06), CORS exact origin (XC-07/08/09), JSON + cookie parsing (XC-12), global rate limiter present & looser than login (XC-14). §4 404 then errorHandler last (XC-10/11).", notCovered: "§2 exact global limiter ceiling of 300/15min (would need 300+ requests — disproportionate; presence + looseness asserted). CSRF (none in v1 by design). Static serving (none by design)." },
   { spec: "08-expense-category-dal.md", covered: "Every category/expense DAL function in the table (DL-01..DL-10): findOtherCategory, createManyCategories, deleteCategoriesByUser, getExpenseTotalByCategory (totals, date range, empty case), findExpenseById, reassignExpensesToCategory, queryExpenses (text + date range, combined).", notCovered: "Nothing deliberately skipped; findByName/resolveCategory-adjacent DAL calls are covered indirectly through CS-*/ES-*/CC-*." },
-  { spec: "09-expense-category-service.md", covered: "§2 categoryService: findByName, createCategory/updateCategory/deleteCategory rule checks (CS-01..CS-13), seedDefaultCategories/resetToDefaults (CI-01..CI-04, both now passing). §3 expenseService: resolveCategory, createExpense, createManyExpenses' no-partial-save (EI-01/02), editExpense/deleteExpense ownership (ES-01..ES-09). §4 POST /chat/confirm's 7-branch intent switch (CC-01..CC-12, all now passing, including the 4 category-mutating intents that used to fail). §5 the three read-only routes (ER-01..ER-11).", notCovered: "Nothing deliberately skipped, but see the Findings section: §5's summary/list endpoints are proven BROKEN for any request whose date range includes today (ER-10/ER-11, new this pass) — the fix for the earlier ObjectId bug exposed a second, separate date-casting bug underneath it." },
+  { spec: "09-expense-category-service.md", covered: "§2 categoryService: findByName, createCategory/updateCategory/deleteCategory rule checks (CS-01..CS-13), seedDefaultCategories/resetToDefaults (CI-01..CI-04). §3 expenseService: resolveCategory, createExpense, createManyExpenses' no-partial-save (EI-01/02), editExpense/deleteExpense ownership (ES-01..ES-09). §4 POST /chat/confirm's 7-branch intent switch (CC-01..CC-12). §5 the three read-only routes (ER-01..ER-11), including the same-day date-range boundary (ER-10/ER-11). All PASS.", notCovered: "Nothing deliberately skipped." },
   { spec: "01-ai-chat.md (chat additions)", covered: "§8 backend/ai/: prompt/schema shared-reference, call-args wiring, the clean-502 contract, the default-client singleton (AI-01..AI-12). §5/§9 GET /chat/messages ordering/limit/scoping (CM-03..06). §6/§7 the real chat->draft->confirm loop through a real browser with one real (minimal) Gemini call (FJ-01).", notCovered: "POST /chat/messages's AI-dependent intent-parsing behaviour at the API-test level (the 30-day window, per-intent matches for all 7 intents) — blocked on B7 (routes/chatRoute.js has no seam to inject a fake AI client; an API-level test would need a real, metered, non-deterministic Gemini call per case). Only the auth boundary (CM-01/02) and one real E2E call (FJ-01) are automated for this route." },
-  { spec: "02-dashboard.md", covered: "Every stat/list the spec names, exercised via the three read-only endpoints its own client code calls (ER-01..ER-11) and one real-browser journey (DJ-01) checking the rendered page against the spec's text.", notCovered: "Client-side pure-function gaps already flagged by docs/reference/testing-reference/2026-09-15-client-additions-testable.md (computeRange's pick/custom branches, buildGroups zero-filtering, the stale-fetch race guard, the 'Other' fallback) are client-unit-test territory, not duplicated here. See the Findings section: the screen is STILL non-functional for real same-day data (always shows its empty state for a user who spent today) due to a server bug — the specific bug changed since the last run (was the ObjectId cast; now the date-boundary cast, ER-10/ER-11), but the user-visible symptom DJ-01 catches is the same." },
+  { spec: "02-dashboard.md", covered: "Every stat/list the spec names, exercised via the three read-only endpoints its own client code calls (ER-01..ER-11) and one real-browser journey (DJ-01) checking the rendered page against the spec's text — including same-day spend, the exact case the dashboard's default 'This month' period hits every time. All PASS.", notCovered: "Client-side pure-function gaps already flagged by docs/reference/testing-reference/2026-09-15-client-additions-testable.md (computeRange's pick/custom branches, buildGroups zero-filtering, the stale-fetch race guard, the 'Other' fallback) are client-unit-test territory, not duplicated here." },
 ];
 const E2E_NOTE = "E2E coverage (UJ-01, UJ-02, FJ-01, DJ-01) drives the real Vite client against the real running server in a real browser — the only layer that proves the cookie/token wiring and the chat-writes/dashboard-reads contract actually connect both sides, not just each in isolation. FJ-01 is the one place this whole pass calls the real Gemini API (one call, deliberately, headed so it can be watched). The silent-refresh-mid-session journey is still not automated (needs a way to force token expiry inside a running browser session — see docs/reference/testing-reference/2026-09-11-client-testable.md).";
 
@@ -277,6 +276,8 @@ const FIXED_BUG_ROWS = [
   ["CH-01..16, CI-03/04, DL-03, CC-08..11 (23 tests)", "backend/models/categoryModel.js", "Every pre('save')/pre('findOneAndUpdate')/pre('findOneAndDelete')/pre('deleteMany') hook was declared async function(next) and called next()/next(err) inside it — the installed Mongoose version does not give an async hook a callable next. Every branch, success or rejection, threw TypeError: next is not a function. Only insertMany (seedDefaultCategories at signup) escaped, since Mongoose skips 'save' middleware for it.", "FIXED — dropped the `next` parameter and every `next(...)`/`next()` call from all four hooks; throw instead of next(err), bare return instead of next(). All 23 tests now PASS. CC-08..11 were rewritten from asserting the 500 to asserting the spec's real success shape."],
   ["ER-08, ER-09 (2 tests, no date filter)", "backend/dal/expenseRepository.js — getExpenseTotalByCategory", "The aggregation's $match stage was built as { user: userId } and passed straight to Expense.aggregate(). Mongoose only casts a plain string to ObjectId inside its own query-builder methods (find, a document constructor, ...) — a raw aggregate() stage is not cast. req.user.id (from the JWT, via requireAuth) is always a plain string.", "FIXED — wrapped `new mongoose.Types.ObjectId(userId)` before building the $match filter. Both tests now PASS."],
   ["CI-03/04 (resetToDefaults ordering — also depended on the categoryModel.js fix above)", "backend/bl/categoryService.js — resetToDefaults", "Old order: find the OLD 'Other' → reassign expenses to it → delete ALL categories (including that old 'Other') → reseed defaults. Every expense ended up pointing at a category id that had just been deleted.", "FIXED — reordered: delete old categories first → seed new defaults → find the NEW 'Other' among them → reassign expenses to the new 'Other's id."],
+  ["ER-10 (GET /expenses)", "backend/dal/expenseRepository.js — queryExpenses", "Model.find() auto-casts the bare 'YYYY-MM-DD' query-string date to midnight UTC that day, and `from` wasn't cast either — a request with to=<today> therefore excluded any expense recorded LATER the same day.", "FIXED — added startOfDay/endOfDay helpers (UTC-based) and wrapped both `from` (startOfDay) and `to` (endOfDay) with them before comparing against the date field. Test now PASSES."],
+  ["ER-11, DJ-01 (GET /expenses/summary)", "backend/dal/expenseRepository.js — getExpenseTotalByCategory", "Second, separate instance of the same 'raw aggregate() doesn't auto-cast' bug class as the ObjectId issue above — this time for dates. The raw .aggregate() $match stage compared the bare query-string `to` against a BSON Date and never matched, regardless of time-of-day.", "FIXED — same startOfDay/endOfDay wrapping applied to this function's $match stage. ER-11 and the end-to-end DJ-01 (dashboard shows today's real spend) both now PASS."],
 ]
   .map(
     (r) =>
@@ -284,15 +285,7 @@ const FIXED_BUG_ROWS = [
   )
   .join("");
 
-const REAL_BUG_ROWS = [
-  ["ER-10 (GET /expenses)", "backend/dal/expenseRepository.js — queryExpenses", "Model.find() auto-casts the bare 'YYYY-MM-DD' query-string date to midnight UTC that day. A request with to=<today> therefore excludes any expense recorded LATER the same day — i.e. almost every same-day expense. Confirmed with a plain script against backend's own code.", "An expense recorded today can silently vanish from GET /expenses whenever the caller's range includes 'today' as the upper bound — exactly what the Dashboard's default period does. Fix: build `to` as end-of-day (e.g. `new Date(to); d.setHours(23,59,59,999)`) before comparing, both here and in getExpenseTotalByCategory below."],
-  ["ER-11, DJ-01 (GET /expenses/summary)", "backend/dal/expenseRepository.js — getExpenseTotalByCategory", "Second, separate instance of the same 'raw aggregate() doesn't auto-cast' bug class that the now-fixed ObjectId issue was — this time for dates. The raw .aggregate() $match stage compares the bare query-string `to` against a BSON Date and never matches, regardless of time-of-day. Confirmed with a plain script against backend's own code.", "GET /expenses/summary still returns 0/[] for any request whose range includes today — which is every request the Dashboard's own 'This month' period makes. DashboardPage.tsx still renders its empty state for a user who spent today, proven end-to-end in DJ-01 (fails for this new reason, not the fixed ObjectId one). Ship-blocking for 02-dashboard.md, same severity as the fixed bug. Fix: build a real `Date` from `to`/`from` before the $match, at end-of-day / start-of-day respectively."],
-]
-  .map(
-    (r) =>
-      `<tr><td class="tid">${esc(r[0])}</td><td class="mono">${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`
-  )
-  .join("");
+const REAL_BUG_ROWS = "";
 
 const specCoverageHtml = SPEC_COVERAGE.map(
   (s) =>
@@ -418,19 +411,15 @@ const html = `<!doctype html>
       ? "No unexpected failures. Every failure below is either a carried-through spec/code divergence, or a real bug found and documented this pass (see below) — nothing here is an unexplained flake."
       : `<strong>${unexpectedFails.length} failure(s) need attention</strong> beyond the known divergences and documented bugs.`}</p>
 
-    <h3 style="color:var(--pass)">Bugs fixed since the last run (2026-09-15, second pass)</h3>
-    <p class="hint">The 3 backend bugs the previous run (21 failures) surfaced were fixed by Adam before this run. All 23 tests previously asserting the categoryModel.js hook bug, plus ER-08/ER-09 (the ObjectId-cast bug), now PASS. See <span class="mono">qa/specs/README.md</span> for the full before/after.</p>
+    <h3 style="color:var(--pass)">Bugs found across 2026-09-15, all fixed as of this run</h3>
+    <p class="hint">Four real backend bugs were found across this date's passes and are now all fixed and re-verified: the categoryModel.js hook bug (23 tests), the getExpenseTotalByCategory ObjectId-cast bug (ER-08/09), the resetToDefaults ordering bug (CI-03/04), and the date-boundary cast bug found right after the ObjectId fix (ER-10/ER-11, DJ-01). See <span class="mono">qa/specs/README.md</span> for the full before/after.</p>
     <table>
       <thead><tr><th>Tests</th><th>File</th><th>Root cause</th><th>Fix</th></tr></thead>
       <tbody>${FIXED_BUG_ROWS}</tbody>
     </table>
 
-    <h3 style="color:var(--bug)">Real bugs found this pass (still open) — not wording, actual breakage</h3>
-    <p class="hint">${realBugFails.length} of ${REAL_BUGS.length} tests written against this bug failed as expected this run — see each one, expanded, in its area below (badged <span class="badge b-bug">BUG</span>). In <span class="mono">backend/</span> outside <span class="mono">ai/</span> — Adam's own code; QA reports it, does not fix it. Confirmed independently of this test harness with a plain script directly against backend's code (not a QA-harness artifact). This is a second, separate instance of the same bug class as the now-fixed ObjectId issue above — dates instead of ids — first visible only once the ObjectId fix stopped masking it.</p>
-    <table>
-      <thead><tr><th>Tests</th><th>File</th><th>Root cause</th><th>Impact / fix</th></tr></thead>
-      <tbody>${REAL_BUG_ROWS}</tbody>
-    </table>
+    <h3>Real bugs found this pass (still open)</h3>
+    <p class="hint">None. All previously open findings (ER-10, ER-11, DJ-01) are fixed and re-verified this run — see the table above.</p>
 
     <h3>Blockers (need an Adam-only change or a decision)</h3>
     <ul>${blockersHtml}</ul>
