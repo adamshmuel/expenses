@@ -42,10 +42,36 @@ const initialState: ChatState = {
   error: null,
 }
 
+// A store/description name a person actually typed is short. Anything past
+// this is treated as a glitch, not a long store name.
+const MAX_FREE_TEXT_LENGTH = 200
+
+// Patterns typical of a leaked JSON or HTML fragment reaching a free-text
+// field (bug 2): an HTML tag or closing tag, or a serialized-JSON-looking
+// `", "key":` run. Plain punctuation a real name can contain — apostrophes,
+// ampersands, emoji, non-Latin scripts — never matches these.
+const HTML_FRAGMENT_PATTERN = /<\/|<html|<body/i
+const JSON_FRAGMENT_PATTERN = /"\s*,\s*"[^"]+"\s*:|[{}]/
+
+/**
+ * True when a free-text field coming from the AI (a store or description
+ * name) looks like natural text rather than a raw JSON/HTML fragment leaked
+ * by a model glitch. `undefined`/`null`/empty are fine — that's just a field
+ * the model left out, not a malformed one.
+ */
+export const isSaneText = (value: string | null | undefined): boolean => {
+  if (!value) return true
+  if (value.length > MAX_FREE_TEXT_LENGTH) return false
+  if (HTML_FRAGMENT_PATTERN.test(value)) return false
+  if (JSON_FRAGMENT_PATTERN.test(value)) return false
+  return true
+}
+
 /**
  * Turns a `/chat/messages` result into what still needs confirming, or
  * `null` when there is nothing to confirm (no match, missing amount, an
- * intent the model didn't recognise).
+ * intent the model didn't recognise, or a free-text field that looks like a
+ * leaked JSON/HTML fragment rather than a real store/description name).
  */
 const buildPending = (result: ChatMessageResult): PendingAction | null => {
   switch (result.intent) {
@@ -54,7 +80,16 @@ const buildPending = (result: ChatMessageResult): PendingAction | null => {
       // The model never invents an amount or a category — if one draft is
       // missing either, the reply already asks for it, so there is nothing
       // to confirm yet.
-      if (drafts.length === 0 || drafts.some((draft) => draft.amount == null || draft.category == null))
+      if (
+        drafts.length === 0 ||
+        drafts.some(
+          (draft) =>
+            draft.amount == null ||
+            draft.category == null ||
+            !isSaneText(draft.store) ||
+            !isSaneText(draft.description),
+        )
+      )
         return null
       return { intent: 'create-expense', drafts }
     }

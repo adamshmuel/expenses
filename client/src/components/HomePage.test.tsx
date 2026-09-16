@@ -191,6 +191,28 @@ describe('HomePage chat', () => {
     expect(chatApi.confirmChat).not.toHaveBeenCalled()
   })
 
+  it('falls back to "Expense" when a match store name looks like a leaked JSON/HTML fragment', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Which one?',
+      intent: 'delete-expense',
+      matches: [
+        {
+          _id: 'e1',
+          amount: 12,
+          store: 'supermarket", "category": "Groceries" } ] }</body></html>',
+          date: '2026-09-14',
+        },
+        { _id: 'e2', amount: 8, store: 'Cafe', date: '2026-09-10' },
+      ],
+    })
+    renderWithProviders(<App />, '/home')
+
+    await send('delete one of these')
+
+    expect(await screen.findByRole('button', { name: /^expense —/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cafe/i })).toBeInTheDocument()
+  })
+
   it('shows an error and keeps the typed text when the server is unreachable', async () => {
     vi.mocked(chatApi.sendMessage).mockRejectedValue({
       message: 'Cannot reach the server. Check that it is running.',

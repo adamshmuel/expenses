@@ -6,6 +6,7 @@ import chatReducer, {
   loadChatHistory,
   selectMatch,
   cancelPending,
+  isSaneText,
 } from './chatSlice'
 import * as chatApi from '../api/chatApi'
 
@@ -202,5 +203,94 @@ describe('chatSlice', () => {
     store.dispatch(cancelPending())
     expect(store.getState().chat.pending).toBeNull()
     expect(chatApi.confirmChat).not.toHaveBeenCalled()
+  })
+
+  it('has nothing pending when a draft store field contains a leaked HTML fragment', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Add this?',
+      intent: 'create-expense',
+      drafts: [
+        {
+          amount: 50,
+          category: 'Groceries',
+          store: 'supermarket", "category": "Groceries", "date": "2023-10-24" } ] }</body></html>',
+        },
+      ],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('spent 50 at the supermarket'))
+    expect(store.getState().chat.pending).toBeNull()
+  })
+
+  it('has nothing pending when a draft description is absurdly long', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Add this?',
+      intent: 'create-expense',
+      drafts: [{ amount: 50, category: 'Groceries', description: 'a'.repeat(300) }],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('spent 50 on something'))
+    expect(store.getState().chat.pending).toBeNull()
+  })
+
+  it('keeps a draft pending when the store name has an apostrophe, ampersand, emoji or Hebrew text', async () => {
+    const cases = ["Carrefour l'Étoile", 'Möbelhaus & Co.', 'סופר יוסי', '🍕 Pizza place']
+    for (const store of cases) {
+      vi.mocked(chatApi.sendMessage).mockResolvedValue({
+        reply: 'Add this?',
+        intent: 'create-expense',
+        drafts: [{ amount: 50, category: 'Groceries', store }],
+      })
+      const testStore = makeStore()
+      await testStore.dispatch(sendChatMessage('spent 50'))
+      expect(testStore.getState().chat.pending).toEqual({
+        intent: 'create-expense',
+        drafts: [{ amount: 50, category: 'Groceries', store }],
+      })
+    }
+  })
+})
+
+describe('isSaneText', () => {
+  it('rejects a literal HTML tag', () => {
+    expect(isSaneText('<html><body>hi</body></html>')).toBe(false)
+  })
+
+  it('rejects a closing-tag fragment', () => {
+    expect(isSaneText('supermarket</body></html>')).toBe(false)
+  })
+
+  it('rejects a leaked JSON punctuation pattern', () => {
+    expect(isSaneText('supermarket", "category": "Groceries" }')).toBe(false)
+  })
+
+  it('rejects a string longer than 200 characters', () => {
+    expect(isSaneText('a'.repeat(201))).toBe(false)
+  })
+
+  it('accepts a store name with an apostrophe', () => {
+    expect(isSaneText("Carrefour l'Étoile")).toBe(true)
+  })
+
+  it('accepts a store name with an ampersand', () => {
+    expect(isSaneText('Möbelhaus & Co.')).toBe(true)
+  })
+
+  it('accepts a Hebrew store name', () => {
+    expect(isSaneText('סופר יוסי')).toBe(true)
+  })
+
+  it('accepts a description starting with an emoji', () => {
+    expect(isSaneText('🍕 Pizza place')).toBe(true)
+  })
+
+  it('accepts an ordinary short description', () => {
+    expect(isSaneText('Weekly groceries')).toBe(true)
+  })
+
+  it('accepts an empty or missing value', () => {
+    expect(isSaneText(undefined)).toBe(true)
+    expect(isSaneText(null)).toBe(true)
+    expect(isSaneText('')).toBe(true)
   })
 })
