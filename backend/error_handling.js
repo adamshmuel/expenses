@@ -11,6 +11,25 @@
 const logger = require("./.config/logger");
 
 /**
+ * A copy of a request body that is safe to write to a log file.
+ *
+ * Shallow-copies so the real request is never modified, and replaces a
+ * `password` field with a placeholder — `/users/login` and `/users/signup`
+ * both carry one, and a logged failure on either would otherwise put the
+ * plaintext password on disk.
+ *
+ * @param {any} body - `req.body`; a GET has none, which is returned unchanged
+ * @returns {any} the body with `password` redacted, if it had one
+ */
+const safeBody = (body) => {
+    if (!body || typeof body !== "object") return body;
+    const copy = { ...body };
+    if ("password" in copy) copy.password = "[redacted]";
+    return copy;
+};
+
+
+/**
  * Wrap an async route handler so a rejected promise is forwarded to the error
  * handler instead of crashing the process.
  *
@@ -46,7 +65,10 @@ function catchAsync(handler) {
  *
  * Logging: the 500 case at `error` level (this is what fills `logs/error.log`);
  * the deliberate 4xx and the 409 at `warn`, so `error.log` stays a list of real
- * problems.
+ * problems. Every line carries the request body as well as the method, path
+ * and stack — without it a logged failure cannot be reconstructed later, only
+ * counted. The body goes through `safeBody` first, so a failed login never
+ * writes a plaintext password to disk.
  *
  * @param {Error & { status?: number, code?: number }} err
  * @param {import('express').Request} req
@@ -56,14 +78,14 @@ function catchAsync(handler) {
 function errorHandler(err, req, res, next) {
 
   if (err.code === 11000) {
-    logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl });
+    logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
     return res.status(409).json({ error: "That username or email is already taken." });
   }
   if (err.status) {
-    logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl });
+    logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
     res.status(err.status).json({ error: err.message })
   } else {
-    logger.error(err.message, { method: req.method, stack: err.stack, path: req.originalUrl });
+    logger.error(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
     res.status(500).json({ error: "Something went wrong." })
   }
 }
