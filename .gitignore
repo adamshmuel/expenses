@@ -26,6 +26,11 @@ logs/
 *.swp
 *.sw?
 
+# Generated QA run output. What each run found is recorded in
+# qa/test-roadmap.md; the reports themselves are disposable, so a fresh clone
+# will not have them until the suite is run again.
+qa/reports/
+
 # AI tooling config and AI-authored root docs — kept on disk for local use,
 # never tracked or pushed. Fresh clones will not have these; see the project
 # owner before relying on git history to restore them.
