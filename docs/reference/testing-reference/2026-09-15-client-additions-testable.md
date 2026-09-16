@@ -102,7 +102,7 @@ against it now as provisional, and re-check against the spec's current text
 
 | Covers | Derived against | Notes |
 |---|---|---|
-| `client/src/api/dashboardApi.ts` (new, untracked), `client/src/components/DashboardPage.tsx` (was a placeholder, now real — uncommitted), `client/src/api/types.ts` dashboard section (uncommitted addition) | working tree as of 2026-09-15, no commit (uncommitted) | Re-check this file's rows once Adam commits — the derivation marker here is informal ("working tree on this date"), not a commit hash. |
+| `client/src/api/dashboardApi.ts` (new), `client/src/components/DashboardPage.tsx` (was a placeholder, now real), `client/src/api/types.ts` dashboard section | commit `2d0d99e` | Now committed ("Build the dashboard: category breakdown, period selector, and recent expenses"). Rows below re-checked against this commit; no behaviour change from the working-tree version this file originally derived against. |
 
 ### `api/dashboardApi.ts` — new
 

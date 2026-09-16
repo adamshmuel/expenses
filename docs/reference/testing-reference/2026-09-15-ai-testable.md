@@ -14,7 +14,7 @@ Adam's) — see `.claude/rules/ownership.md` — but it is still read-only for t
 
 | Covers | Last derived against | Notes |
 |---|---|---|
-| `backend/ai/` (`index.js`, `parseMessage.js`, `prompt.js`, `schema.js`, `__tests__/`) | commit `60c12e2` + uncommitted working-tree addition (2026-09-15, second pass) | Full first derivation 2026-09-15. Second pass same day: `parseMessage.js` gained `logger` calls on both failure paths and on success (closes the "logged apart" gap noted below) — still uncommitted, no new commit hash. No other exports or behaviour changed; Adam's own 10/10 `node --test` run confirmed unaffected. |
+| `backend/ai/` (`index.js`, `parseMessage.js`, `prompt.js`, `schema.js`, `__tests__/`) | commit `ece6439` | Full first derivation 2026-09-15. Second pass same day: `parseMessage.js` gained `logger` calls on both failure paths and on success (closes the "logged apart" gap noted below) — now committed as `ece6439` ("Log AI call outcomes to ai.log"). No other exports or behaviour changed; Adam's own 10/10 `node --test` run confirmed unaffected. |
 
 Before re-deriving, diff this commit against the current tree for the covered
 path (`git diff --stat 60c12e2 -- backend/ai`). No changes → this file is
