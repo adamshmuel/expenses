@@ -44,27 +44,40 @@ const findByName = async (userId, name, parentId) => {
  * Create a main category, or a subcategory under an existing main category.
  *
  * @param {string} userId
- * @param {{ name: string, parent?: string }} fields - `parent`, if given, must
- *   be an existing main category (no parent of its own) owned by this user
+ * @param {{ name: string, parent?: string }} fields - `parent`, if given, is
+ *   the *name* of an existing main category owned by this user (that is what
+ *   the AI sends — never an id); it is resolved to that category's `_id` here
+ *   before anything is stored
  * @returns {Promise<import('mongoose').Document>}
- * @throws {{status:400,message:string}} no such parent, or the parent is itself a subcategory
+ * @throws {{status:400,message:string}} no such parent, the parent name is
+ *   ambiguous, or the parent is itself a subcategory
  * @throws {{status:409,message:string}} a category with this name already exists under the same parent
  */
 const createCategory = async (userId, { name, parent }) => {
+
+    let parentId = null;
     if (parent) {
-        const parentDoc = await categoryRepository.findCategoryById(parent);
+        const parentMatches = await findByName(userId, parent);
+        if (parentMatches.length === 0) {
+            throw { status: 400, message: "No such category to add a subcategory to." };
+        }
+        if (parentMatches.length > 1) {
+            throw { status: 400, message: `More than one category named "${parent}".` };
+        }
+        const parentDoc = parentMatches[0];
         if (!parentDoc || String(parentDoc.owner) !== String(userId)) {
             throw { status: 400, message: "No such category to add a subcategory to." };
         }
         if (parentDoc.parent) {
             throw { status: 400, message: "Categories can only be two levels deep." };
         }
+        parentId = parentDoc._id;
     }
-    const existing = await findByName(userId, name, parent);
+    const existing = await findByName(userId, name, parentId);
     if (existing.length > 0) {
         throw { status: 409, message: `A category named "${name}" already exists here.` };
     }
-    return categoryRepository.createCategory({ name, parent: parent ?? null, owner: userId });
+    return categoryRepository.createCategory({ name, parent: parentId, owner: userId });
 }
 
 /**
@@ -133,7 +146,7 @@ const seedDefaultCategories = async (userId) => {
 
     const mainCategories = [];
 
-    for(const entry of defaultCategories) {
+    for (const entry of defaultCategories) {
         mainCategories.push({ name: entry.name, parent: null, owner: userId, isProtected: !!entry.isProtected });
     }
 
@@ -141,11 +154,11 @@ const seedDefaultCategories = async (userId) => {
 
     const subcategories = [];
 
-    for(const entry of defaultCategories) {
-        if(entry.subcategories.length > 0) {
+    for (const entry of defaultCategories) {
+        if (entry.subcategories.length > 0) {
             const mainCategory = defaultMainCategories.find(category => category.name === entry.name);
-            for(const subcategory of entry.subcategories) {
-                subcategories.push({ name: subcategory, parent: mainCategory._id , owner: userId});
+            for (const subcategory of entry.subcategories) {
+                subcategories.push({ name: subcategory, parent: mainCategory._id, owner: userId });
             }
         }
     }

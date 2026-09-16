@@ -156,6 +156,50 @@ test("model call failure: throws the shared { status: 502, message } shape", asy
   );
 });
 
+test("history omitted: still calls the model, no crash", async () => {
+  const client = fakeClient({
+    intent: "unknown",
+    reply: "I didn't understand that — nothing was changed.",
+  });
+
+  const result = await parseMessage("what's the weather like", categories, recentExpenses, { client });
+
+  assert.equal(result.intent, "unknown");
+});
+
+test("history passed: a short answer to the assistant's pending question resolves the earlier draft", async () => {
+  const history = [
+    { role: "assistant", text: "I see you paid 50, but what category does this belong to?" },
+    { role: "user", text: "bike" },
+  ];
+  const client = fakeClient({
+    intent: "create-expense",
+    reply: "Got it — 50 under Groceries. Want me to save it?",
+    drafts: [{ amount: 50, category: "Groceries" }],
+  });
+
+  const result = await parseMessage("bike", categories, recentExpenses, history, { client });
+
+  assert.equal(result.intent, "create-expense");
+  assert.equal(result.drafts[0].amount, 50);
+});
+
+test("bug A: today's date is passed into the system prompt so the model has a real clock", async () => {
+  let seenPrompt;
+  const client = {
+    models: {
+      generateContent: async ({ config }) => {
+        seenPrompt = config.systemInstruction;
+        return { text: JSON.stringify({ intent: "unknown", reply: "ok" }) };
+      },
+    },
+  };
+
+  await parseMessage("paid 40", categories, recentExpenses, [], { client, today: "2026-09-16" });
+
+  assert.ok(seenPrompt.includes("2026-09-16"));
+});
+
 test("malformed model output: throws the shared { status: 502, message } shape", async () => {
   const client = {
     models: {

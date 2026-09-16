@@ -51,9 +51,11 @@ const buildPending = (result: ChatMessageResult): PendingAction | null => {
   switch (result.intent) {
     case 'create-expense': {
       const drafts = result.drafts ?? []
-      // The model never invents an amount — if one draft is missing it, the
-      // reply already asks for it, so there is nothing to confirm yet.
-      if (drafts.length === 0 || drafts.some((draft) => draft.amount == null)) return null
+      // The model never invents an amount or a category — if one draft is
+      // missing either, the reply already asks for it, so there is nothing
+      // to confirm yet.
+      if (drafts.length === 0 || drafts.some((draft) => draft.amount == null || draft.category == null))
+        return null
       return { intent: 'create-expense', drafts }
     }
     case 'create-category':

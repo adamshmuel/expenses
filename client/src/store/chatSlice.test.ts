@@ -78,6 +78,17 @@ describe('chatSlice', () => {
     expect(store.getState().chat.pending).toBeNull()
   })
 
+  it('has nothing pending when a draft is missing its category', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'I see you spent 50, but what was this for?',
+      intent: 'create-expense',
+      drafts: [{ amount: 50 }],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('paid 50'))
+    expect(store.getState().chat.pending).toBeNull()
+  })
+
   it('has nothing pending when an edit matches no expense', async () => {
     vi.mocked(chatApi.sendMessage).mockResolvedValue({
       reply: 'No expense matches that.',

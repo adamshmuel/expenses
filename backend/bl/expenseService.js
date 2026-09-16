@@ -7,9 +7,13 @@ const categoryService = require('./categoryService.js');
  * @param {string} userId
  * @param {string} categoryNameOrId
  * @returns {Promise<import('mongoose').Document>}
- * @throws {{status: 400, message: string}} no match, or more than one match
+ * @throws {{status: 400, message: string}} no category name given, no match, or more than one match
  */
 const resolveCategory = async (userId, categoryNameOrId) => {
+
+    if (!categoryNameOrId) {
+        throw { status: 400, message: "Which category should this go under?" };
+    }
     const category = await categoryService.findByName(userId, categoryNameOrId);
     if (category.length === 0) {
         throw { status: 400, message: `No category named "${categoryNameOrId}". Create it first?` };

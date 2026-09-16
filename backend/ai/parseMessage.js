@@ -33,15 +33,32 @@ function getDefaultClient() {
  * @param {string} text - the user's raw chat message.
  * @param {object[]} categories - this user's categories, for name matching.
  * @param {object[]} recentExpenses - this user's last 30 days of expenses.
- * @param {{ client?: { models: { generateContent: Function } } }} [options] -
+ * @param {object[]} [history] - recent `{ role, text }` messages, oldest
+ *   first, ending with the message being parsed right now (the caller saves
+ *   it before fetching history, so it is already the last element — never
+ *   passed again separately). Omit for a first message or when no history is
+ *   available; undefined degrades to "no history" rather than crashing.
+ * @param {{ client?: { models: { generateContent: Function } }, today?: Date|string }} [options] -
  *   `client` overrides the Gemini client; tests use this, production callers
- *   omit it and get the real SDK client.
+ *   omit it and get the real SDK client. `today` overrides the current date
+ *   used to resolve "today"/relative dates in the prompt (bug: the model has
+ *   no clock of its own and invents a date when none is given); tests pass a
+ *   fixed value, production callers omit it and get the real `new Date()`.
+ *   Callers written before `history` existed pass this as the 4th argument —
+ *   still accepted (see below).
  * @returns {Promise<object>} one of the seven intent shapes from spec 01 §8,
  *   plus a "reply" string.
  * @throws {{ status: number, message: string }} when the model call fails,
  *   or returns something that isn't valid JSON — never a raw provider error.
  */
-async function parseMessage(text, categories, recentExpenses, options = {}) {
+async function parseMessage(text, categories, recentExpenses, history, options = {}) {
+  // `history` is an array (or omitted). An older caller passing `options` as
+  // the 4th argument instead (before `history` existed) sends a plain object
+  // there — shift it into `options` so that call shape keeps working.
+  if (history && !Array.isArray(history)) {
+    options = history;
+    history = undefined;
+  }
   const client = options.client ?? getDefaultClient();
 
   let response;
@@ -50,7 +67,7 @@ async function parseMessage(text, categories, recentExpenses, options = {}) {
       model: MODEL,
       contents: text,
       config: {
-        systemInstruction: buildPrompt(categories, recentExpenses),
+        systemInstruction: buildPrompt(categories, recentExpenses, history, options.today),
         responseMimeType: "application/json",
         responseSchema,
       },
