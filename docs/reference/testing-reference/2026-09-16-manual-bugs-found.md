@@ -107,7 +107,21 @@ fix was made.
   logging an error is to reconstruct it without reproducing it live.
 - **Owner**: `backend/` logging setup is Adam's own code — his call on what
   to add (e.g. logging the request body and raw AI response on error).
-- **Not yet fixed.**
+- **Request-body half fixed 2026-09-16.** `errorHandler` in
+  `backend/error_handling.js` now logs `body: safeBody(req.body)` alongside
+  method/path/stack, on all three branches (409, deliberate 4xx, and 500).
+  `safeBody` shallow-copies the body and replaces a `password` field with
+  `"[redacted]"`, so a failed login cannot write a plaintext password into
+  the logs. Verified both ways: a failed `/chat/confirm` now records its full
+  `{ intent, drafts: [...] }` payload, and a failed `/users/login` records
+  `{"username":"AdamShmuel","password":"[redacted]"}` — the real password
+  appears zero times across all five log files.
+- **Still open — the AI response half.** The model's raw output is still not
+  logged, which was the *other* thing missing when Bug 2 could not be
+  diagnosed: `ai.log` records `AI parsed intent: create-expense` but never
+  what the model actually returned, so a malformed field cannot be recovered
+  after the fact. That belongs in `backend/ai/parseMessage.js` — Claude's
+  file, not Adam's.
 
 ## Bug 4 — new expenses get the wrong date; dashboard then can't find them
 
