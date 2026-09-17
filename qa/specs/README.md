@@ -33,11 +33,31 @@ HTML report inlines each test's full case from here.
 | `api-chat-messages.md` | `GET`/`POST /chat/messages` | api | CM-01 … CM-06 |
 | `api-expenses-categories.md` | `GET /expenses`, `/expenses/summary`, `/categories` | api | ER-01 … ER-11 |
 | `e2e-chat-dashboard-journey.md` | chat → dashboard, real client + real server, browser-driven | e2e | FJ-01, DJ-01 |
-| `v2-chat-questions-2026-09-17.md` | **V2** — asking the chat about past spending. Designed against `docs/specs/10` + `11` **before the feature exists**; no case is exploratory | mixed (44 of 61 browser) | Q-01 … Q-61 |
+| `v2-chat-questions-2026-09-17.md` | **V2** — asking the chat about past spending. Designed against `docs/specs/10` + `11` **before the feature exists**; no case is exploratory | mixed (48 of 67 browser) | Q-01 … Q-67 |
 
 **Governing specs:** `docs/specs/01-ai-chat.md`, `02-dashboard.md`, `03-api-contract.md`,
 `04-data-model.md`, `05-user-layers.md`, `06-server-modules.md`, `07-server-entry.md`,
-`08-expense-category-dal.md`, `09-expense-category-service.md`.
+`08-expense-category-dal.md`, `09-expense-category-service.md`,
+`10-chat-questions.md`, `11-chat-questions-server.md`.
+
+## Spec changes this design work produced
+
+Design-before-build earned its place on V2: twelve gaps in `docs/specs/10`/`11`
+were found by writing the cases, **before a line of the feature existed**.
+Eleven were accepted, one rejected, and all twelve are recorded in
+`v2-chat-questions-2026-09-17.md` §6 with their rulings. Two are worth knowing
+about from here:
+
+- **A main category matched nothing.** As first specified, *"how much did I
+  spend on Food this month"* — the spec's own headline example — would have
+  answered "I found no expenses" on an account holding forty coffees, because
+  expenses are filed on the subcategory. Now ruled: a category means that
+  category and everything under it, matching what `/dashboard` already does.
+- **`queryExpenses` built an unescaped regular expression from user text.** A
+  **live V1 defect**, not a V2 one: *"change the expense at C++ (Tel Aviv) to
+  90"* threw inside the DAL, and `.*` matched the whole account. Fixed in
+  `9c151e5`. The 225-test V1 suite never sent a metacharacter — the hole was
+  found by writing down what the input space is, not by running anything.
 
 ## Known spec divergences these tests will surface
 

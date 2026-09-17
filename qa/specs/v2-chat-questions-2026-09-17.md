@@ -3,7 +3,39 @@
 **Designed:** 2026-09-17, against `docs/specs/10-chat-questions.md` and
 `docs/specs/11-chat-questions-server.md`.
 
-**IDs:** `Q-01` … `Q-61`.
+**IDs:** `Q-01` … `Q-67`.
+
+**Revised 2026-09-17, second pass**, after Adam ruled on all three blockers and
+all seven proposed bars. Specs 10 and 11 are now **approved**, and both were
+re-read in full before this revision — nothing below is written from the first
+pass's notes. What changed:
+
+| | |
+|---|---|
+| **Unblocked** | `Q-24` (a main category includes its subcategories) and `Q-26` (an ambiguous name is asked back) now have one definite expected result each, not two |
+| **Rewritten** | `Q-57` — the regex hole is **fixed and committed** (`9c151e5`), so the case now asserts real behaviour |
+| **Corrected** | `Q-11`, `Q-13`, `Q-55`, `Q-28`, `Q-53` wherever they touched a main category or the shape of the resolved filter |
+| **Split** | `Q-44` — the figures half kept, the right-to-left half dropped (§6.12) |
+| **Strengthened** | `Q-09` and `Q-38` now assert a spec rule rather than a proposal |
+| **Added** | `Q-62` … `Q-67`, six cases the rulings newly make testable — including the one cell I previously recorded as *missed* |
+
+**Every bar in this file is now approved.** One proposal was rejected and its
+case is **split, not weakened** — §6.12.
+
+**One distinction the revision made explicit**, because §6.12 showed I had been
+blurring it. Two different things were called "proposed" in the first pass:
+
+| | What it is | Whose call |
+|---|---|---|
+| **Bar** | A threshold the **product** must meet that no spec had written down — reply length, response time, "looks right" | **Adam's.** All now ruled; none remain open |
+| **Detection floor** | How a **test** checks a rule the spec already states, without asserting exact wording — which the model makes impossible | **Mine.** A test-design choice, not a product decision |
+
+Spec 10 §4 says a list reply must *"say which ten these are"*. That is the rule
+and it is Adam's. Checking it by requiring a word from a defined recency set
+plus the numeral `count − 10` is a **detection floor** — my mechanism, and if a
+better one exists it can be swapped without troubling him. Every remaining
+`(P)` in the cases below is a detection floor, each with its word lists checked
+in one place so they are reviewable rather than buried in an assertion.
 
 ---
 
@@ -20,19 +52,30 @@ That has two consequences the implementer must hold on to:
    the app.** Where the spec is silent, I have proposed a bar and said so. A
    proposed bar is Adam's to confirm, change, or reject. If he rejects one, the
    case is **deleted**, not softened into something that always passes.
-2. **The spec gaps found while writing this are worth more than the cases.**
-   They are in §6. Three of them are things I believe V2 should not ship
-   without, and one of them means the spec's own headline example — *"how much
-   did I spend on Food this month"* — will most likely answer **₪0** as
-   currently specified. That is §6.1, and it is the single most valuable output
-   of this pass.
+2. **The spec gaps found while writing this were worth more than the cases**,
+   and this is the evidence for designing before building rather than after.
+   Twelve gaps went to Adam; **eleven were accepted as proposed and one was
+   rejected with a better reason than mine.** All twelve are recorded in §6 with
+   the ruling, because the finding and the decision are both part of the design
+   record. Two of them were not V2 problems at all:
+
+   - **§6.1** — as first written, the spec's own headline example *"how much did
+     I spend on Food this month"* would have answered **"I found no expenses"**
+     on an account holding forty coffees. Found by trying to write the expected
+     result for `Q-24` and discovering there wasn't one. Now ruled.
+   - **§6.3** — the unescaped regular expression was a **live V1 defect**, not a
+     V2 one. It sat on the edit and delete paths, reachable today by anyone
+     asking to change an expense at a shop with a bracket in its name. **V1's
+     225-test suite had a hole that a V2 design pass found**, which is worth
+     recording on its own: the thing that caught it was writing down what the
+     input space was, not running anything.
 
 **Provenance key**, marked on every case:
 
 | Mark | Means |
 |---|---|
 | **S** | Derived from `docs/specs/10` or `11` — a behaviour the spec asserts |
-| **P** | Derived from a bar **I proposed** because the spec is silent (§6) |
+| **P** | Derived from a bar I proposed because the spec was silent — **now approved and written into `docs/specs/10` §5** (§6). Kept as a distinct mark so it stays visible which rules came out of this design pass rather than out of the product spec |
 | **A** | Archetype-derived — the spec names no users; this is what one of them does |
 | **B** | A defect **class** from `docs/reference/testing-reference/`, applied forward to a place the original bug never reached |
 | **C** | Derived from reading the **existing** code V2 plugs into — a seam check, not exploration |
@@ -167,6 +210,14 @@ each row two or three different tests.
 | QF7 | Ask in Hebrew → answered in Hebrew, figures intact | A2 | S |
 | QF8 | The second AI call fails → a flat sentence, never a dead end | A2 | S |
 | QF9 | Ask a question, then act on the answer with a V1 intent | A5 | A |
+| QF10 | Name a category two of yours share → **the server** asks which → pick one → answered | A4 | S |
+| QF11 | Ask a question on a brand-new account, before recording anything | A1 | A |
+
+QF10 and QF11 are **new in the second pass**. QF10 exists because Adam's ruling
+created a second kind of asking-back — QF3's is written by the *model* when the
+question is vague, QF10's is written by the *server* when a name is ambiguous.
+They take different routes through the code and only one of them was covered.
+QF11 closes the A1 cell §7.4 previously recorded as missed.
 
 ### 4.1 The four axes, crossed with the flows
 
@@ -184,9 +235,17 @@ does not apply.** No flow is left silent on an axis.
 | **QF7** | Q-35, Q-36 | Q-09 | *n/a — language is a property of the message, not the actor* | Q-44 |
 | **QF8** | Q-39 | Q-49 | *n/a — a failure of the second call is not actor-dependent* | Q-38 |
 | **QF9** | Q-61 | Q-61 (question then write, same conversation) | Q-53 | *n/a — the visible half is QF1's and QF2's reply, already covered by Q-43* |
+| **QF10** | Q-26, Q-65 | Q-26 (the second turn — the ask must be answerable) | Q-53 (the candidate ids must all be the asker's) | Q-26 (both parents named, or the question cannot be answered) |
+| **QF11** | Q-67 | Q-67 (step 5 — the empty state must not be a dead end) | Q-67 (a first-evening account **is** the actor here) | Q-67 (an empty answer must read as a state, not an error) |
 
 Six "n/a" cells, each with a reason that is a risk judgement. None of them is
 "I did not design it".
+
+**QF10 and QF11 are answered on all four axes with no n/a**, which is not a
+virtue — it is what happens when a flow is designed after the rules exist rather
+than alongside them. Worth noting because it suggests the n/a cells above are
+partly an artefact of designing QF1–QF9 against an unruled spec, and are worth
+re-reading once the feature is built and can actually be explored.
 
 ---
 
@@ -268,7 +327,7 @@ new failure V2 introduces"*. One case would be a sample. This is a matrix.
   `חניה 20 אתמול` / `כמה הוצאתי על חניה אתמול`, `קניתי צהריים ב־45` /
   `כמה עלו לי הצהריים`, `שכר דירה 3200` / `מה היה שכר הדירה שלי`.
 - **Expect:** same as Q-01, per sentence.
-- **Proposed bar (P):** Hebrew must be no worse than English on this boundary —
+- **Detection floor (P):** Hebrew must be no worse than English on this boundary —
   if the English pairs pass at 12/12 and Hebrew at 7/12, that is a defect, not a
   language limitation. The bar is **parity**, not a fixed pass rate.
 
@@ -317,7 +376,7 @@ new failure V2 introduces"*. One case would be a sample. This is a matrix.
   `כמה הוצאתי?`, `spending?`
 - **Expect, per question:** the reply **asks**, no query runs, and no second AI
   call is made.
-- **Proposed floor (P) — how "asks back, with an example" is checked**, since
+- **Detection floor (P) — how "asks back, with an example" is checked**, since
   wording may never be asserted (Q4):
   1. the reply contains at least one `?`, **and**
   2. the reply contains **no currency figure and no digit group of 3+**, and
@@ -351,10 +410,22 @@ new failure V2 introduces"*. One case would be a sample. This is a matrix.
 - **Expect:** the ask-back is in Hebrew (Hebrew character ratio > 0.5,
   excluding digits and punctuation), contains a `?`, contains an example, and
   contains no figure.
-- **Why separate from Q-07:** the ask-back is written by **call one**, whose
-  language rule is V1's, while §4's *"reply in the language the question was
-  asked in"* binds **call two**. The vague path never reaches call two. Nothing
-  in the spec says call one's ask must match the language — §6.5.
+- **Now a spec rule, not a proposal.** Spec 10 §2 says it outright: *"The
+  ask-back is in the user's language... A Hebrew user asking a vague question in
+  Hebrew must be asked back in Hebrew. The same applies to the templated
+  fallback in §4."* This case asserts a requirement, so a failure is a defect
+  and not a discussion.
+- **Why it needed saying at all (§6.5):** §4's language rule binds **call two**,
+  and a vague question never reaches call two — its reply is written by call
+  one. A Hebrew user asking a vague question would have been answered in English
+  and nothing in the spec would have been violated. The gap was invisible from
+  the user's seat and from the code; it only showed up by tracing which call
+  writes which sentence.
+- **Extend the case to the three replies that escape §4's rule**, since they are
+  now all bound by the same sentence: the vague ask-back (here), the **ambiguous
+  ask-back** (Q-26, which reaches call two and so was always covered), and the
+  **templated fallback** (Q-38, which does not reach the model at all and is the
+  hardest of the three to get right).
 
 ### Q-10 — Above the floor, it answers rather than asks · *S*
 
@@ -366,14 +437,37 @@ new failure V2 introduces"*. One case would be a sample. This is a matrix.
   as wrong as one that guesses.
 - **Method:** `what did I spend at Aroma`, `how much on Transport`.
 - **Expect:** answered, not asked back. The figure equals the **all-time** total
-  for that filter, computed independently (Q1). The reply states the range is
-  all time.
-- **Proposed floor (P) for "says it used all time":** the reply contains no
-  specific date or month name, **and** contains one of a defined set of
-  all-time markers (`all`, `ever`, `total`, `so far`, `since you started`, or
-  Hebrew equivalents). If Adam prefers the server to pass the account's first
-  expense date so the reply can name a real range, that is a better product and
-  a cleaner assertion — flagged in §6.4.
+  for that filter, computed independently (Q1).
+- **Floor, now approved (P → S).** Adam took the better of the two options I
+  offered: the server returns the account's **earliest expense date** from the
+  same aggregation (`earliest: { $min: "$date" }`, spec 11 step 2), so the reply
+  names a **real range** — *"since March, across all 218 expenses"* — instead of
+  gesturing at "all time". That turns a fuzzy wording check into an exact one:
+  **the reply names a month or date, and it is the month of the earliest
+  matching expense**, computed from the collection.
+- **The `$min` is over the matched set, not the account** — *"what did I spend
+  at Aroma"* should say "since your first Aroma expense", not since the account
+  opened. Assert the named date equals `min(date)` **over the same filter**, not
+  over all the user's expenses. One `$group` produces both, so getting this
+  wrong is unlikely — and invisible if nobody checks.
+
+### Q-64 — The earliest date is real, and is the right earliest · *S* — **new**
+
+- **Layer:** **SPLIT — API + DATA SWEEP.**
+- **Account:** `lv_steady`, `lv_coffee`.
+- **Proves:** the one line spec 11 step 2 added. It is the only number in the
+  reply that comes from an accumulator nobody looks at twice.
+- **Method:** four dateless questions whose matched sets have **different**
+  earliest dates — one all-account, one by a category, one by shop text, one
+  matching a single recent expense.
+- **Expect:** each reply names a range beginning at `min(date)` **over that
+  question's own filter**; the four differ from each other; and for the
+  single-match question the range begins at that expense's own date, not at the
+  account's first expense.
+- **Two edges:** a question that matches **nothing** must not name a range at
+  all (`$min` over an empty set is absent — Q-29's empty-search reading wins);
+  and when the user **did** give a range, the earliest date must not leak into
+  the reply and contradict the range they asked for.
 
 ---
 
@@ -396,6 +490,14 @@ the collection.
   test derives both from the collection using the **reply's own stated range and
   filter**, so a reply that names the wrong range fails even when its arithmetic
   is internally consistent.
+- **Corrected 2026-09-17:** `Transport` is a **main** category, so its expected
+  figure is the sum over `Transport` **and its subcategories** (`Fuel`,
+  `Public transport`, `Parking`), per spec 10 §2. The first pass of this case
+  would have computed a direct-only total and asserted the old behaviour — it
+  would have failed against correct code. **Every expectation in this file that
+  names a category now derives its id set the same way the app does: leaf →
+  itself; main → itself plus its children.** That helper is written once and
+  used by Q-11, Q-13, Q-17, Q-23, Q-24, Q-25, Q-55 and Q-62.
 - **Also:** the reply states the range and the filter it used (§4 rule 3). An
   answer with no stated range is a fail even when the number is right — the user
   cannot tell the app understood.
@@ -428,6 +530,19 @@ the collection.
   function, and this case is the only thing pointed at it.**
 - **Include a range ending today**, because `ER-10`/`ER-11` was precisely the
   bug where `to=<today>` silently dropped today's expenses.
+- **Strengthened 2026-09-17.** The two screens are no longer merely *expected*
+  to agree — spec 10 §2 now makes agreement the **stated reason** the rollup
+  rule exists: *"the chat must give the same number for the same period, or the
+  two screens contradict each other."* So this case grew a second half: compare
+  **per main category**, not only the grand total. Open a category group on
+  `/dashboard`, read its rolled-up amount, ask the chat about that category for
+  the same period, and require equality for **every** main category with
+  spending in it. A grand total can agree while every individual category
+  disagrees, and that is the more likely bug now that two separate pieces of
+  code do the same rollup — `DashboardPage.tsx`'s `buildGroups` in the client,
+  and `answerQuestion`'s id collection on the server. **Two implementations of
+  one rule is the `BD-02` seam by construction**, and this is the case aimed at
+  it.
 
 ### Q-14 — No number appears that was not handed in · *S, P*
 
@@ -441,7 +556,7 @@ the collection.
 - **Expect:** every numeric token in the reply is one of — the total, the count,
   a listed expense's amount, a date within the stated range, or a small ordinal
   that matches a list position (`1.`, `2.`, `3.`).
-- **Proposed bar (P):** the spec forbids calculation but gives no way to detect
+- **Detection floor (P):** the spec forbids calculation but gives no way to detect
   it. This token check is my proposal for the detection rule. If it is too
   strict in practice (a reply saying "about 40 a day"), the right fix is to
   tighten the prompt, not to loosen this check — "about 40 a day" **is** the
@@ -454,11 +569,9 @@ the collection.
 - **Method:** `how many coffees did I buy this month`, `how many expenses did I
   record last week`.
 - **Expect:** the count appears in the reply and equals the DB count.
-- **Proposed bar (P):** the spec routes "how many" through the `total` shape,
-  which returns both a sum and a count, and never says the **count** must lead.
-  A reply to "how many coffees" that opens with a shekel figure answers a
-  different question. My proposed rule: **for a question whose ask is a count,
-  the count must appear; the sum may appear as well.** §6.6.
+- **Approved 2026-09-17 (P → S).** Now spec 10 §4 rule 4: *"Answer the question
+  that was asked. 'How many coffees' is answered with the count, not only with
+  the money."* The count must appear; the sum may appear as well.
 
 ---
 
@@ -481,7 +594,7 @@ bites.
   4. the reply says how many more exist, and **that numeral equals the true
      match count minus 10** — computed independently, not read from the
      response.
-- **Proposed floor (P) for 3 and 4**, since wording may not be asserted:
+- **Detection floor (P) for 3 and 4**, since wording may not be asserted:
   - *"says they are the latest"* → the reply contains one of a defined recency
     set (`latest`, `most recent`, `newest`, `last`, `recent`, and the Hebrew
     `האחרונות`, `האחרונים`) **and** does not contain an all-inclusive word
@@ -503,7 +616,7 @@ bites.
 - **Expect:** exactly 3 rows; they are the true top 3 by `amount` within the
   month, in descending order; the reply **names the ordering** (§4 rule 4 —
   *"The reply always names the ordering it used"*).
-- **Proposed floor (P):** the reply contains a magnitude word (`biggest`,
+- **Detection floor (P):** the reply contains a magnitude word (`biggest`,
   `largest`, `highest`, `top`, `הגדולות`) and does **not** contain a recency
   word from Q-16's set. Naming the wrong ordering is as bad as using it.
 - **Edge to include:** if a tie in amount exists at the boundary, either tied
@@ -532,8 +645,11 @@ bites.
   exceeded 10, the case still passes **provided the server capped it** — that is
   the point of capping server-side. Record both numbers in the report; a model
   routinely asking for 50 is worth knowing even when the server holds.
-- **Proposed bar (P):** §6.7 — the spec caps but never says the user is told the
-  cap applied when they named a larger number. This case asserts they are.
+- **Approved 2026-09-17 (P → S).** Spec 10 §5 now carries the row: *"Return 10
+  and say the cap applied. The user asked for a number and got a different one;
+  saying nothing makes it look like they only have 10."* That last clause is the
+  whole risk — on `lv_coffee` a silent cap tells the user they own 10 coffees
+  when they own 40.
 
 ### Q-20 — The server caps even when the model asks for the moon · *S, B*
 
@@ -545,9 +661,15 @@ bites.
   produce on a bad day: `limit: 500`, `limit: 0`, `limit: -1`, `limit: "10"`,
   `limit: null`, `sort: "store"`, `sort: "amount", order: "sideways"`,
   `shape: "chart"`.
-- **Expect:** at most 10 rows, ever. An unknown `sort` or `order` falls back to
-  the spec's default (`date`, `desc`) rather than throwing or passing an
-  arbitrary string into `.sort()`. An unknown `shape` is refused clearly.
+- **Expect, all now spec rules rather than my guesses (spec 10 §5,
+  2026-09-17):** at most 10 rows, ever. `limit: 0` or negative is **treated as
+  absent**, so the default 10 applies — not as "return nothing", which would
+  answer a question with silence. An unknown `sort` or `order` falls back to the
+  defaults (`date`, `desc`) rather than throwing or passing an arbitrary string
+  into `.sort()`. An unknown `shape` is **refused clearly** rather than guessed
+  at — and, since `ambiguous` is now a real third shape, assert an `ambiguous`
+  arriving from the *model* is refused too (Q-65), because only the server is
+  allowed to produce it.
 - **Class (B):** `BD-02` — two components each internally consistent,
   disagreeing at the seam. Spec 11 puts the cap in **two** places (step 1's DAL
   and step 3's service). Two enforcers means either could be removed later
@@ -584,27 +706,66 @@ bites.
   *"Never silently drop the filter and answer a different question."* Silently
   answering "how much did I spend this month" instead is the worst outcome here,
   because the number is real and the question was not.
-- **Proposed floor (P):** the reply contains the asked-for name (case-insensitive)
+- **Detection floor (P):** the reply contains the asked-for name (case-insensitive)
   and contains no currency figure.
 
-### Q-24 — Asking about a parent category · *S, C, P — see §6.1*
+### Q-24 — A main category carries its subcategories · *S, C*
 
 - **Layer:** **SPLIT — BROWSER + DATA SWEEP.**
 - **Account:** `lv_coffee`, where every coffee sits under **Food › Coffee** and
-  the parent **Food** most likely holds few or no expenses of its own.
+  the parent **Food** holds few or no expenses of its own — so a parent-only
+  match would answer nothing.
+- **Unblocked 2026-09-17.** Spec 10 §2: *"A category means that category and
+  everything under it."* One expected result now, not two.
 - **Method:** `how much did I spend on Food this month` — **the spec's own
   headline example**, from §2 and §4.
-- **Expect (my proposed rule, §6.1):** the figure equals the sum over **Food and
-  all of its subcategories**, and the reply makes clear that subcategories are
-  included.
-- **Expect if Adam rules the other way** (a parent means only rows filed
-  directly on the parent): the reply must say so explicitly — *"₪0 filed
-  directly under Food; its subcategories are separate"* — because a bare ₪0 in
-  answer to "how much on Food" when the account holds 40 coffees is a confident
-  wrong answer, which is the exact thing §7 decided against.
-- **As currently specified, this case fails**, and it fails on the example the
-  spec uses to describe the feature. See §6.1. **This case cannot be implemented
-  until Adam rules**, and that is the finding.
+- **Expect, three things:**
+  1. the figure equals `Σ amount` over **Food plus every category whose `parent`
+     is Food** (`Coffee`, `Groceries`, `Restaurants`), computed independently
+     from the collection (Q1);
+  2. it is **not** zero, and it is **not** the direct-only total;
+  3. it **equals what `/dashboard` shows for Food over the same period**,
+     asserted by reading both screens. `DashboardPage.tsx:98-104` computes a
+     main category's amount as `direct + Σ subs`; the chat must agree or the two
+     screens contradict each other, which is the argument Adam ruled on.
+- **Also run on `lv_steady` and `lv_sprawl`**, whose category trees are deeper
+  and wider, and where a rollup that collects the wrong children is more likely
+  to show.
+- **The failure this guards against now inverts:** the risk is no longer
+  under-matching (answering ₪0) but **over-matching** — a rollup that collects
+  every category rather than the right children, giving a Food total that is
+  really the account total. Assert the figure is strictly less than the
+  all-category total for the same period whenever another category has spending
+  in it. Q-62 is the same guard from the other end.
+
+### Q-62 — A subcategory named alone matches only itself · *S* — **new**
+
+- **Layer:** **SPLIT — BROWSER + DATA SWEEP.**
+- **Account:** `lv_coffee`.
+- **Proves:** the rollup is a rollup, not a widening. Spec 11 step 3: *"one
+  match, and it is a subcategory → just that id."*
+- **Method:** `how much did I spend on Coffee this month`, then in the same
+  conversation `and on Groceries?`
+- **Expect:** each figure equals the sum over **that leaf alone** — not its
+  parent's total, not its siblings'. Assert `Coffee < Food` and
+  `Coffee + Groceries + Restaurants + direct-Food = Food` for the same period,
+  from the collection. That identity is the cleanest possible check that the
+  rollup collects exactly the right set, and it needs no wording assertion at
+  all.
+
+### Q-63 — Categories with no children, and the protected one · *S* — **new**
+
+- **Layer:** **API.**
+- **Account:** `lv_steady`.
+- **Proves:** the rollup does not break the ordinary case. Four of the eight
+  default categories — `Health`, `Clothing`, `Entertainment`, `Education` — have
+  **no subcategories at all**, and `Other` is protected and childless.
+- **Method:** ask a total for each of the five.
+- **Expect:** each answers with the direct total, no error, no empty
+  subcategory list causing an empty `$in` array. **An empty `$in` matches
+  nothing in Mongo**, so a rollup that builds `$in: []` instead of `$in: [ownId]`
+  turns every childless category into "I found no expenses" — a one-character
+  mistake with a plausible-looking result, and exactly the class §6.1 was.
 
 ### Q-25 — A word that is both a category and shop text · *S*
 
@@ -620,19 +781,56 @@ bites.
 - **Then the mirror:** `how much at coffee time` where `Coffee time` is not a
   category → treated as text, figure equals the text total, reply says so.
 
-### Q-26 — Several categories could be meant · *P — see §6.2*
+### Q-26 — Two categories share a name, so the app asks which · *S*
 
 - **Layer:** **BROWSER.**
-- **Account:** `lv_sprawl` (`Groceries` / `Supermarket` / `Food shopping`).
-- **Method:** `how much did I spend on groceries this month`.
-- **Expect (proposed):** the app either asks which of the matching categories
-  was meant, or **names the one it used** clearly enough that the user can see
-  it chose. It must not pick one silently and present the figure as *the*
-  answer.
-- **Why (C):** `categoryService.findByName(userId, name)` returns an **array**,
-  and duplicate names across different parents are legal (uniqueness is per
-  parent). Spec 11 step 3 says *"Not found → throw"* and is **silent on more
-  than one found**. On a 33-category account this is not hypothetical. §6.2.
+- **Account:** needs an account holding **two categories with the same name
+  under different parents** — e.g. Food › Coffee and Home › Coffee. Verify
+  whether `lv_sprawl` already has such a pair among its near-duplicate clusters;
+  its documented clusters are *similar* names (`Groceries`/`Supermarket`), which
+  is a different case. **If no exact duplicate exists, this runs on
+  `lv_qcollide`** (§3.2) — the four lived-in accounts are not modified to
+  create one.
+- **Unblocked 2026-09-17.** Spec 10 §2 *"The server asks back too, when a name
+  is ambiguous"*, and spec 11 step 3 — `answerQuestion` returns a third shape,
+  `ambiguous`, carrying the candidates and their parents.
+- **Method:** `how much did I spend on Coffee this month`.
+- **Expect, four things:**
+  1. the app **asks which one**, and **names both parents** — "one under Food,
+     one under Home". Naming only the shared name asks an unanswerable question;
+  2. it contains **no figure** — nothing was queried;
+  3. it is in the **user's language**. This is the point of routing `ambiguous`
+     through the second AI call rather than throwing a flat English error, so
+     ask the Hebrew form `כמה הוצאתי על קפה החודש` too and assert the ask comes
+     back in Hebrew;
+  4. zero writes (Q2).
+- **Then finish the exchange:** answer `the one under Food` and assert the
+  figure equals that leaf's total. An ask the user cannot answer is worse than a
+  guess, and nothing else in this file tests the second half of it.
+- **Near-duplicate mirror, on `lv_sprawl` as documented:** `how much did I spend
+  on groceries` where `Groceries`, `Supermarket` and `Food shopping` all exist
+  but only one is *named* Groceries. Expect it resolves to `Groceries` and
+  **says which one it used**, so the user can see it chose — this is a
+  single-match case, not an `ambiguous` one, and the two must not be confused.
+
+### Q-65 — The ambiguous shape, at the layer that builds it · *S, C* — **new**
+
+- **Layer:** **API / unit**, calling `expenseService.answerQuestion` directly.
+  Deliberately past the model: the browser proves the user is asked, this proves
+  the server never quietly answered.
+- **Method:** hand-built `question` objects against a category tree containing a
+  duplicate name, plus these orderings:
+  - a duplicated name where **one match is a main category and one is a
+    subcategory** — ambiguity must be detected **before** the rollup runs,
+    otherwise the app rolls up a category it was never sure the user meant;
+  - a duplicated name matching **three** categories;
+  - a name matching one category **whose case differs** (`coffee` vs `Coffee`) —
+    still one match, not ambiguous;
+  - `shape: "ambiguous"` arriving from the model itself, which it never should.
+- **Expect:** `{ shape: "ambiguous", options: [...] }` with each candidate's own
+  name **and its parent's name**; **no query executed** for any of them; and an
+  `ambiguous` shape arriving from the model is refused rather than echoed back
+  as though the server had produced it.
 
 ### Q-27 — Case and spacing resolve · *S, C*
 
@@ -653,12 +851,22 @@ bites.
   2. `backend/bl/expenseService.answerQuestion` — what it accepts and what it
      resolves (spec 11 step 3: resolves a **name** via `findByName`);
   3. `backend/dal/expenseRepository.queryExpenses` — what its `category` key
-     takes (spec 11 step 1: *"a category **id** — exact match"*);
+     takes. **Corrected 2026-09-17:** spec 11 step 1 now reads *"an **array** of
+     category ids — `$in`, because a main category carries its subcategories
+     with it"*. The first pass of this case asserted a single id and would have
+     failed against correct code;
   4. `getExpenseTotals` — the same key, in the `$match`.
-- **Expect:** the name→id conversion happens exactly once, in the service, and
-  neither repository function ever receives a name. Also assert `getExpenseTotals`
-  wraps `new mongoose.Types.ObjectId(userId)` and casts `from`/`to` through the
-  existing `startOfDay`/`endOfDay` helpers.
+- **Expect:** the name→**array of ids** conversion happens exactly once, in the
+  service, and neither repository function ever receives a name or a bare id.
+  Both repository functions build `$in` over an array. Also assert
+  `getExpenseTotals` wraps `new mongoose.Types.ObjectId(userId)`, casts
+  `from`/`to` through the existing `startOfDay`/`endOfDay` helpers, and includes
+  the `earliest: { $min: "$date" }` accumulator spec 11 step 2 now requires.
+- **The seam is now wider than it was**, which makes this case worth more: the
+  concept crosses **four** boundaries — a name in the model's JSON, an array of
+  ids in the service, an `$in` in two different repository functions, and the
+  same rollup again in `DashboardPage.tsx`. Every one of them is a place the
+  shape can be got wrong while each side stays internally consistent.
 - **Class (B):** this is the seam that produced the original name-vs-id defect —
   `backend/ai/` sent a name, `backend/bl/` expected an id, both halves passed
   their own tests. **The same seam is being rebuilt for V2, one layer deeper.**
@@ -676,7 +884,7 @@ bites.
 - **Method:** `what did I spend at Helicopter Rentals`, `how much on
   scuba diving`, `כמה הוצאתי על טרקטורים`.
 - **Expect:** §5 — *"I found no expenses matching that"*, **not** "you spent 0".
-- **Proposed floor (P):** the reply contains **no zero-valued currency token**
+- **Detection floor (P):** the reply contains **no zero-valued currency token**
   (`0`, `₪0`, `0.00`) and contains a no-match marker from a defined set
   (`no expenses`, `nothing`, `none`, `couldn't find`, `didn't find`, `לא מצאתי`,
   `אין`). The distinction the spec draws is real and entirely unenforceable
@@ -730,10 +938,13 @@ bites.
 - **Method:** `how much would I have spent if I delete the coffee expense`,
   `what if I move all my parking to Transport — how much then`,
   `show me my 3 biggest and remove the top one`.
-- **Expect:** zero writes. The third is explicitly out of scope per §2 *"Not in
-  V2"* — one intent per message — so the acceptable outcomes are: answer the
-  question part only, or say it can only do one thing at a time. Never: do the
-  delete.
+- **Expect:** zero writes. **Definite now, 2026-09-17:** the third has one
+  correct outcome, per spec 10 §5 — *"Answer the question, and say it can only
+  do one thing at a time."* Both halves are asserted: the 3 biggest are actually
+  listed **and** the reply declines the delete. Answering the question silently,
+  or declining without answering, each fails half of it — and answering silently
+  is the dangerous half, because the user has no reason to think the delete did
+  not happen.
 
 ---
 
@@ -791,9 +1002,16 @@ bites.
   (Q1 still applies — the fallback is built from the same numbers). Saved as an
   assistant message. **No error banner.** Spec: *"A question is never a dead
   end."*
-- **Also assert:** the fallback is in the user's language if the question was
-  Hebrew, or, if that is out of scope for a template, that Adam knows it is not
-  — §6.5.
+- **Also assert — now a requirement, not an open question:** spec 10 §4 —
+  *"The fallback follows the question's language too."* Ask the Hebrew form and
+  require a Hebrew fallback carrying the correct figures.
+- **This is the hardest of the three language paths and the most likely to
+  fail.** The fallback is a template built in code, with no model involved, so
+  it is the one place where writing an English string is the path of least
+  resistance. It is also the path a user only ever reaches on a bad day —
+  meaning a Hebrew-speaking user hits an English sentence at exactly the moment
+  the app is already failing them. Run it for a total, a list (where the
+  "latest 10, N more" clause must also be Hebrew — Q-37) and an empty result.
 
 ### Q-39 — A garbled or enormous second response does not reach the user · *S, B, P*
 
@@ -807,8 +1025,11 @@ bites.
   cap and no repetition guard"*. V2 feeds it up to **10 expenses of
   user-controlled text** on every list question — the same load, on a new path,
   with the guard still missing.
-- **Proposed bar (P):** §6.8 — a chat reply over **2,000 characters** is a
-  defect regardless of content, and the fallback is used instead.
+- **Approved 2026-09-17 (P → S).** Spec 10 §4, *"Two guards on the second
+  call"*: a reply over **2,000 characters** is discarded and the fallback used.
+  Assert the guard fires (the user gets the fallback with correct figures) and
+  that nothing over 2,000 characters ever reaches the transcript — including on
+  the **success** path, which is where a slow collapse would first appear.
 
 ### Q-40 — A failing first call is still a 502 with the text kept · *S*
 
@@ -825,14 +1046,22 @@ bites.
 ### Q-41 — How long an answer takes · *P*
 
 - **Layer:** **BROWSER.**
-- **Proposed bar (P):** **15 s** for an answered question, **10 s** for a vague
-  ask-back. §6.3 — the existing 10 s bar in `qa/harness/bars.ts` was set for
-  **one** model call; the question path makes **two**, sequentially, with a
-  database query between them. Reusing 10 s would fail honest behaviour, and
-  dropping the bar would hide a path that got 50% slower by design.
-- **Method:** measure across 10 questions on `lv_steady` and `lv_coffee`.
-- **Expect:** within budget. Recorded per question in the report whether it
-  passes or not, so a trend is visible.
+- **Bar, approved 2026-09-17 and now in spec 10 §5:** **15 s** for an answered
+  question, **10 s** for a vague ask-back. The existing 10 s bar in
+  `qa/harness/bars.ts` was set for **one** model call; the question path makes
+  **two**, sequentially, with a database query between them. Reusing 10 s would
+  have failed honest behaviour; dropping the bar would have hidden a path 50%
+  slower by design.
+- **Method:** measure across 10 questions on `lv_steady` and `lv_coffee`,
+  covering both a total and a ten-row list — the list sends far more text into
+  the second call and is the slower of the two.
+- **Expect:** within budget.
+- **The number has never been measured, and the spec says so.** Every question's
+  time is recorded in the report whether it passes or not, so the threshold can
+  move to fit reality after the first run. A bar set from nothing and then
+  quietly relaxed on each failure is worse than no bar; a bar set from nothing
+  and then corrected once, in the open, from real numbers, is how it should
+  work. `bars.ts` gets these two values so one edit moves every case.
 
 ### Q-42 — The user knows it is working while they wait · *S-implied, P*
 
@@ -855,16 +1084,34 @@ bites.
   inside a chat bubble is the same class of content in a narrower container, and
   it is the largest thing this app has ever rendered in a message.
 
-### Q-44 — A Hebrew answer reads correctly right-to-left · *P*
+### Q-44 — A Hebrew answer's figures survive being rendered · *P*
 
 - **Layer:** **BROWSER.**
-- **Method:** the Q-37 answer at 375 px.
-- **Expect:** RTL direction applied to the bubble; amounts, dates and `₪` not
-  reversed or split from their numbers; the list's rows aligned consistently.
-- **Proposed bar (P):** no spec covers Hebrew rendering. Proposed rule: a reply
-  whose Hebrew ratio is above 0.5 renders with `direction: rtl`, and every
-  numeral appears in the rendered text in the same digit order as in the
-  response body.
+- **Method:** the Q-37 answer (a ten-row Hebrew list) at 375 px, and the Q-35
+  Hebrew totals.
+- **Expect:** every amount, every date and the `₪` sign appear in the **rendered
+  text** in the same digit order and the same grouping as in the response body.
+  No number reversed, none split from its currency sign, none split across a
+  line so that `1,240` renders as `240` next to `1`.
+- **Split on Adam's ruling, 2026-09-17 — and this is the right call.** The first
+  pass proposed a second half: a reply more than half Hebrew must render with
+  `direction: rtl`. That is **dropped**, because there is no RTL handling
+  anywhere in `client/` — so the rule described *a feature nobody has decided to
+  build*, not a bar the app is failing. A suite asserting it would report a
+  missing feature as a defect on every single run, which trains people to ignore
+  the suite.
+- **What was kept is a real defect class, and it is the part that bites without
+  any RTL work at all.** Bidirectional text reorders **numbers** inside a
+  right-to-left run in the browser's own layout engine, whatever the CSS says.
+  A Hebrew sentence containing `₪1,240` can render with the sign on the wrong
+  side or the digits regrouped, and the user then reads a different number from
+  the one the database holds. That is a wrong figure reaching a user — the exact
+  thing this whole file exists to catch — and it is independent of whether
+  anyone ever builds RTL.
+- **Recorded, not asserted:** if the reply visibly reads badly for want of RTL,
+  the run report **notes** it and the case still passes. That is the honest way
+  to keep the observation without failing the app for an unbuilt feature, and it
+  gives Adam the evidence if he later wants to spec it.
 
 ### Q-45 — The answer is still there after a reload · *S*
 
@@ -970,6 +1217,15 @@ bites.
   this user's, so the `user` scope must exclude it regardless of the category
   filter; (3) only `lv_steady`'s own rows; (4) `user` present in every `$match`
   and every `find`.
+- **Fifth check, added 2026-09-17 because the rollup created it.** The resolved
+  filter is now an **array** of ids, built by collecting *"the ones whose
+  `parent` is this category's id"* (spec 11 step 3). Assert that **every id in
+  that array belongs to the asking user**. Spec 11 says to collect the children
+  from *"the user's full category list in the route"*, which is already scoped —
+  but an implementer who reaches for `Category.find({ parent: id })` instead
+  gets an unscoped query that is correct today only because ids are unique. The
+  scope must be there because it is right, not because nothing has collided yet.
+  A single unowned id in that array widens the read by a whole category.
 - **The trap being checked:** spec 11 step 2 says `$match` is built *"the same
   way `queryExpenses` builds its query, plus `user: ObjectId(userId)"*. If the
   `user` clause is added **after** an `$or` from the text filter and ends up
@@ -984,6 +1240,43 @@ bites.
 - **Expect:** each tab shows the answer to **its own** question, both figures
   correct, and after a reload both pairs appear in the transcript in a coherent
   order.
+
+---
+
+### Q-67 — Someone asks a question on their first evening · *A* — **new**
+
+- **Layer:** **BROWSER.**
+- **Account:** a **fresh** signup — 8 default main categories, 6 subcategories,
+  **zero expenses, zero messages**.
+- **Closing a cell I named as missed, not accepted.** The first pass of this
+  file wrote off A1 × every question flow on the grounds that a question against
+  an empty account can only produce the empty-search reply. That reasoning was
+  the convenient one, and I said so at the time rather than dressing it up. It
+  is also wrong on its own terms: what A1 uniquely reaches is **the first
+  minute**, and a new user asking the app what it can do before they have fed it
+  anything is an ordinary first move, not an edge case.
+- **Method:** sign up, and **before recording anything**, in one conversation:
+  1. `how much did I spend this month` — a well-formed question, no data;
+  2. `what did I spend on Food` — a category that exists with nothing under it;
+  3. `show me my expenses` — a list over nothing;
+  4. `how much did I spend?` — the vague floor, on an empty account;
+  5. then record one expense and ask (1) again.
+- **Expect:**
+  1–3 read as an **empty search**, never "you spent 0" (Q-29's floor), and
+  never as an error. (2) does **not** say *"you don't have a category called
+  Food"* — they do have it; it is empty. Those two refusals are one word apart
+  in effect and opposite in truth, and only an account with a category and no
+  expenses can tell them apart. (4) still asks back — the floor does not soften
+  because there is no data. (5) answers correctly, so the empty state was a
+  state and not a dead end.
+- **Also assert:** no figure invented from the seeded categories, zero writes
+  from (1)–(4), and the reply does not tell a brand-new user to look at a
+  dashboard that is equally empty.
+- **Why it earns its place beyond the empty-search mechanism:** `FR-42` in the
+  2026-09-17 findings — *"asked to total their spending, the user is told the
+  app cannot do that, and never told the dashboard can"* — is a first-evening
+  defect on exactly this path, and V2 is the feature that is supposed to fix it.
+  This is the case that checks it did.
 
 ---
 
@@ -1008,6 +1301,14 @@ bites.
   | expected resolved filter | `{ category: "Transport", from: <1st>, to: <today> }` |
   | expected figures | **computed from the database at run time** from that filter, not hardcoded |
   | expected framing | none / recency+more / ordering / refusal-by-name / empty-search / ask-back |
+
+  **Corrected 2026-09-17:** every entry naming a **main** category derives its
+  expected figures through the rollup (parent plus children), using the shared
+  helper from Q-11. Entries written against direct-only totals would have
+  asserted the pre-ruling behaviour and failed correct code. The corpus must
+  also now include at least one entry per new rule: a main category, a leaf, a
+  duplicated name (expecting the ask-back), a dateless question (expecting a
+  named earliest range), and a limit above the cap.
 
   The corpus must spread across: **wording** (`how much on X`, `what did I spend
   at X`, `X — how much?`, `show me X`, `my N biggest X`, a bare fragment);
@@ -1043,24 +1344,61 @@ bites.
   honest: **no secret, no action, no write, no crash.** Reading oddly is
   recorded, not failed.
 
-### Q-57 — Text that is also a regular expression · *C*
+### Q-57 — Text that is also a regular expression · *C, B*
 
 - **Layer:** **SPLIT — API + BROWSER.**
-- **Why this case exists, and it is the one I would run first:**
-  `queryExpenses` builds its text filter as
-  `new RegExp(filters.text, 'i')` — **unescaped**. V1 only ever reached that
-  line with an edit/delete `searchFilters.text`. **V2 routes the user's own
-  question text into the same line**, which widens the input enormously.
-- **Method:** `what did I spend at C++ (`, `how much on .*`,
-  `how much at [A-Z]`, `what did I spend on (unclosed`, `how much on \`,
-  `how much on a{99999999}`.
-- **Expect:** no 500 on any of them (an unterminated group throws
-  `SyntaxError` inside the DAL today). `.*` does **not** silently match every
-  expense and present the account total as the answer to a question about a
-  shop — which is a wrong answer that looks completely plausible. A
-  catastrophic-backtracking pattern does not hang the request past the Q-41
-  budget.
-- **Gap:** §6.3. Nothing in any spec says the text filter is escaped.
+- **Status changed 2026-09-17: the hole is fixed and committed** (`9c151e5`,
+  *"Treat a chat search term as text, not as a pattern"*).
+  `backend/dal/expenseRepository.js` now escapes with the built-in
+  `RegExp.escape` before building the pattern. So this case asserts **real
+  behaviour**, not a known failure — it is a regression guard, and it is the
+  only thing standing between that one-line fix and its quiet removal.
+- **Why it was found here, and why that is worth recording:** this was a **live
+  V1 defect**, not a V2 one. `queryExpenses` is reached today by every
+  edit and delete `searchFilters.text`, so *"change the expense at C++ (Tel
+  Aviv) to 90"* threw a `SyntaxError` inside the DAL before V2 existed. V2 only
+  widened the input by routing the user's own question text down the same line.
+  **V1's 225-test suite never sent a metacharacter**, which is the first failure
+  reason the 2026-09-17 findings list: *"every test payload was written by the
+  same mind that wrote the code — all complete, all valid."* Writing down what
+  the input space *was* found it; running the suite never would have.
+- **Method — four kinds, both on the question path and on the V1 edit path:**
+  1. **Metacharacters that used to throw:** `what did I spend at C++ (`,
+     `what did I spend on (unclosed`, `how much on \`, `how much at [A-Z`.
+  2. **Metacharacters that used to over-match:** `how much on .*`,
+     `what did I spend at a+`, `how much at ^`.
+  3. **A metacharacter that must still find its own row:** an expense whose
+     store genuinely is `C++ (Tel Aviv)` — ask about it and get **that expense
+     and nothing else**. Escaping that broke real matching would be a worse bug
+     than the one it fixed, and a test that only checks "no crash" would pass
+     while it did.
+  4. **Backtracking:** `how much on a{99999999}` and a 200-character pattern of
+     nested quantifiers — the request finishes inside the Q-41 budget.
+- **Expect:** no 500 on any input; `.*` returns only expenses whose text
+  literally contains `.*` (almost certainly none), **never the account total**;
+  kind 3 returns exactly its own row; kind 4 finishes in budget.
+- **Run kinds 1 and 2 through the V1 edit path as well** (`change the expense at
+  C++ ( to 90`), because that is where the defect actually lived and where the
+  fix could be reverted without any V2 test noticing.
+
+### Q-66 — The fix depends on a very new built-in · *C* — **new**
+
+- **Layer:** **STATIC + start-up.** No model, no database.
+- **Why:** `RegExp.escape` is **ES2025**, available from **Node 24**. It is
+  present on the Node in use here (v26.4.0, verified 2026-09-17). Neither
+  `backend/package.json` nor `client/package.json` declares an `engines` field,
+  so nothing stops the app being run on an older Node — and this is **graded
+  coursework that will be run on a machine nobody here controls.**
+- **The failure mode is bad:** on Node 20 or 22, `RegExp.escape` is
+  `undefined`, so every chat **edit and delete** throws
+  `TypeError: RegExp.escape is not a function` — a core V1 flow, dead, on the
+  grader's machine, from a line added to fix a different bug.
+- **Method:** assert `typeof RegExp.escape === "function"` at start-up, and
+  assert the repo declares the Node version it needs.
+- **Expect:** both. **The second half is a change to `backend/package.json`,
+  which is Adam's file** — reported, not written, and listed in §8.
+- **Not a criticism of the fix.** `RegExp.escape` is the right call and beats a
+  hand-rolled escape. It just needs the floor written down next to it.
 
 ### Q-58 — Dates at the edges · *S, B*
 
@@ -1092,7 +1430,10 @@ bites.
   actually returned was unrecoverable and the investigation stalled.
 - **Method:** ask five questions, including one refusal and one empty result,
   then read `backend/logs/`.
-- **Proposed bar (P), §6.9** — for each answered question the log holds:
+- **Bar, approved 2026-09-17** and now in spec 10 §4, with one improvement on
+  what I proposed: the logging lives **inside `backend/ai/`**, which already
+  holds all three pieces — so it does not straddle Adam's files and needs no
+  change in `backend/` at all. For each answered question the log holds:
   1. the `question` object call one produced;
   2. the filters actually used, **after** the server's defaults and caps;
   3. the `{ total, count }` or row ids the query returned;
@@ -1148,11 +1489,36 @@ works"*, and step 1 changes a function the dashboard uses.
 
 ---
 
-## 6. Spec gaps — what I could not write a case against
+## 6. The gaps this design pass found, and how each was ruled
 
-Each one: what is missing, why it matters, and the rule I propose. All proposed
-rules are marked **PROPOSED** in the cases and in `qa/harness/bars.ts`, and are
-deleted rather than weakened if Adam rejects them.
+**All twelve are now closed** (2026-09-17). Eleven were accepted as proposed;
+one was rejected, with a better reason than mine. Every rule below is in
+`docs/specs/10-chat-questions.md` — §2 for the two category rules, §4 for the
+earliest-date field and the two guards, §5 for the small rules and the Bars
+table, and §7 for the record of the decisions.
+
+This section is kept as the **design record**, not as a to-do list. It is the
+answer to "why does the suite assert this?" for every rule that did not come
+from the product spec originally, and it is the evidence for the order of work:
+none of these twelve could have been found by running anything, because there
+was nothing to run.
+
+| # | Gap | Ruling | Case |
+|---|---|---|---|
+| 6.1 | A main category matched nothing | **Accepted** — parent includes its children | Q-24, Q-62, Q-63 |
+| 6.2 | A duplicated category name was undefined | **Accepted** — the server asks which, via the second call | Q-26, Q-65 |
+| 6.3 | The text filter was an unescaped regex | **Fixed and committed** (`9c151e5`) | Q-57, Q-66 |
+| 6.4 | "All time" had no shape | **Accepted, improved** — return the earliest date, name a real range | Q-10, Q-64 |
+| 6.5 | The ask-back and the fallback escaped the language rule | **Accepted** — both follow the question's language | Q-09, Q-26, Q-38 |
+| 6.6 | "How many" could be answered with money | **Accepted** — the count is answered | Q-15 |
+| 6.7 | Being capped and being told were separate | **Accepted** — say the cap applied | Q-19 |
+| 6.8 | No length cap on a reply | **Accepted** — over 2,000 characters, use the fallback | Q-39 |
+| 6.9 | A wrong figure could not be explained | **Accepted, improved** — logged inside `backend/ai/` | Q-59 |
+| 6.10 | Messages per question turn unstated | **Accepted** — exactly two | Q-45, and Q2 throughout |
+| 6.11 | Four small undefined behaviours | **Accepted** as proposed | Q-20, Q-34, Q-58 |
+| 6.12 | Right-to-left rendering | **Rejected** — and correctly | Q-44, split |
+
+Each gap is kept below in the form it was raised, with the ruling attached.
 
 ### 6.1 A parent category does not include its subcategories — so the spec's own example returns nothing
 
@@ -1173,13 +1539,21 @@ expenses matching that"** on an account holding 40 coffees and 218 expenses.
 
 Nothing in spec 10 or 11 mentions subcategories at all.
 
-> **PROPOSED:** when the resolved category is a **main** category, the filter
-> matches that category **and every category whose `parent` is it**. The reply
-> says so: *"₪1,240 on Food, including its subcategories."* Asking about a leaf
-> matches only the leaf.
+> **RULED — accepted, 2026-09-17.** A main category matches itself **and every
+> category whose `parent` is it**. A leaf matches only itself. Spec 10 §2.
 
-**Q-24 cannot be implemented until Adam rules.** I believe V2 should not ship
-without this decision.
+**The deciding argument was not mine but a better one**, and it is worth keeping
+because it generalises: `/dashboard` already rolls children into their parent
+(`client/src/components/DashboardPage.tsx`, `buildGroups` — a main category's
+amount is `direct + Σ subs`). So the chat is not free to choose. Two screens
+answering "how much on Food this month" with two different numbers is a worse
+product than either number alone, whichever is "right". **Where a behaviour
+already exists somewhere in the product, the new feature does not get to decide
+it afresh** — it has to match, or the disagreement becomes the defect. That is a
+question worth asking of every new V2 surface, and it is now Q-13's second half.
+
+Cases: **Q-24** (unblocked, one expected result), **Q-62** (the mirror — a leaf
+must not widen), **Q-63** (childless categories must not produce an empty `$in`).
 
 ### 6.2 `findByName` can return several, and nothing says what then
 
@@ -1189,13 +1563,21 @@ step 3 covers *not found* and nothing else. On `lv_sprawl` (33 categories) and
 on any account that made a `Parking` under `Home` as well as under `Transport`,
 this is ordinary.
 
-> **PROPOSED:** more than one match → the app asks which was meant, listing
-> them with their parents. It never picks one silently. This matches how V1
-> already handles an ambiguous **expense** match, and `categoryService`
-> already throws *"More than one category named X"* when creating a
-> subcategory — so the app has a precedent and a phrasing to reuse.
+> **RULED — accepted, 2026-09-17.** More than one match → the app asks which
+> was meant, naming each candidate's parent. It never picks one silently.
+> Adam's words: *"if the chat needs more clarification from the user it should
+> ask him, same as any other AI chat app."*
 
-Case: **Q-26.**
+**Implemented better than I proposed.** I suggested the server throw a clear
+error that the route turns into a reply — which would have been an English
+string. Instead `answerQuestion` returns a **third shape**, `ambiguous`,
+carrying the candidates, and that goes into the **same second AI call** as any
+answer. The question therefore comes back in the user's own language for free.
+That also means the ambiguous path is not a bypass: it runs the same code the
+answers run, so it cannot rot separately — which is why `Q-26` asserts the
+Hebrew form and `Q-65` asserts the shape at the layer below.
+
+Cases: **Q-26**, **Q-65**.
 
 ### 6.3 The text filter is an unescaped regular expression
 
@@ -1208,11 +1590,27 @@ term. Two failures follow, and neither is mentioned anywhere:
   account total, presented as the answer about a shop. A wrong answer that looks
   entirely plausible is worse than a crash.
 
-> **PROPOSED:** escape regex metacharacters before building the pattern. This is
-> one line in `queryExpenses` and it is **Adam's file** — I cannot write it, and
-> it is named as a blocker in the report.
+> **FIXED AND COMMITTED, 2026-09-17** — `9c151e5`, *"Treat a chat search term
+> as text, not as a pattern"*. `queryExpenses` now escapes with the built-in
+> `RegExp.escape` before building the pattern. Verified: `C++ (Tel Aviv)`
+> matches its own expense and nothing else; `.*` no longer returns the whole
+> account.
 
-Case: **Q-57.**
+**This was a live V1 defect, and that is the part worth keeping.** It sat on the
+edit and delete paths, reachable today, before V2 existed — *"change the expense
+at C++ (Tel Aviv) to 90"* threw a `SyntaxError` inside the DAL. V2 only widened
+the input by routing question text down the same line.
+
+So **V1's 225-test suite had a hole that a V2 design pass found, without running
+anything.** That is the first of the five failure reasons the 2026-09-17
+findings list — *"every test payload was written by the same mind that wrote the
+code — all complete, all valid"* — caught this time by asking what the input
+space *is* rather than what inputs someone thought of. It is the strongest
+argument in this whole file for designing before building.
+
+Cases: **Q-57** (now a regression guard, run on the V1 edit path too),
+**Q-66** (new — `RegExp.escape` is ES2025/Node 24+, and nothing in the repo
+declares a Node floor).
 
 ### 6.4 "Says it used all time" has no shape
 
@@ -1221,12 +1619,14 @@ dates were given, but the server hands the second call no such marker — it
 passes back the filters it used, and the absence of `from`/`to` is what the
 model must notice and articulate.
 
-> **PROPOSED:** the service returns the account's **earliest expense date**
-> alongside the result when no range was given, so the reply can name a real
-> range (*"since March, across all 218 expenses"*) instead of gesturing at "all
-> time". Better product, and a far cleaner assertion.
+> **RULED — accepted, 2026-09-17.** `getExpenseTotals` gains
+> `earliest: { $min: "$date" }` in the same `$group`, so it costs one line and
+> no extra query. The reply names a real range — *"since March, across all 218
+> expenses"* — instead of gesturing at "all time".
 
-Case: **Q-10.**
+Cases: **Q-10**, **Q-64** (new — the `$min` must be over the **matched set**,
+not the account, or *"what did I spend at Aroma"* claims a range going back to
+an account opening that has nothing to do with Aroma).
 
 ### 6.5 Call one's ask-back has no language rule
 
@@ -1234,20 +1634,31 @@ Case: **Q-10.**
 two**. The vague ask-back is written by **call one** and never reaches call two.
 The templated fallback of §4 is also not bound by it.
 
-> **PROPOSED:** both the ask-back and the fallback follow the question's
-> language. If a templated fallback cannot be bilingual cheaply, say so
-> explicitly in the spec — an English fallback for a Hebrew user is a decision,
-> not an accident.
+> **RULED — accepted, 2026-09-17.** Both the ask-back and the templated fallback
+> follow the question's language. Spec 10 §2 and §4.
 
-Cases: **Q-09**, **Q-38**.
+Recorded because the finding matters more than the rule: **this gap was
+invisible from the user's seat and from the code.** Both halves were correct —
+§4's language rule was right, and the ask-back was right to be written by call
+one. The defect only existed in the *gap between them*, and it took tracing
+which call writes which sentence to see it. A Hebrew user asking a vague
+question would have been answered in English, and **no spec would have been
+violated**. That is the seam class, in prose rather than in field types.
+
+There are three replies on this feature and they reach the language rule by
+three different routes: the answer (call two, always bound), the ambiguous
+ask-back (call two, bound for free — §6.2), and the vague ask-back and fallback
+(neither reaches call two). The last is the one that breaks.
+
+Cases: **Q-09**, **Q-26**, **Q-38**.
 
 ### 6.6 A "how many" question may be answered with money
 
 §2 routes *"how many expenses did I record last week"* through the `total`
 shape, which returns a sum **and** a count. No rule says the count must appear.
 
-> **PROPOSED:** when the user's ask is a count, the count appears in the reply.
-> The sum may also appear.
+> **RULED — accepted, 2026-09-17.** Spec 10 §4 rule 4: *"Answer the question
+> that was asked."* The count is answered; the sum may also appear.
 
 Case: **Q-15.**
 
@@ -1257,8 +1668,8 @@ Case: **Q-15.**
 the user **named a number above the cap** — *"show me all 50 of my coffees"* →
 10. The user asked for a number and got a different one.
 
-> **PROPOSED:** when the user names a limit above 10, the reply says the cap
-> applied.
+> **RULED — accepted, 2026-09-17.** Spec 10 §5, with the reason spelled out
+> there: *"saying nothing makes it look like they only have 10."*
 
 Case: **Q-19.**
 
@@ -1269,9 +1680,8 @@ The 2026-09-16 run produced a **207 KB** model response, and the findings state
 receives **up to 10 expenses of user-controlled text** on every list question —
 the same failure mode, on a new path, with the guard still absent.
 
-> **PROPOSED:** a chat reply over **2,000 characters** is discarded and the
-> templated fallback used. Two thousand is generous for ten rows of prose and
-> catches collapse early. Numbers are Adam's to change.
+> **RULED — accepted, 2026-09-17.** Spec 10 §4, *"Two guards on the second
+> call"*: over 2,000 characters, discard and use the fallback.
 
 Case: **Q-39.**
 
@@ -1282,13 +1692,16 @@ server ran it wrong, or the model mis-stated a correct result. Telling them
 apart needs the `question` object and the computed result on disk. Neither is
 logged today.
 
-> **PROPOSED:** log, per answered question — the `question` object, the filters
-> actually used after defaults and caps, the `{ total, count }` or row ids
-> returned, and whether the fallback fired. And nothing else: no token, no key,
-> no hash.
+> **RULED — accepted, 2026-09-17, and placed better than I proposed.** All four
+> pieces are logged **inside `backend/ai/`**, which already holds every one of
+> them. And nothing else: no token, no key, no hash.
 
-Case: **Q-59.** This sits in Adam's `backend/` and in Claude's `backend/ai/`;
-the split is his to make.
+Case: **Q-59.** I had flagged this as straddling Adam's files and Claude's.
+It does not: `backend/ai/` already holds the `question` object, the filters and
+the result, so the whole change lives in Claude's folder and needs **nothing**
+from Adam. A gap I reported as a shared problem turned out to be a one-owner
+problem — worth noting, because "who has to change what" is a thing I should
+check before reporting a blocker.
 
 ### 6.10 How many messages a question turn saves
 
@@ -1299,17 +1712,53 @@ variable is overwritten before the single save), but an implementer who saves
 first and updates later produces three messages and a transcript that shows the
 model's placeholder.
 
-> **PROPOSED:** exactly two messages per question turn. Asserted by Q2
-> throughout.
+> **RULED — accepted, 2026-09-17.** Exactly two chat messages per question
+> turn. Asserted by Q2 throughout, and by Q-45 after a reload — the only place a
+> third message, holding call one's discarded placeholder, becomes visible.
 
 ### 6.11 Small things, recorded so they are decisions
 
-| Gap | Proposed |
+**All four accepted as proposed, 2026-09-17**, and now in spec 10 §5.
+
+| Gap | Ruling |
 |---|---|
 | "This month" is resolved by the model against the injected date, but `startOfDay`/`endOfDay` are **UTC** — a user asking near midnight local time may get a range off by a day | Accept UTC for V2 and say so in the spec; the app already stores at UTC midnight throughout. Case Q-58 records the behaviour rather than failing it |
 | Unknown `sort` / `order` / `shape` values from the model | Fall back to the spec defaults; refuse an unknown `shape` clearly. Q-20 |
 | `limit: 0` or negative | Treated as absent → default 10. Q-20 |
 | A question and a write in one message (*"show me my 3 biggest and delete the top one"*) | §2 says one intent per message, but not what the app does when asked both. Proposed: answer the question, say it can only do one thing at a time. Q-34 |
+
+### 6.12 Right-to-left rendering — the one proposal that was rejected
+
+I proposed that a reply more than half Hebrew must render with
+`direction: rtl`. **Rejected, 2026-09-17, and the reason is better than my
+proposal was:** there is no RTL handling anywhere in `client/`. So the rule
+described **a feature nobody has decided to build**, not a bar the app is
+failing. A suite that asserted it would report a missing feature as a defect on
+every run — which is how people learn to stop reading the suite.
+
+**This is a mistake I should be able to catch myself.** My own standing
+instruction is that a missing bar is a finding rather than an exemption, and I
+applied it eleven times correctly here. The twelfth time I over-applied it: I
+proposed a bar for something that was not a bar at all but an unbuilt feature.
+The distinction is real and I can state it now —
+
+> **Propose a bar** when the app already does the thing and nobody has written
+> down how well it must do it (response time, reply length, "looks right").
+> **Write a spec request** when the app does not do the thing at all. A bar is a
+> threshold on existing behaviour; it is not a way to smuggle in a feature
+> request that then fails every run.
+
+Per the rule that a rejected bar is deleted rather than weakened, the RTL half
+of `Q-44` is **gone**, not softened into something that always passes. The case
+survives because its other half — *a Hebrew reply's amounts, dates and `₪` must
+not be reversed or split from their numbers* — is a real defect class that bites
+**whatever** is decided about text direction: bidirectional text reorders
+numbers inside a right-to-left run in the browser's own layout engine,
+regardless of CSS. A user reading a different number from the one in the
+database is exactly what this file exists to catch.
+
+RTL needs its own spec. Recorded in §7.4 as out of scope with a reason, not as
+an oversight.
 
 ---
 
@@ -1319,18 +1768,25 @@ model's placeholder.
 
 | Layer | Cases |
 |---|---:|
-| Browser only (headed) | 24 |
-| Split — browser plus API, a sweep, or a static read | 20 |
-| API only | 13 |
-| Static (declaration comparison) | 1 |
+| Browser only (headed) | 26 |
+| Split — browser plus API, a sweep, or a static read | 22 |
+| API only | 15 |
+| Static / start-up (declaration comparison, no server) | 2 |
 | Data sweep only | 1 |
-| Response-time / log reads (API + log) | 2 |
-| **Total** | **61** |
+| Response-time / log reads (API + log) | 1 |
+| **Total** | **67** |
 
-**44 of 61 touch a real headed browser.** Two of the API-only cases (Q-20,
-Q-53) are deliberately past the UI because the payloads cannot be produced
+**48 of 67 touch a real headed browser.** Three of the API-only cases (Q-20,
+Q-53, Q-65) are deliberately past the UI because the payloads cannot be produced
 through it; the rest are contract, corpus-scale, or fault-injection work where
 the screen adds nothing to the risk.
+
+**The two cheapest cases in the file are the two I would run first.** `Q-28` and
+`Q-66` need no server, no model and no database — they compare declarations and
+check a runtime floor. `Q-28` is aimed at the seam that has already cost this
+project once and is now four boundaries wide; `Q-66` is aimed at a one-line fix
+that silently breaks V1 on any Node below 24. Neither could have been found by
+running the suite.
 
 ### 7.2 By axis
 
@@ -1338,10 +1794,10 @@ Every flow is answered on every axis, or the cell carries a reason (§4.1).
 
 | Axis | Cases |
 |---|---|
-| 1 — the input space | Q-01…Q-05, Q-10, Q-18, Q-19, Q-23, Q-26, Q-27, Q-29, Q-30, Q-34…Q-36, Q-55, Q-56, Q-57, Q-58 |
-| 2 — the moment | Q-06, Q-08, Q-45, Q-46, Q-47, Q-48, Q-49, Q-50, Q-52 |
-| 3 — the actor | Q-51, Q-52, Q-53, Q-54, Q-50 |
-| 4 — the person watching | Q-41, Q-42, Q-43, Q-44, Q-15, Q-16 (framing), Q-22, Q-29 |
+| 1 — the input space | Q-01…Q-05, Q-10, Q-18, Q-19, Q-23, Q-26, Q-27, Q-29, Q-30, Q-34…Q-36, Q-55, Q-56, Q-57, Q-62, Q-63, Q-64, Q-65 |
+| 2 — the moment | Q-06, Q-08, Q-45, Q-46, Q-47, Q-48, Q-49, Q-50, Q-52, Q-58 |
+| 3 — the actor | Q-50, Q-51, Q-52, Q-53, Q-54, Q-67 |
+| 4 — the person watching | Q-15, Q-16 (framing), Q-22, Q-29, Q-41, Q-42, Q-43, Q-44, Q-67 |
 
 Axis 2 is the thinnest in absolute terms, which is correct: a question has a
 shorter middle than a two-request confirm flow. Axis 3 is thin by count and
@@ -1353,23 +1809,25 @@ strong by weight — Q-53 is the case that matters.
 |---|---|
 | User experience | Q-05, Q-06, Q-15, Q-22, Q-29, Q-42, Q-49 |
 | UI | Q-43, Q-44, Q-33, Q-45 |
-| Response time | Q-41, Q-42 (both PROPOSED bars) |
+| Response time | Q-41, Q-42 (both bars now approved, spec 10 §5) |
 | Input diversity | Q-55 (30 questions, each with its own expectation), Q-01, Q-04, Q-56, Q-57 |
-| Edge values | Q-20, Q-21, Q-22, Q-58, Q-57 |
+| Edge values | Q-20, Q-21, Q-22, Q-57, Q-58, Q-63 (a category with no children), Q-64 (`$min` over an empty set) |
 | Interruption mid-flow | Q-06, Q-46, Q-47, Q-49 |
 | Log out / back in / carry on | Q-50, Q-51, Q-52, Q-54 |
 | Nonsense and injection | Q-56, Q-57, Q-05 |
-| Missing info given later | Q-07, Q-08 (the vague→specific exchange **is** this area for V2) |
+| Missing info given later | Q-07, Q-08 (the vague→specific exchange **is** this area for V2), Q-26 (the server's own version of it) |
 
 ### 7.4 Empty cells — named, not counted
 
-- **A1, first evening × every question flow.** Deliberate, and a risk judgement:
-  a question feature on an account with zero expenses can only ever produce the
-  empty-search reply, which Q-29 and Q-30 already cover at the mechanism level.
-  The one thing A1 uniquely reaches — *a brand-new user asks a question before
-  recording anything* — is **not covered**, and it is a plausible first-minute
-  experience. **Missed, not accepted.** One case would close it; I did not write
-  it, and I would rather say so than pad the count.
+- **A1, first evening × every question flow. — CLOSED 2026-09-17 by `Q-67`.**
+  The first pass recorded this as *missed, not accepted*, and that was the right
+  label: the reasoning I had used ("an empty account can only produce the
+  empty-search reply, which Q-29 covers") was the convenient one, and it was
+  wrong on its own terms. Two things only an account with categories and no
+  expenses can distinguish: *"you don't have a category called Food"* versus
+  *"Food is empty"* — one word apart in effect, opposite in truth. `Q-67` now
+  covers them, plus the vague floor on an empty account and the transition to
+  the first real answer.
 - **A7, two tabs × the vague ask-back.** Q-54 covers two tabs with two answered
   questions. Two tabs mid-ask-back is uncovered, and **accepted**: the ask-back
   holds no state anywhere — it is one saved message — so a second tab cannot
@@ -1380,10 +1838,26 @@ strong by weight — Q-53 is the case that matters.
   oversized-input half at the API layer.
 - **Performance beyond the proposed budget.** No load testing, no concurrency
   beyond Q-54's two tabs. **Accepted**: this is a course project with one user.
-- **Accessibility of the answer bubble.** No spec makes a claim, and unlike the
-  other gaps here I am **not** proposing a bar, because a10y deserves its own
-  spec rather than a number invented in a test file. **Missed, and named as
-  such.**
+- **Accessibility of the answer bubble — OUT OF SCOPE, and this is now a
+  decision rather than a silence.** Asked directly to say plainly whether it
+  stays out, the answer is **yes, for V2**, for the same reason §6.12's RTL
+  proposal was rejected and by the same test: accessibility is not a threshold
+  on behaviour the app already has, it is **behaviour the app does not have**.
+  There is no a11y handling in `client/`, no spec asserting any, and a suite
+  that invented one would fail every run against a feature nobody has decided to
+  build — teaching everyone to ignore the suite, which costs more than the gap.
+  It needs its own spec, alongside RTL, and the two are close relatives: both
+  are about whether the reply is reachable by someone who is not reading it the
+  way I am.
+  **What this accepts, stated as a risk rather than hidden:** a screen-reader
+  user cannot use this app today, and V2 does not change that either way. That
+  is acceptable for a six-day graded course project with one known user, and it
+  would not be acceptable for anything shipped to the public. The line is drawn
+  there deliberately, and it is Adam's to move.
+  **What is *not* deferred** is the part that is a threshold on existing
+  behaviour: touch-target size (`FR-38`), contrast and legibility at three
+  widths (`Q-43`), and figures surviving rendering (`Q-44`). Those stay, because
+  the app already does those things and can already do them wrong.
 
 ### 7.5 What in this file is a sample rather than coverage
 
@@ -1396,6 +1870,18 @@ Said plainly, so nobody counts them twice:
 - **Q-27** samples case-insensitivity on three spellings of one name.
 - **Q-30** samples the empty-range reading on two ranges.
 - **Q-48** is a single happy-path walk of navigate-and-return.
+- **Q-63** samples childless categories on one account's five.
+- **Q-66** samples one runtime built-in. A real check would enumerate every
+  recent-JS feature the codebase relies on; this one is written because it has a
+  known consequence today, not because it is complete.
+
+And one demoted by the second pass: **Q-25** was written as coverage of the
+category-versus-text collision, but with the rollup ruling it now samples only
+the **leaf** case (`Coffee` is a subcategory). A main category whose name also
+appears in expense text — *"how much on Food"* on an account with a shop called
+"Food Hall" — is the harder version and is **not covered**. Named here rather
+than folded in, because it is a real gap the ruling created and I noticed it too
+late to design properly.
 
 ### 7.6 What demotes existing cases
 
@@ -1414,28 +1900,49 @@ rewriting for the statement domain, and that is **still open and still mine**.
 
 ## 8. Blockers and dependencies
 
-| # | What | Owner | Blocks |
-|---|---|---|---|
-| **B1** | **Rule the parent-category question (§6.1).** Does asking about `Food` include `Coffee`? The spec's own headline example turns on it | **Adam** | Q-24, and the correctness of Q-11, Q-13, Q-55 wherever a main category is named |
-| **B2** | **Escape the regex in `queryExpenses` (§6.3).** `backend/dal/expenseRepository.js` is Adam's file. I cannot write it and will not sketch it | **Adam** | Q-57 will fail until it is done |
-| **B3** | **Rule on several `findByName` matches (§6.2)** | **Adam** | Q-26 |
-| **B4** | Confirm or replace the seven proposed bars: §6.4 §6.6 §6.7 §6.8 §6.9, Q-41's 15 s, Q-43/Q-44's layout rules | **Adam** | those cases are deleted, not weakened, on rejection |
-| **B5** | A fault switch to fail **only the second AI call** | **builder** (`backend/ai/` is Claude's) | Q-38, Q-39 |
-| **B6** | Build `lv_qcollide` — one small additive account (§3.2). The four lived-in accounts are never touched | `qa-tester` | Q-25, Q-56 kind 3 |
-| **B7** | The feature itself does not exist | Adam (steps 1–4) + builder (`backend/ai/`) | everything |
+**B1, B2, B3 and B4 are all closed** (2026-09-17). What remains:
+
+| # | What | Owner | Blocks | State |
+|---|---|---|---|---|
+| ~~B1~~ | Rule the parent-category question (§6.1) | Adam | — | **Closed** — parent includes children |
+| ~~B2~~ | Escape the regex in `queryExpenses` (§6.3) | Adam | — | **Closed** — fixed, `9c151e5` |
+| ~~B3~~ | Rule on several `findByName` matches (§6.2) | Adam | — | **Closed** — the server asks which |
+| ~~B4~~ | Confirm or replace the seven proposed bars | Adam | — | **Closed** — six accepted, one rejected (§6.12) |
+| **B5** | A fault switch to fail **only the second AI call**, and to force an oversized reply | **builder** — `backend/ai/` is Claude's, so this is not Adam's work | Q-38, Q-39 | open |
+| **B6** | Build `lv_qcollide` — one small additive account (§3.2), now also carrying the duplicate category name `Q-26` and `Q-65` need. The four lived-in accounts are **never touched** | `qa-tester` | Q-25, Q-26, Q-56 kind 3, Q-65 | open |
+| **B7** | Declare a Node floor (`engines`) in `backend/package.json`, because `RegExp.escape` is ES2025 / Node 24+ | **Adam** — his file, one line, and I will not write it | Q-66's second half | **new** |
+| **B8** | The feature itself does not exist | Adam (steps 1–4) + builder (`backend/ai/`) | everything | open |
+
+**B7 is the only new thing Adam needs to do**, and it exists because of his own
+fix rather than in spite of it — `RegExp.escape` is the right call, it just
+needs the floor written next to it. Verified present on the Node here (v26.4.0);
+absent on Node 20 and 22, where every chat **edit and delete** would throw.
 
 ---
 
 ## 9. What I would not ship V2 without
 
-Four things, in order:
+Revised after the rulings. The first item on the old list — a decision on §6.1 —
+is **closed**, so this is now four cases rather than three cases and a question.
 
-1. **A ruling on §6.1.** As written, the feature's own headline example answers
-   nothing on an account full of coffees.
-2. **Q-53.** `answerQuestion` is a new path that reads every row a user owns,
-   scoped by filters a language model built. One misplaced clause in the
-   `$match` and it reads someone else's.
-3. **Q-31.** The read feature must be provably a read — and the same sweep is
-   what proves this suite did not damage the accounts Adam is testing by hand.
-4. **Q-16.** A slice presented as the whole answer is the one defect here that a
-   user will act on financially without ever knowing they were misled.
+1. **Q-53.** `answerQuestion` is a new path that reads every row a user owns,
+   scoped by filters a language model built — and, since the rollup ruling, by
+   an **array** of category ids assembled from a parent lookup. One misplaced
+   clause in the `$match`, or one unowned id in that array, and it reads someone
+   else's spending.
+2. **Q-31.** The read feature must be provably a read — and the same sweep is
+   what proves this suite did not damage the four accounts Adam is testing by
+   hand.
+3. **Q-16.** A slice presented as the whole answer is the one defect here a user
+   will act on financially without ever knowing they were misled.
+4. **Q-24 with Q-13's per-category half.** The rollup rule is now implemented
+   **twice** — once in `DashboardPage.tsx`'s `buildGroups`, once in
+   `answerQuestion` — and the spec's stated reason for the rule is that the two
+   screens must agree. Two implementations of one rule, in two languages, owned
+   by two people, is the `BD-02` seam by construction. Nothing else in the suite
+   looks at it.
+
+**And one thing V2 should not ship *with*:** `Q-66`'s Node floor (B7). It is one
+line in a file I may not edit, and without it a fix for a V1 bug becomes a
+worse V1 bug on any machine running Node 22 — including, plausibly, the one this
+coursework is graded on.
