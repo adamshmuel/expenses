@@ -36,6 +36,12 @@ const getForUser = (userId, filters) => {
     return expenseRepository.queryExpenses(userId, filters);
 }
 
+const requireLabel = (store, description) => {
+    if (!store && !description) {
+        throw { status: 400, message: "An expense needs a store or a description." };
+    }
+}
+
 /**
  * Create one expense, resolving its category name to a real category first.
  * @param {string} userId
@@ -43,6 +49,7 @@ const getForUser = (userId, filters) => {
  * @returns {Promise<import('mongoose').Document>} the saved expense
  */
 const createExpense = async (userId, { amount, store, description, date, category }) => {
+    requireLabel(store, description);
     const categoryDoc = await resolveCategory(userId, category);
     return expenseRepository.createExpense({ amount, store, description, date, category: categoryDoc._id, user: userId });
 }
@@ -57,6 +64,7 @@ const createExpense = async (userId, { amount, store, description, date, categor
  */
 const createManyExpenses = async (userId, drafts) => {
     const docs = await Promise.all(drafts.map(async (draft) => {
+        requireLabel(draft.store, draft.description);
         const categoryDoc = await resolveCategory(userId, draft.category);
         return { ...draft, category: categoryDoc._id, user: userId };
     }));
@@ -76,6 +84,11 @@ const editExpense = async (userId, id, changes) => {
     const expense = await expenseRepository.findExpenseById(id);
     if (!expense || expense.user.toString() !== userId) {
         throw { status: 404, message: "Expense not found." };
+    }
+    if ('store' in changes || 'description' in changes) {
+        const store = 'store' in changes ? changes.store : expense.store;
+        const description = 'description' in changes ? changes.description : expense.description;
+        requireLabel(store, description);
     }
     if (changes.category) {
         const categoryDoc = await resolveCategory(userId, changes.category);
