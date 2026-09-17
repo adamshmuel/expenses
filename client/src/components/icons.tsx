@@ -9,6 +9,25 @@ export const Mark = () => (
   </span>
 )
 
+/** A restart/replay glyph — gives the Replay control a visible affordance
+ *  (spec §4) so it reads as pressable, not as a line of body text. */
+export const ReplayIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12a9 9 0 1 1-3-6.7" />
+    <path d="M21 3v5h-5" />
+  </svg>
+)
+
 export const AlertIcon = () => (
   <svg
     width="18"

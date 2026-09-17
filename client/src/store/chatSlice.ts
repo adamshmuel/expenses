@@ -232,17 +232,20 @@ const chatSlice = createSlice({
         state.error = action.payload?.message ?? 'Something went wrong.'
       })
 
-      .addCase(sendChatMessage.pending, (state) => {
+      .addCase(sendChatMessage.pending, (state, action) => {
         state.status = 'sending'
         state.error = null
-      })
-      .addCase(sendChatMessage.fulfilled, (state, action) => {
-        state.status = 'idle'
+        // Shown right away — it's the user's own text, already known
+        // locally, with nothing to wait on the server for (bug: it used to
+        // appear only once the reply came back, ~3s later).
         state.messages.push({
           id: `u-${state.messages.length}`,
           role: 'user',
           text: action.meta.arg,
         })
+      })
+      .addCase(sendChatMessage.fulfilled, (state, action) => {
+        state.status = 'idle'
         state.messages.push({
           id: `a-${state.messages.length}`,
           role: 'assistant',
@@ -255,6 +258,11 @@ const chatSlice = createSlice({
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.status = 'idle'
         state.error = action.payload?.message ?? 'Something went wrong.'
+        // Undo the optimistic push above: the request never actually went
+        // through, so the transcript should not claim it did. The composer
+        // still holds the text (HomePage doesn't clear it on failure), so
+        // the user can just retry.
+        state.messages.pop()
       })
 
       .addCase(confirmChatAction.pending, (state) => {

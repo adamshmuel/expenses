@@ -9,6 +9,7 @@ import { LoginPage } from './components/LoginPage'
 import { SignupPage } from './components/SignupPage'
 import { HomePage } from './components/HomePage'
 import { DashboardPage } from './components/DashboardPage'
+import { HowToUsePage } from './components/HowToUsePage'
 import { PageNotFound } from './components/PageNotFound'
 
 const App = () => {
@@ -61,6 +62,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* Public — spec docs/specs/12-how-to-use.md §1: works logged in or out. */}
+        <Route path="/how-to-use" element={<HowToUsePage />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

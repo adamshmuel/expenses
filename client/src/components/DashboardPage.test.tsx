@@ -180,4 +180,18 @@ describe('DashboardPage', () => {
 
     await waitFor(() => expect(dashboardApi.getSummary).toHaveBeenCalledWith('2026-09-15', '2026-09-15'))
   })
+
+  it('does not print a description under a column that claims to be the store', async () => {
+    vi.mocked(dashboardApi.getCategories).mockResolvedValue(categories)
+    vi.mocked(dashboardApi.getSummary).mockResolvedValue([{ _id: 'health', total: 32.5 }])
+    vi.mocked(dashboardApi.getExpenses).mockResolvedValue([
+      // No store — only a description. Bug 5: this printed "gas" under a
+      // header that says "Store", which is not true of this row.
+      { _id: 'e1', amount: 32.5, description: 'gas', date: '2026-09-12', category: 'health' },
+    ])
+    renderWithProviders(<DashboardPage />, '/dashboard')
+
+    await screen.findByText('gas')
+    expect(screen.queryByRole('columnheader', { name: /^store$/i })).not.toBeInTheDocument()
+  })
 })

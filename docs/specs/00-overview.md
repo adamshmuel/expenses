@@ -17,6 +17,7 @@ edit directly.
 |---|---|---|
 | `/home` | AI chat. The only place the user creates, edits, or deletes anything — expenses and categories alike. | [01-ai-chat.md](01-ai-chat.md) |
 | `/dashboard` | Read-only statistics and lists, built from what was saved through the chat. | [02-dashboard.md](02-dashboard.md) |
+| `/how-to-use` | A tutorial page: what to type, what confirming does, where it ends up. Public, client-only. | [12-how-to-use.md](12-how-to-use.md) |
 
 The API between the two sides is [03-api-contract.md](03-api-contract.md); the
 database behind it is [04-data-model.md](04-data-model.md). The server layers

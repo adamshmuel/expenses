@@ -151,6 +151,14 @@ a:hover {
   text-decoration: none;
 }
 
+/* Padding grows the real tap target to the 44x44 WCAG target size; the
+   matching negative margin cancels it back out so the link still sits and
+   spaces itself exactly as before — the text never visibly moves or grows. */
+.navbar__quiet-link {
+  padding: 11px 12px;
+  margin: -11px -12px;
+}
+
 .navbar__links a:hover,
 .navbar__quiet-link:hover {
   color: var(--ink);
@@ -160,6 +168,19 @@ a:hover {
   color: var(--ink);
   font-weight: 600;
   box-shadow: inset 0 -2px 0 var(--debit);
+}
+
+/* "Sign up" is a real button with its own background, so padding would grow
+   the visible pill. Instead an invisible ::after extends past its edges to
+   reach the 44x44 tap target — the pill itself never changes size. */
+.navbar__right .button--small {
+  position: relative;
+}
+
+.navbar__right .button--small::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 
 .navbar__user {
@@ -523,19 +544,37 @@ a:hover {
   }
 }
 
-/* Nothing to scroll yet: the empty message and the composer form one block
-   that sits centred in the remaining space, instead of the composer
-   docking to the bottom. */
-.chat-page:has(.chat-empty) {
-  justify-content: center;
-}
-
 .chat-page h1 {
   margin: 0 0 20px;
   font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.04em;
   flex-shrink: 0;
+}
+
+/* Everything below the "Chat" heading. A flex column of its own so the empty
+   state can centre itself in the space the heading leaves behind, instead of
+   pulling the heading down with it — see .chat-body:has(.chat-empty). */
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Nothing to scroll yet: the invitation, the hint and the composer form one
+   block that sits centred in the remaining space, instead of the composer
+   docking to the bottom — the way a chat app greets a new user. */
+.chat-body:has(.chat-empty) {
+  justify-content: center;
+}
+
+.chat-empty__invite {
+  margin: 0 0 8px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
 }
 
 /* Everything above the docked composer scrolls independently in here. */
@@ -628,7 +667,7 @@ a:hover {
 
 /* The error banner, confirm card and form as one cluster. Centred (with the
    empty message above it) until there is a conversation, then docked to the
-   bottom of the viewport — see .chat-page:has(.chat-empty) and
+   bottom of the viewport — see .chat-body:has(.chat-empty) and
    .chat-bottom--docked. */
 .chat-bottom {
   display: flex;
@@ -705,6 +744,35 @@ a:hover {
   }
 }
 
+/* Below ~480px the logged-in navbar (brand + Home/Dashboard + avatar +
+   username + Log out) is wider than the viewport and pushes the whole page
+   into horizontal scroll (LV-15). Nothing is hidden — the row wraps onto a
+   second line instead, so the brand, both links, the username and Log out
+   all stay readable. */
+@media (max-width: 480px) {
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 8px;
+    padding: 10px 16px;
+  }
+
+  .navbar__left {
+    gap: 16px;
+  }
+
+  /* .navbar__right keeps its default 22px gap here — FR-38's enlarged Log
+     in/Sign up tap targets eat into that gap on both sides, and a tighter
+     gap would make them overlap. */
+  .navbar__links {
+    gap: 12px;
+  }
+
+  .navbar .button--plain {
+    white-space: nowrap;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Dashboard — "Classical" redesign (docs/designs/Expenses Redesign.dc.html).
    Scoped entirely under .dashboard-page: its own palette, serif type, and
@@ -713,7 +781,12 @@ a:hover {
    for the rest of the app to move onto these tokens.
 --------------------------------------------------------------------------- */
 
-.dashboard-page {
+/* The custom properties are shared with .dashboard-vars (below) — a
+   lighter-weight wrapper the "How to use" tutorial puts around a Dashboard
+   snippet (docs/specs/12-how-to-use.md §4) so it picks up the same colours
+   and type without the full page's own layout rules. */
+.dashboard-page,
+.dashboard-vars {
   --db-bg: #f3f2f2;
   --db-text: #201f1d;
   --db-accent: #b68235;
@@ -727,7 +800,9 @@ a:hover {
   --db-radius-md: 4px;
   --db-heading: 'Cormorant Garamond', ui-serif, Georgia, serif;
   --db-body: 'Lora', ui-serif, Georgia, serif;
+}
 
+.dashboard-page {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -1223,4 +1298,233 @@ a:hover {
   .dashboard-total-row__figure {
     min-width: 0;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   "How to use" — docs/specs/12-how-to-use.md. A public page in the app's own
+   ink/paper language, not a brochure. Each lesson's animation box reuses the
+   real chat and dashboard classes above, so it never needs its own colours or
+   type — only .dashboard-vars (above) to carry the Dashboard's own tokens
+   into a box that isn't the Dashboard page itself.
+--------------------------------------------------------------------------- */
+
+.tutorial-page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 56px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 16px 64px;
+}
+
+@media (min-width: 600px) {
+  .tutorial-page {
+    padding: 64px 32px 80px;
+  }
+}
+
+.tutorial-hero {
+  text-align: center;
+  max-width: 46ch;
+}
+
+.tutorial-hero h1 {
+  margin: 0 0 14px;
+  font-size: clamp(30px, 4.4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.tutorial-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.5;
+}
+
+.tutorial-lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  width: 100%;
+}
+
+.lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+}
+
+.lesson:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.lesson h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.lesson__text {
+  margin: 0 0 8px;
+  max-width: 56ch;
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+
+.lesson__animation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* A grid, not a block: every frame (see TutorialLesson) is placed in the
+   same cell with `grid-area: 1 / 1`, so they stack on top of each other
+   instead of flowing one after another. A grid track auto-sizes to the
+   largest item assigned to it, so this cell — and the stage's height — is
+   always exactly as tall as the tallest frame, whichever one is currently
+   visible. That holds at any viewport width and however the frames' content
+   changes; nothing here is a fixed pixel number. */
+.lesson__stage {
+  display: grid;
+  min-height: 160px;
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+.lesson__frame {
+  grid-area: 1 / 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* Shorter frames (e.g. the empty composer) sit centred in the reserved
+     height by default. */
+  justify-content: center;
+}
+
+/* Once a frame has a message thread, dock its composer to the bottom of the
+   reserved height instead — the same rule the live chat page uses once it
+   has a conversation (.chat-body:has(.chat-empty) above), so a lesson with
+   more frames than fit stacks messages upward under a steady composer
+   instead of drifting the whole block up and down the box. */
+.lesson__frame:has(.chat-bottom--docked) {
+  justify-content: flex-end;
+}
+
+/* Reduced motion, multi-frame case (spec §4): the grid-stack trick above
+   overlaps every frame in one cell, which is right when only one is ever
+   really visible. Here more than one frame is visible at once, so they need
+   real document flow instead — a plain stack, one below the other. Still no
+   fixed height: the box simply grows to fit both. */
+.lesson__stage--still {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lesson__frame--still {
+  min-width: 0;
+}
+
+.lesson__stage .chat-bottom {
+  padding-bottom: 0;
+}
+
+.lesson__stage .chat-empty {
+  padding: 24px 0;
+}
+
+.lesson-dashboard-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lesson__caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.lesson__replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 16px;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lesson__replay:hover {
+  border-color: var(--ink);
+}
+
+.lesson__dashboard-link {
+  align-self: flex-start;
+}
+
+.tutorial-examples {
+  width: 100%;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+}
+
+.tutorial-examples h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.tutorial-examples ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tutorial-examples li {
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 15px;
+}
+
+.tutorial-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+  text-align: center;
+}
+
+.tutorial-cta p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
 }

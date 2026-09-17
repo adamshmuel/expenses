@@ -21,12 +21,15 @@ export const NavBar = () => {
           <span className="brand__name">Expenses</span>
         </div>
 
-        {user && (
-          <nav className="navbar__links">
-            <NavLink to="/home">Home</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
-          </nav>
-        )}
+        <nav className="navbar__links">
+          {user && (
+            <>
+              <NavLink to="/home">Home</NavLink>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+            </>
+          )}
+          <NavLink to="/how-to-use">How to use</NavLink>
+        </nav>
       </div>
 
       {user ? (

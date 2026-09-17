@@ -14,7 +14,14 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   accessToken: null,
-  status: 'idle',
+  // Starts 'checking', not 'idle': the app always asks the server whether a
+  // session exists (App's restoreSession, dispatched on mount) before it
+  // knows if the user is logged in. ProtectedRoute/PublicOnlyRoute render
+  // nothing during 'checking' for exactly this reason — an initial 'idle'
+  // let ProtectedRoute read "no user yet" as "logged out" and redirect to
+  // /login (with `replace`) before restoreSession had a chance to answer,
+  // destroying the page the user actually asked for.
+  status: 'checking',
   error: null,
   fieldErrors: {},
 }

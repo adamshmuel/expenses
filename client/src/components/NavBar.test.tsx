@@ -22,6 +22,14 @@ describe('NavBar', () => {
     expect(navbar.queryByRole('link', { name: /dashboard/i })).not.toBeInTheDocument()
   })
 
+  it('offers a "How to use" link when nobody is logged in', async () => {
+    vi.mocked(authApi.refresh).mockRejectedValue({ message: 'No session.', fieldErrors: {} })
+    renderWithProviders(<App />, '/login')
+
+    const navbar = within(await screen.findByRole('banner'))
+    expect(navbar.getByRole('link', { name: /how to use/i })).toHaveAttribute('href', '/how-to-use')
+  })
+
   it('shows the username and the app links once logged in', async () => {
     vi.mocked(authApi.refresh).mockResolvedValue({ user, accessToken: 'abc' })
     renderWithProviders(<App />, '/home')
@@ -31,6 +39,14 @@ describe('NavBar', () => {
     expect(navbar.getByRole('link', { name: /home/i })).toBeInTheDocument()
     expect(navbar.getByRole('link', { name: /dashboard/i })).toBeInTheDocument()
     expect(navbar.getByRole('button', { name: /log out/i })).toBeInTheDocument()
+  })
+
+  it('also offers the "How to use" link once logged in', async () => {
+    vi.mocked(authApi.refresh).mockResolvedValue({ user, accessToken: 'abc' })
+    renderWithProviders(<App />, '/home')
+
+    const navbar = within(await screen.findByRole('banner'))
+    expect(await navbar.findByRole('link', { name: /how to use/i })).toHaveAttribute('href', '/how-to-use')
   })
 
   it('returns to the login screen after logging out', async () => {

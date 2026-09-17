@@ -11,11 +11,11 @@ const user = { id: '1', username: 'adam', email: 'adam@example.com' }
 describe('authSlice', () => {
   beforeEach(() => vi.resetAllMocks())
 
-  it('starts logged out', () => {
+  it('starts checking, not idle, so a protected route does not redirect before restoreSession answers', () => {
     const { auth } = makeStore().getState()
     expect(auth.user).toBeNull()
     expect(auth.accessToken).toBeNull()
-    expect(auth.status).toBe('idle')
+    expect(auth.status).toBe('checking')
   })
 
   it('stores the user and access token after a successful login', async () => {

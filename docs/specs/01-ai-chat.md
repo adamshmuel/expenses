@@ -210,6 +210,10 @@ user's categories at once. Shortest of the seven writing intents.
   clearly marked as a new one the user is agreeing to create.
 - An edit or delete can only ever match the logged-in user's own expenses or
   categories — every DAL lookup is scoped by `userId` first.
+- The reply is written in the same language as the user's message. A Hebrew
+  message gets a Hebrew reply. This covers the reply prose only — a category's
+  name, a store and a description keep the form they already have, taken from
+  the user's own text or from the category list, never translated.
 - Category rules from [04-data-model.md](04-data-model.md) apply the same as if
   typed by hand: two levels only, no duplicate name under the same parent, and
   "Other" cannot be renamed or deleted. A request that would break one of these
@@ -222,6 +226,7 @@ user's categories at once. Shortest of the seven writing intents.
 | Case | Behaviour |
 |---|---|
 | Text does not match any of the eight intents | Say so. Nothing changes |
+| The user asks what they spent — a totals question (V1, before `answer-question` ships) | Say the chat cannot total spending, and point at the dashboard, which already breaks spending down by category. Never imply the chat can answer it. Removed when [10-chat-questions.md](10-chat-questions.md) lands |
 | A statement is misread as a question, or the reverse (V2) | The one genuinely new failure V2 introduces — `spent 50 on coffee` and `how much on coffee` are close. See [10-chat-questions.md](10-chat-questions.md) §5 |
 | Amount missing (create expense) | Ask for the amount. Save nothing |
 | Several expenses in one message | Numbered list, one confirmation |
@@ -231,7 +236,8 @@ user's categories at once. Shortest of the seven writing intents.
 | The AI call fails or times out (provider unreachable) | Show an error, `502`. The user's text is not lost |
 | The model responds but the content is unusable (garbled, empty, oversized, wrong script) | Retry once, identical request; still bad → refuse with "try rephrasing", not a `502`. See §8 |
 | The user cancels | Nothing changes |
-| No messages yet | An empty state, not a blank screen |
+| No messages yet | A **centred** empty state — the composer sits in the middle of the screen with a short invitation above it, the way a chat app greets a new user. Not a heading stranded at the top of an empty page, and not a blank screen |
+| The user presses Send | Their text leaves the composer **and** appears in the transcript in the same moment. It is never in both places at once, and never in neither. If the send fails, the text returns to the composer so it can be retried, and the transcript does not claim it was sent |
 
 ### Auth
 
@@ -317,9 +323,12 @@ treats them as a distinct failure mode from "the API is down":
   can't have been altered by the model.
 - A parsed amount with more than two decimal places is rejected the same way.
 - A response with no usable text, an empty draft, a suspicious/leaked field,
-  a reply over 5000 characters, or characters outside the supported script
-  ranges (Hebrew included, per the app's bilingual support) is treated as
-  **garbled**, not passed through.
+  a raw response over **8192 bytes** (8KB), or characters outside the supported
+  script ranges (Hebrew included, per the app's bilingual support) is treated
+  as **garbled**, not passed through. The ceiling is measured in real UTF-8
+  bytes, not string length — a Hebrew character is two bytes but one unit of
+  string length, so counting characters would misjudge a Hebrew reply's real
+  size. A normal reply is under 2KB; the 2026-09-17 run recorded a 207KB one.
 - On a garbled response, `parseMessage` retries **once** with an identical
   request before giving up — Gemini Flash Lite's failures on this app's
   traffic are transient roughly 1 time in 5, and one retry cuts the

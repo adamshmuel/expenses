@@ -23,9 +23,10 @@ describe('HomePage chat', () => {
     vi.mocked(chatApi.getHistory).mockResolvedValue([])
   })
 
-  it('shows an empty state before anything is typed', async () => {
+  it('shows an inviting empty state before anything is typed', async () => {
     renderWithProviders(<App />, '/home')
-    expect(await screen.findByText(/nothing here yet/i)).toBeInTheDocument()
+    expect(await screen.findByText(/type an expense the way you.d say it out loud/i)).toBeInTheDocument()
+    expect(screen.getByText(/spent 50 at the supermarket/i)).toBeInTheDocument()
   })
 
   it('loads and shows the chat history on entering the page', async () => {
@@ -44,7 +45,23 @@ describe('HomePage chat', () => {
 
     expect(await screen.findByText('spent 50 at the supermarket')).toBeInTheDocument()
     expect(screen.getByText('Added.')).toBeInTheDocument()
-    expect(screen.queryByText(/nothing here yet/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/type an expense the way/i)).not.toBeInTheDocument()
+  })
+
+  it("shows the user's own message immediately, before the reply arrives", async () => {
+    let resolveSend: (value: { reply: string; intent: 'unknown' }) => void = () => {}
+    vi.mocked(chatApi.sendMessage).mockImplementation(
+      () => new Promise((resolve) => { resolveSend = resolve }),
+    )
+    renderWithProviders(<App />, '/home')
+
+    await send('spent 50 at the supermarket')
+
+    expect(await screen.findByText('spent 50 at the supermarket')).toBeInTheDocument()
+    expect(screen.queryByText(/type an expense the way/i)).not.toBeInTheDocument()
+
+    resolveSend({ reply: 'Added.', intent: 'unknown' })
+    expect(await screen.findByText('Added.')).toBeInTheDocument()
   })
 
   it('shows the reply once the server answers', async () => {
@@ -101,6 +118,35 @@ describe('HomePage chat', () => {
         ],
       }),
     )
+  })
+
+  it('shows a date on a new-expense confirm card', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Add this?',
+      intent: 'create-expense',
+      drafts: [{ amount: 50, store: 'Supermarket', category: 'Groceries', date: '2026-09-15' }],
+    })
+    renderWithProviders(<App />, '/home')
+
+    await send('spent 50 at the supermarket')
+
+    const drafts = within(await screen.findByRole('list', { name: /expenses to add/i }))
+    expect(drafts.getByText(/2026-09-15/)).toBeInTheDocument()
+  })
+
+  it('formats a draft amount the same way the dashboard does', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Add this?',
+      intent: 'create-expense',
+      drafts: [{ amount: 1234.5, store: 'Supermarket', category: 'Groceries', date: '2026-09-15' }],
+    })
+    renderWithProviders(<App />, '/home')
+
+    await send('spent 1234.50 at the supermarket')
+
+    // dashboardFormat's money(): "₪ 1,234.50" — a thousands separator and a
+    // space after the symbol. ChatScreen's own formatter printed "₪1234.50".
+    expect(await screen.findByText('₪ 1,234.50')).toBeInTheDocument()
   })
 
   it('says so and shows nothing to confirm when an edit matches no expense', async () => {
@@ -244,5 +290,27 @@ describe('HomePage chat', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/cannot reach the server/i)
     expect(screen.getByLabelText(/message/i)).toHaveValue('spent 50 at the supermarket')
+    // The optimistic bubble is popped back off on failure (chatSlice
+    // sendChatMessage.rejected) — the text must not sit in both places, only
+    // in the composer, ready to retry.
+    expect(screen.queryByRole('list', { name: /conversation/i })).not.toBeInTheDocument()
+  })
+
+  it('clears the composer the moment the message sends, not only once the reply arrives', async () => {
+    let resolveSend: (value: { reply: string; intent: 'unknown' }) => void = () => {}
+    vi.mocked(chatApi.sendMessage).mockImplementation(
+      () => new Promise((resolve) => { resolveSend = resolve }),
+    )
+    renderWithProviders(<App />, '/home')
+
+    await send('spent 50 at the supermarket')
+
+    // The text has left the composer and is showing in the transcript at
+    // the same moment — never both places, never neither (spec §7).
+    expect(screen.getByLabelText(/message/i)).toHaveValue('')
+    expect(await screen.findByText('spent 50 at the supermarket')).toBeInTheDocument()
+
+    resolveSend({ reply: 'Added.', intent: 'unknown' })
+    expect(await screen.findByText('Added.')).toBeInTheDocument()
   })
 })

@@ -15,6 +15,7 @@ be tested**, split one file per area so no single file grows unbounded.
   | `2026-09-15-ai-testable.md` | `backend/ai/` |
   | `2026-09-15-server-additions-testable.md` | `backend/` growth since `e48ce5b` (chat/expense/category routes, services, models) |
   | `2026-09-15-client-additions-testable.md` | `client/` growth since `e48ce5b` (chat UI committed; dashboard UI uncommitted — see file) |
+  | `2026-09-17-how-to-use-testable.md` | `/how-to-use`, and the `ChatScreen` / dashboard extractions it shares with the real screens |
 
 - **When a genuinely new area of the system appears** — `backend/ai/` once it's
   built, a mobile app, a second service — it gets its **own new dated file**,

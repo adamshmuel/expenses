@@ -43,6 +43,25 @@ describe('chatSlice', () => {
     expect(store.getState().chat.messages).toEqual([])
   })
 
+  it('shows the user message as soon as the request starts, not only once the reply arrives', async () => {
+    let resolveSend: (value: { reply: string; intent: 'unknown' }) => void = () => {}
+    vi.mocked(chatApi.sendMessage).mockImplementation(
+      () => new Promise((resolve) => { resolveSend = resolve }),
+    )
+    const store = makeStore()
+    const promise = store.dispatch(sendChatMessage('spent 50 at the supermarket'))
+
+    expect(store.getState().chat.messages.map((m) => m.text)).toEqual(['spent 50 at the supermarket'])
+    expect(store.getState().chat.messages[0].role).toBe('user')
+
+    resolveSend({ reply: 'Not sure what you mean.', intent: 'unknown' })
+    await promise
+    expect(store.getState().chat.messages.map((m) => m.text)).toEqual([
+      'spent 50 at the supermarket',
+      'Not sure what you mean.',
+    ])
+  })
+
   it('appends the user text and the assistant reply after a plain reply', async () => {
     vi.mocked(chatApi.sendMessage).mockResolvedValue({ reply: 'Not sure what you mean.', intent: 'unknown' })
     const store = makeStore()

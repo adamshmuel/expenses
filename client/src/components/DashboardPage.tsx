@@ -6,6 +6,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getCategories, getExpenses, getSummary } from '../api/dashboardApi'
 import type { CategoryTotal, DashboardCategory, DashboardExpense } from '../api/types'
+import { money } from '../lib/dashboardFormat'
+import { DashboardTotals } from './DashboardTotals'
+import { CategoryBreakdown } from './CategoryBreakdown'
 
 type Period = 'today' | 'week' | 'month' | 'pick' | 'custom'
 
@@ -16,9 +19,6 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: 'pick', label: 'Pick a month' },
   { key: 'custom', label: 'Custom' },
 ]
-
-const money = (amount: number) =>
-  '₪ ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const toISODate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -278,22 +278,7 @@ export const DashboardPage = () => {
 
       {status === 'ready' && !isEmpty && (
         <>
-          <div className="dashboard-totals">
-            <div className="dashboard-totals__main">
-              <span className="dashboard-eyebrow">Total spent</span>
-              <span className="dashboard-fig dashboard-totals__figure">{money(total)}</span>
-            </div>
-            <div className="dashboard-stats">
-              <div className="dashboard-stat">
-                <span className="dashboard-eyebrow">Expenses</span>
-                <span className="dashboard-fig dashboard-stat__figure">{expenses.length}</span>
-              </div>
-              <div className="dashboard-stat">
-                <span className="dashboard-eyebrow">Categories used</span>
-                <span className="dashboard-fig dashboard-stat__figure">{summary.length}</span>
-              </div>
-            </div>
-          </div>
+          <DashboardTotals total={total} expensesCount={expenses.length} categoriesUsedCount={summary.length} />
 
           <div className="dashboard-body">
             <section className="dashboard-section" aria-label="By category">
@@ -301,47 +286,7 @@ export const DashboardPage = () => {
                 <h2>By category</h2>
                 <span className="dashboard-hint">Tap a category for its subcategories</span>
               </div>
-              <div className="dashboard-categories">
-                {groups.map((g) => {
-                  const hasSubs = g.subs.length > 0
-                  const isOpen = hasSubs && !!openGroups[g.id]
-                  const share = total > 0 ? Math.round((g.amount / total) * 100) : 0
-                  return (
-                    <div key={g.id}>
-                      <button
-                        type="button"
-                        className="dashboard-category-row"
-                        aria-expanded={hasSubs ? isOpen : undefined}
-                        onClick={() => hasSubs && toggleGroup(g.id)}
-                      >
-                        <span className="dashboard-caret" aria-hidden="true">
-                          {hasSubs ? (isOpen ? '▾' : '▸') : ''}
-                        </span>
-                        <span className="dashboard-category-row__name">{g.name}</span>
-                        <span className="dashboard-leader" />
-                        <span className="dashboard-fig dashboard-category-row__share">{share}%</span>
-                        <span className="dashboard-fig dashboard-category-row__amount">{money(g.amount)}</span>
-                      </button>
-                      {isOpen && (
-                        <div className="dashboard-subcategories">
-                          {g.subs.map((s) => (
-                            <div key={s.id} className="dashboard-sub-row">
-                              <span>{s.name}</span>
-                              <span className="dashboard-leader dashboard-leader--sub" />
-                              <span className="dashboard-fig">{money(s.amount)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-                <div className="dashboard-total-row">
-                  <span className="dashboard-eyebrow">Total</span>
-                  <span className="dashboard-leader" />
-                  <span className="dashboard-fig dashboard-total-row__figure">{money(total)}</span>
-                </div>
-              </div>
+              <CategoryBreakdown groups={groups} total={total} openGroups={openGroups} onToggle={toggleGroup} />
             </section>
 
             <section className="dashboard-section" aria-label="Recent expenses">
@@ -354,7 +299,10 @@ export const DashboardPage = () => {
                 <thead>
                   <tr>
                     <th className="dashboard-table__date">Date</th>
-                    <th>Store</th>
+                    {/* Bug 5: this column shows store OR description — never
+                        both — so it is headed "Details", not "Store", which
+                        was only ever true for half the rows. */}
+                    <th>Details</th>
                     <th>Category</th>
                     <th className="dashboard-table__amount">Amount</th>
                   </tr>
