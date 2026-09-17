@@ -65,7 +65,7 @@ const queryExpenses = (userId, filters) => {
         if (filters.to) query.date.$lte = endOfDay(filters.to);
     }
     if (filters.text) {
-        const escapedText = RegExp.escape(filters.text);
+        const escapedText = filters.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const pattern = new RegExp(escapedText, 'i');
         query.$or = [{ store: pattern }, { description: pattern }];
     }
