@@ -47,7 +47,8 @@
       "Bash(python3 -c ' *)",
       "Bash(node -e \"require\\('./backend/bl/categoryService.js'\\); require\\('./backend/routes/chatRoute.js'\\); console.log\\('both files parse OK'\\)\")",
       "Bash(git check-ignore *)",
-      "Bash(node -e \"require\\('./backend/routes/chatRoute.js'\\); console.log\\('parses OK'\\)\")"
+      "Bash(node -e \"require\\('./backend/routes/chatRoute.js'\\); console.log\\('parses OK'\\)\")",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X POST http://localhost:3100/api/users/signup -H 'Content-Type: application/json' -d '{\"username\":\"qa_chatroute_verify\",\"password\":\"TestPass123!\"}')"
     ],
     "additionalDirectories": [
       "/Users/adamshmuel/Dev/git/expenses/backend/ai",

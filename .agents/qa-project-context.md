@@ -88,6 +88,10 @@ Early-stage project, 6-day build. Concrete targets for this round:
 
 - **Test file naming:** `<area>.<subject>.test.ts` under `qa/tests/{unit,api,integration}/`. One file per test-spec area.
 - **Traceability:** every `describe`/`it` title starts with its test ID (e.g. `US-01`). The test spec lists the same IDs. `qa/specs/` holds design; `qa/tests/` holds code.
+- **Browser tests run headed.** Playwright `headless: false`, real Chromium. Adam
+  asked for this explicitly so he can watch the suite work. Never silently switch a
+  browser case to headless or to an API-level equivalent — see the "Layer
+  discipline" section in `qa/specs/flow-fresh-2026-09-16.md`.
 - **Selectors:** N/A (no browser tests this round). If Playwright is added later: `getByRole` first, `data-testid` only where no role fits (per `.claude/agents/builder.md`).
 - **Test data:** a factory in `qa/fixtures/factories.ts` builds unique users (`faker`-style suffix from a seeded counter). Each API/integration test creates its own user; the harness drops the whole `expenses_qa_test` DB on teardown. Unit tests use in-memory doubles for the repository, `bcrypt`, and `jwt` — no DB.
 - **Branching:** `main` only. QA never commits unless asked.
