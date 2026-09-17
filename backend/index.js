@@ -30,8 +30,8 @@ const port = process.env.PORT || 3000;
 
 
 // --- Middleware, in order (spec 07 §2) ---
-app.use(compression());               // gzip response bodies
 app.use(helmet());                    // safe HTTP headers — first, so it covers every response
+app.use(compression());               // gzip response bodies
 app.use(cors({                        // exact client origin + credentials, because the client sends the refresh cookie
     origin: process.env.CLIENT_ORIGIN,
     credentials: true
