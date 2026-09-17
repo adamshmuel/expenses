@@ -2,6 +2,13 @@ const userRepository = require('../dal/userRepository.js');
 const categoryService = require('./categoryService.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+// How long after a refresh token is rotated a second call may still present
+// it and be answered with the winner's token instead of a 401. Long enough to
+// cover one request double-firing, short enough that a captured token is not
+// a usable key to the session. See `refresh` below.
+const RACE_GRACE_MS = 3 * 1000;
 
 /**
  * Business-logic layer for authentication.
@@ -21,6 +28,24 @@ const jwt = require('jsonwebtoken');
  */
 
 /**
+ * Sign a fresh access token for a user. Split out of `issueTokenPair` so the
+ * "already rotated" branch of `refresh` can mint a new access token to go
+ * with an existing (still valid) refresh token, without creating a second
+ * refresh token row for the same rotation.
+ *
+ * @param {import('mongoose').Document} user - a saved User document
+ * @returns {string}
+ */
+const signAccessToken = (user) => {
+    return jwt.sign(
+        { id: user._id, username: user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' }
+    );
+};
+
+
+/**
  * Sign an access/refresh token pair for a user and persist the refresh token.
  *
  * Private — not exported. Used by signup, login and refresh so all three issue
@@ -28,8 +53,12 @@ const jwt = require('jsonwebtoken');
  *
  * - access token: `{ id, username }`, `JWT_SECRET`, 15 minutes. The payload is
  *   what `requireAuth` reads off `req.user` on the chat and expense routes.
- * - refresh token: `{ userId }`, `REFRESH_TOKEN_SECRET` (a different secret),
- *   7 days.
+ * - refresh token: `{ userId, jti }`, `REFRESH_TOKEN_SECRET` (a different
+ *   secret), 7 days. The random `jti` is what makes two tokens signed in the
+ *   same second differ — `jwt.sign`'s `iat` claim is only second-resolution,
+ *   so without it a signup-then-immediate-refresh, or two concurrent
+ *   refreshes, would mint the identical string twice and collide on the
+ *   collection's unique index on `token`.
  * - the refresh token row is saved with an `expiresAt` 7 days out, which feeds
  *   the TTL index on the collection.
  *
@@ -39,13 +68,9 @@ const jwt = require('jsonwebtoken');
  * @returns {Promise<{ accessToken: string, refreshToken: string }>}
  */
 const issueTokenPair = async (user) => {
-    const accessToken = jwt.sign(
-        { id: user._id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: '15m' }
-    );
+    const accessToken = signAccessToken(user);
     const refreshToken = jwt.sign(
-        { userId: user._id },
+        { userId: user._id, jti: crypto.randomUUID() },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: '7d' }
     );
@@ -55,6 +80,7 @@ const issueTokenPair = async (user) => {
 
     return { accessToken, refreshToken };
 };
+
 
 /**
  * Register a new user and log them in.
@@ -100,34 +126,67 @@ const login = async (username, password) => {
 }
 
 /**
- * Rotate a refresh token: trade a valid one for a fresh pair, killing the old.
+ * Rotate a refresh token: trade a valid one for a fresh pair.
  *
- * 1. the token must still be in the collection — one that was already rotated
- *    out, or issued before a restart, is gone, and this throws 401;
- * 2. `jwt.verify` must pass — a tampered or expired token throws, and the route
- *    turns that into a 401 too;
- * 3. the old row is deleted, so it can never be used again;
- * 4. a new pair is issued for the same user (the new refresh row is saved by
- *    `issueTokenPair`).
+ * Uses `consumeRefreshToken` as the single atomic read of the old token, so
+ * two near-simultaneous calls with the same token (e.g. React StrictMode's
+ * double-mount, which is what made reloading the page log a user out) can
+ * never both believe they rotated it first. Exactly one call sees
+ * `replacedByToken` still null and its new pair becomes the current one; the
+ * other sees `replacedByToken` already set.
+ *
+ * That second call is only answered with the winner's token if the rotation
+ * happened within `RACE_GRACE_MS`, and the winner's row is still there. A
+ * rotated-out token presented later is a replay, not a race, and is refused
+ * exactly as it was before any of this existed — otherwise a captured token
+ * would stay a working key to the current session for its full 7 days.
  *
  * @param {string} oldRefreshToken - the raw token from the cookie
  * @returns {Promise<{ user: import('mongoose').Document, accessToken: string, refreshToken: string }>}
- * @throws {Error} with `.status = 401` when the token is not recognized;
- *   `jwt.verify` errors propagate for the route to treat as 401
+ * @throws {Error} with `.status = 401` when the token is not recognized, its
+ *   user no longer exists, it was rotated longer than `RACE_GRACE_MS` ago, or
+ *   the token it was rotated into is gone; `jwt.verify` errors propagate for
+ *   the route to treat as 401
  */
+
 const refresh = async (oldRefreshToken) => {
-    const stored = await userRepository.findRefreshToken(oldRefreshToken);
+    const payload = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = await userRepository.findUserById(payload.userId);
+
+    if (!user) {
+        const err = new Error("not recognized");
+        err.status = 401;
+        throw err;
+    }
+    const { accessToken, refreshToken } = await issueTokenPair(user);
+
+    const stored = await userRepository.consumeRefreshToken(oldRefreshToken, refreshToken);
+
     if (!stored) {
         const err = new Error("not recognized");
         err.status = 401;
         throw err;
     }
-    const payload = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await userRepository.findUserById(payload.userId);
-    await userRepository.deleteRefreshToken(oldRefreshToken);
-    const { accessToken, refreshToken } = await issueTokenPair(user);
-    return { user, accessToken, refreshToken };
 
+    if (stored.replacedByToken) {
+        const rotatedAgo = Date.now() - new Date(stored.replacedAt ?? 0).getTime();
+        if (rotatedAgo > RACE_GRACE_MS) {
+            const err = new Error("not recognized");
+            err.status = 401;
+            throw err;
+        }
+        const newerStored = await userRepository.findRefreshToken(stored.replacedByToken);
+        if (!newerStored) {
+            const err = new Error("not recognized");
+            err.status = 401;
+            throw err;
+        }
+
+        const winnerAccessToken = signAccessToken(user);
+        return { user, accessToken: winnerAccessToken, refreshToken: stored.replacedByToken };
+    }
+
+    return { user, accessToken, refreshToken };
 };
 
 /**

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { BACKEND_ENV, TEST_DB_NAME } from "./paths.js";
+import { BACKEND_ENV, BACKEND_DIR, TEST_DB_NAME } from "./paths.js";
+import { resolve } from "node:path";
 
 /**
  * Parse backend/.env WITHOUT importing it into this process's env, and without
@@ -22,6 +23,22 @@ export function readBackendEnv(): Record<string, string> {
     out[m[1]] = val;
   }
   return out;
+}
+
+/**
+ * Read the refresh-rotation race/replay grace window straight out of
+ * backend/bl/userService.js's source text, WITHOUT importing the module (we
+ * never import backend/ code into the QA process). Tests that need to wait
+ * past the window call this instead of hardcoding a duration, so they keep
+ * working if Adam tunes `RACE_GRACE_MS` (e.g. 10s -> 3s).
+ */
+export function readRaceGraceMs(): number {
+  const src = readFileSync(resolve(BACKEND_DIR, "bl", "userService.js"), "utf8");
+  const m = src.match(/RACE_GRACE_MS\s*=\s*([\d_]+)\s*\*\s*([\d_]+)/);
+  if (!m) {
+    throw new Error("Could not find RACE_GRACE_MS in backend/bl/userService.js — did its definition change shape?");
+  }
+  return Number(m[1].replace(/_/g, "")) * Number(m[2].replace(/_/g, ""));
 }
 
 /**
