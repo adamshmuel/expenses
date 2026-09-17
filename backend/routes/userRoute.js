@@ -76,7 +76,7 @@ function setRefreshCookie(res, token) {
 const signupValidators = [
     body("username")
         .isLength({ min: 3, max: 20 })
-        .withMessage('User name must between 3 and 20 characters')
+        .withMessage('Username must be 3–20 characters.')
         .custom(async (value) => {
             const existing = await userRepository.findUserByUsername(value);
             if (existing) {
