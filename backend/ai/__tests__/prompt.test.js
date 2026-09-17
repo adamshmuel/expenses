@@ -137,3 +137,48 @@ test("buildPrompt tells the model an edit/delete reply must not presuppose a mat
   );
   assert.ok(/if (a |one )?match is found|if it exists|conditional/i.test(prompt));
 });
+
+// --- 2026-09-17 QA run: FR-43 — a Hebrew message got an English reply ---
+
+test("buildPrompt tells the model to reply in the same language the user wrote in", () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  assert.ok(
+    /"reply".{0,80}same language|same language.{0,80}"reply"|reply in the (same |user's own )?language/i.test(prompt),
+    "must state the reply is written in the language the user used"
+  );
+});
+
+// --- 2026-09-17 QA run: bug — "gas" (a thing bought, no place) landed in
+// "description" as the rule intends, but the STORE column then displays it
+// because "store" was never filled; the ambiguous "cannot tell which it is"
+// judgment call is also what made the model visibly deliberate in production. ---
+
+test("buildPrompt tells the model to leave \"store\" empty when the text names only a thing bought, not a place", () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  assert.ok(
+    /names? only a thing[^.]*(leave "store" out|store.{0,20}(stays|left)\s+empty)/is.test(prompt) ||
+      /(leave "store" out|store.{0,20}(stays|left)\s+empty)[^.]*names? only a thing/is.test(prompt),
+    'must say "store" is left empty specifically for the only-a-thing case, not filled with the thing bought'
+  );
+});
+
+test("buildPrompt replaces the ambiguous \"cannot tell which it is\" judgment call with a deterministic place-vs-thing rule", () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  assert.ok(
+    !/cannot tell which/i.test(prompt),
+    "the old ambiguous rule (decide whether you can tell, then guess) must be gone"
+  );
+  assert.ok(/names?\s+a\s+place/i.test(prompt) && /names?\s+a\s+thing/i.test(prompt));
+});
+
+// --- 2026-09-17 QA run: FR-42 — told the app can't total spending, never told the dashboard can ---
+
+test("buildPrompt points an unanswerable totals/spending question at the dashboard", () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  // The refusal and the dashboard pointer must be the same instruction — the
+  // negation words alone appear all over the prompt, so assert them together.
+  assert.ok(
+    /(can't|cannot|can not|does not|doesn't)[^.]{0,200}dashboard/i.test(prompt),
+    "must tell the model to refuse the totals question AND point at the dashboard"
+  );
+});

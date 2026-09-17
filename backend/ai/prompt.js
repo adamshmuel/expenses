@@ -89,6 +89,13 @@ function renderHistory(history) {
  *   `new Date()` when omitted so existing callers keep working, but a
  *   caller-supplied value is what makes this deterministic and testable.
  * @returns {string}
+ *
+ * FR-42 (2026-09-17 QA run): the "totals/spending question" rule below is a
+ * V1 stopgap — right now such a question has no intent that can serve it, so
+ * the least-bad answer is a refusal that points at the dashboard instead of
+ * a dead end. When V2's `answer-question` intent ships
+ * (docs/specs/10-chat-questions.md), that intent should handle these
+ * questions directly and this rule should be removed.
  */
 function buildPrompt(categories, recentExpenses, history, today) {
   const todayISO = toISODate(today);
@@ -112,6 +119,15 @@ field.
 
 If the message matches none of these, use intent "unknown" and explain in
 "reply" that you did not understand, without changing anything.
+
+If the message asks a question about totals or past spending instead of
+asking to change something (e.g. "how much did I spend on food this month",
+"how much have I spent overall") — this chat only creates, edits, deletes,
+and resets, it does not total anything — use intent "unknown" too. Say
+plainly in "reply" that you can't total spending here, and point to the
+dashboard, which already breaks spending down by category, in one short
+sentence (e.g. "I can't total that up here, but the dashboard breaks your
+spending down by category."). Never say or imply that you can answer it.
 
 ## Rules
 
@@ -177,17 +193,27 @@ If the message matches none of these, use intent "unknown" and explain in
   a removed category moves to "Other").
 - "reply" is always a short, plain-language sentence or two, written to the
   user directly.
+- Write "reply" in the same language the user's current message was written
+  in (e.g. a Hebrew message gets a Hebrew reply). This app supports Hebrew
+  and English. Structured fields ("store", "description", category "name",
+  and the like) are unaffected by this rule — they follow the other rules
+  above (an existing category's own name, or text taken from the message),
+  never a translation of it.
 - Each category below has a "parent": null for a main category, or the main
   category's name for a subcategory. When "reply" mentions a category that
   has a parent, name the parent too (e.g. "under Food → Coffee"), so it never
   reads as if a flat, invented category was picked. Main categories need no
   such mention.
-- "store" is who the money was paid to — the business or merchant (e.g.
-  "Aroma", "the supermarket"). "description" is everything else about the
-  purchase that isn't the amount, date, or category (e.g. "coffee", "birthday
-  present for Dana"). If the text gives both, fill both. If it gives only
-  one and you cannot tell which it is, put it in "description" — never leave
-  the choice open or write out your reasoning about which field to use.
+- "store" is a place — where the money was paid, the business or merchant
+  (e.g. "Aroma", "the supermarket"). "description" is a thing — what was
+  bought (e.g. "coffee", "gas", "birthday present for Dana"). Decide by what
+  the text names, never by weighing which field fits better: if it names a
+  place, that is "store"; if it names a thing bought, that is "description";
+  if it names both, fill both. If it names only a thing bought and no place,
+  leave "store" out rather than filling it with the thing — an expense only
+  needs one of "store"/"description" filled, so an empty "store" is safe.
+  Never leave the choice open or write out your reasoning about which field
+  to use.
 - "store", "description", "name" (category), and every other free-text field
   carry the final value only — a word or short phrase, nothing else. Never write
   reasoning, deliberation, alternatives you considered, or the word "wait"

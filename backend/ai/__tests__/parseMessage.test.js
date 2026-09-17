@@ -532,6 +532,44 @@ test("bug 5: an ordinary response well under the length cap is unaffected", asyn
   assert.equal(result.drafts[0].amount, 50);
 });
 
+test("size ceiling: a response just under 8192 bytes passes through unchanged", async () => {
+  const base = { intent: "create-expense", reply: "", drafts: [{ amount: 50, store: "Aroma", category: "Groceries" }] };
+  const overhead = Buffer.byteLength(JSON.stringify(base), "utf8");
+  base.reply = "a".repeat(8191 - overhead); // total raw response: 8191 bytes, just under the cap
+  const rawText = JSON.stringify(base);
+  assert.ok(Buffer.byteLength(rawText, "utf8") < 8192);
+
+  const client = { models: { generateContent: async () => ({ text: rawText }) } };
+
+  const result = await parseMessage("spent 50 at Aroma on coffee", categories, recentExpenses, { client });
+
+  assert.equal(result.intent, "create-expense");
+  assert.equal(result.drafts[0].store, "Aroma");
+});
+
+test("size ceiling: a Hebrew reply well under 8192 bytes is accepted, even though its character count alone would fail a conservative per-character cap", async () => {
+  // Hebrew characters are 2 bytes each in UTF-8 but count as one JS string
+  // character (.length is UTF-16 code units). A char-based cap sized
+  // conservatively for the worst case (4 bytes/char) would sit around
+  // 8192 / 4 = 2048 characters -- well below what this reply needs, even
+  // though its real byte size is comfortably under the true 8192-byte cap.
+  // This is why the check has to measure real bytes, not .length.
+  const base = { intent: "create-expense", reply: "", drafts: [{ amount: 50, store: "סופרמרקט", category: "Groceries" }] };
+  const overhead = Buffer.byteLength(JSON.stringify(base), "utf8");
+  const hebrewChar = "א"; // 2 bytes in UTF-8, 1 UTF-16 code unit
+  base.reply = hebrewChar.repeat(Math.floor((8000 - overhead) / 2));
+  const rawText = JSON.stringify(base);
+  assert.ok(Buffer.byteLength(rawText, "utf8") < 8192);
+  assert.ok(base.reply.length > 2048); // would fail a naive char-count cap sized for 8192 bytes worst-case
+
+  const client = { models: { generateContent: async () => ({ text: rawText }) } };
+
+  const result = await parseMessage("שילמתי 50 בסופרמרקט", categories, recentExpenses, { client });
+
+  assert.equal(result.intent, "create-expense");
+  assert.equal(result.drafts[0].store, "סופרמרקט");
+});
+
 test("bug 6: response.text undefined (real SDK degeneration) is refused, not a crash", async () => {
   // Reproduces the crash reported against the real Gemini API: the SDK can
   // resolve with `{ text: undefined }` under the same degeneration bug 5's
@@ -652,6 +690,29 @@ test("retry: a malformed-JSON first response followed by a good one succeeds on 
 
 test("retry: two garbled responses in a row exhausts the retry and returns the refusal, calling the model exactly twice", async () => {
   const client = sequenceClient([{ text: "" }, { text: "" }]);
+
+  const result = await parseMessage("spent 50 at Aroma on coffee", categories, recentExpenses, { client });
+
+  assert.notEqual(result.intent, "create-expense");
+  assert.match(result.reply, /trouble|try again|didn't come out right|something went wrong|rephrase/i);
+  assert.equal(client.calls(), 2);
+});
+
+test("size ceiling: an oversized first response (over 8192 bytes) retries and succeeds with a normal second response", async () => {
+  const client = sequenceClient([
+    { text: "x".repeat(9000) }, // well over the 8192-byte cap, caught before JSON.parse
+    { text: JSON.stringify({ intent: "create-expense", reply: "Got it — adding one expense.", drafts: [{ amount: 50, store: "Aroma", category: "Groceries" }] }) },
+  ]);
+
+  const result = await parseMessage("spent 50 at Aroma on coffee", categories, recentExpenses, { client });
+
+  assert.equal(result.intent, "create-expense");
+  assert.equal(result.drafts[0].store, "Aroma");
+  assert.equal(client.calls(), 2);
+});
+
+test("size ceiling: two oversized responses in a row exhausts the retry and refuses, not a 502", async () => {
+  const client = sequenceClient([{ text: "x".repeat(9000) }, { text: "y".repeat(9000) }]);
 
   const result = await parseMessage("spent 50 at Aroma on coffee", categories, recentExpenses, { client });
 

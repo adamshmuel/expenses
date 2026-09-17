@@ -22,11 +22,17 @@ const RAW_RESPONSE_LOG_CAP = 2000;
 // repetition-collapse run, not a legitimate parse result. A budget-app
 // intent (a handful of short fields) has no honest reason to approach this
 // size; refuse before paying the JSON.parse/regex cost on something this
-// shape, rather than only catching it after decoding. Generous headroom
-// above any real response (the largest legitimate shape is several drafts
-// plus a two-sentence reply, nowhere near this), so it only ever fires on
-// the degenerate case the log evidence shows, never on real output.
-const MAX_RESPONSE_LENGTH = 5000;
+// shape, rather than only catching it after decoding. 8192 bytes (8KB) is
+// Adam's number: a normal reply is under 2KB, so 8KB is roughly four times
+// the largest legitimate response — generous enough to never fire on real
+// output, tight enough to still catch the degenerate case.
+//
+// Measured in real UTF-8 bytes (Buffer.byteLength), not response.text.length
+// -- a JS string's .length counts UTF-16 code units, not bytes, and this app
+// supports Hebrew output (spec 01-ai-chat.md). Hebrew and emoji are
+// multi-byte, so a character count does not track the real payload size and
+// would misjudge a legitimate multi-byte reply against a byte-based limit.
+const MAX_RESPONSE_BYTES = 8192;
 
 // Same "does this look like leaked JSON/HTML instead of natural text" check
 // as the client's isSaneText (client/src/store/chatSlice.ts) — a JS port for
@@ -195,8 +201,9 @@ async function attemptParse(client, text, categories, recentExpenses, history, o
   // collapse, not a legitimate parse result) — refuse before paying the
   // JSON.parse/regex cost on something this shape, rather than only
   // catching it after decoding.
-  if (response.text.length > MAX_RESPONSE_LENGTH) {
-    logger.warn(`AI response was ${response.text.length} characters — refusing rather than parsing a runaway response`, {
+  const responseByteLength = Buffer.byteLength(response.text, "utf8");
+  if (responseByteLength > MAX_RESPONSE_BYTES) {
+    logger.warn(`AI response was ${responseByteLength} bytes — refusing rather than parsing a runaway response`, {
       area: "ai",
       rawResponse,
     });
