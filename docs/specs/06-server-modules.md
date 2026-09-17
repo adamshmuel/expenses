@@ -148,6 +148,7 @@ It maps the error to a status like this:
 | Condition on `err` | Status | Response body |
 |---|---|---|
 | `err.code === 11000` (MongoDB duplicate key) | **409** | `{ "error": "<field> already exists." }` — a friendly message, not the raw Mongo string |
+| `err.name === "ValidationError"` (Mongoose schema validation) | **400** | `{ "error": <the failing field's own message> }` — taken from `err.errors`, so the user reads the rule that was broken rather than a generic failure |
 | `err.status` is set (e.g. `401` from `userService.login`) | that number | `{ "error": err.message }` |
 | anything else | **500** | `{ "error": "Something went wrong." }` — a generic message; the real one is logged, not sent |
 

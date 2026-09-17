@@ -22,10 +22,10 @@ const logger = require("./.config/logger");
  * @returns {any} the body with `password` redacted, if it had one
  */
 const safeBody = (body) => {
-    if (!body || typeof body !== "object") return body;
-    const copy = { ...body };
-    if ("password" in copy) copy.password = "[redacted]";
-    return copy;
+  if (!body || typeof body !== "object") return body;
+  const copy = { ...body };
+  if ("password" in copy) copy.password = "[redacted]";
+  return copy;
 };
 
 
@@ -58,6 +58,11 @@ function catchAsync(handler) {
  *   - `err.code === 11000` (Mongo duplicate key) → 409, friendly message.
  *     Handled here once, for every model with a `unique` index — not in a
  *     service (05-user-layers.md decision 3).
+ *   - `err.name === "ValidationError"` (Mongoose schema validation, including
+ *     on updates, which pass `runValidators: true`) → 400, with the failing
+ *     field's own message out of `err.errors`. The user reads the rule they
+ *     broke ("Amount cannot have more than two decimal places") instead of a
+ *     generic failure.
  *   - `err.status` set (e.g. 401 from `userService.login`) → that status, with
  *     `err.message` (a message the code chose on purpose).
  *   - anything else → 500 with a generic message; the real one is logged, not
@@ -79,7 +84,12 @@ function errorHandler(err, req, res, next) {
 
   if (err.code === 11000) {
     logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
-    return res.status(409).json({ error: "That username or email is already taken." });
+    const field = Object.keys(err.keyValue ?? {})[0] ?? "That value";
+    return res.status(409).json({ error: `${field} already exists.` });
+  }
+  if (err.name === 'ValidationError') {
+    logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
+    return res.status(400).json({ error: Object.values(err.errors)[0].message });
   }
   if (err.status) {
     logger.warn(err.message, { method: req.method, stack: err.stack, path: req.originalUrl, body: safeBody(req.body) });
