@@ -73,6 +73,7 @@ concern, that is the service.
 | `findUserById(id)` | `User.findById(id)` | the `User` document, or `null` |
 | `saveRefreshToken({ token, user, expiresAt })` | `new RefreshToken(...).save()` | the saved `RefreshToken` document |
 | `findRefreshToken(token)` | `RefreshToken.findOne({ token })` | the `RefreshToken` document, or `null` |
+| `consumeRefreshToken(oldToken, newToken)` | `RefreshToken.findOneAndUpdate({ token: oldToken }, { replacedByToken: newToken, replacedAt: new Date() })` — no `{ new: true }`, so it returns the row as it was **before** the stamp | the pre-update `RefreshToken` document, or `null` if `oldToken` isn't in the collection |
 | `deleteRefreshToken(token)` | `RefreshToken.deleteOne({ token })` | nothing meaningful (the delete result is fine) |
 
 ### Notes
@@ -115,18 +116,44 @@ still slips through, `createUser` throws and the route handles it.
 
 This is the rotation (course demo 24).
 
-1. `findRefreshToken(oldRefreshToken)`. If it is not in the collection — throw
-   "not recognised", route answers **401**. (A token that was already rotated
-   out, or from before a restart, is gone from the collection.)
-2. `jwt.verify(oldRefreshToken, REFRESH_TOKEN_SECRET)`. If it throws (tampered
+1. `jwt.verify(oldRefreshToken, REFRESH_TOKEN_SECRET)`. If it throws (tampered
    or expired) — let it become a 401.
-3. `findUserById(payload.userId)` — needed because the response includes the
-   user.
-4. `deleteRefreshToken(oldRefreshToken)` — the old one can never be used again.
-5. Issue a **new** token pair for that user. The token-pair helper saves the
-   new refresh token itself (§ *Private helper*), so there is no separate
-   `saveRefreshToken` call here.
-6. Return `{ user, accessToken, refreshToken }`.
+2. `findUserById(payload.userId)`. Not found (account deleted) → "not
+   recognised", **401**.
+3. Issue a **new** token pair for that user (§ *Private helper*), before
+   touching the old row.
+4. `consumeRefreshToken(oldRefreshToken, newRefreshToken)` — the single atomic
+   read-and-stamp of the old row. `null` back (old token not in the
+   collection at all) → "not recognised", **401**.
+5. If the row's **pre-update** `replacedByToken` was already set, this old
+   token was already rotated by an earlier call:
+   - Rotated more than `RACE_GRACE_MS` (3 seconds) ago → treat as a replay:
+     "not recognised", **401**.
+   - Within the grace window, and the token it names is still in the
+     collection → this is the **same client's** request double-firing (React
+     StrictMode's double-mount is the case that motivated it), not an
+     attacker. Sign a **fresh access token** for the user and return the
+     **winner's** refresh token — the one the earlier call already committed
+     — rather than minting a second one.
+   - If the token it names is gone too → "not recognised", **401**.
+6. Otherwise this call won the race: return the pair issued in step 3.
+
+**Why not delete-then-reissue:** an earlier version deleted the old row
+immediately (step 4 above). Two near-simultaneous calls with the same
+token — the exact shape of a page reload, since React's dev-mode double
+`useEffect` fires the request twice — raced on that delete, and the loser hit
+a 401 believing its own valid session was dead. `consumeRefreshToken` makes
+the read-and-stamp one atomic Mongo operation, so of two racing calls exactly
+one sees `replacedByToken` still null; the loser is answered with the
+winner's pair instead of being logged out. The row is kept, not deleted, so
+there's something for the loser to be pointed at — the TTL index still clears
+it out on the normal 7-day schedule.
+
+A token presented **outside** the grace window with `replacedByToken` already
+set is a genuine replay (a captured old token, not a double-fired request),
+and is refused exactly as delete-then-reissue would have refused it — the
+grace window only widens the "this is fine" case by 3 seconds, it does not
+weaken the replay check.
 
 Storing refresh tokens in the `RefreshToken` collection (not an in-memory array
 like `ex6`) is deliberate: restarting the server does not log everyone out, and
@@ -145,8 +172,12 @@ there, that is fine — logout is idempotent.
 - signs the **access token**: `jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '15m' })`
   — short. Payload carries what `requireAuth` will read off `req.user` on the
   chat and expense routes later.
-- signs the **refresh token**: `jwt.sign({ userId: id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' })`
-  — long, minimal payload, different secret from the access token.
+- signs the **refresh token**: `jwt.sign({ userId: id, jti: crypto.randomUUID() }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' })`
+  — long, minimal payload, different secret from the access token. The random
+  `jti` matters: `jwt.sign`'s `iat` claim is only second-resolution, so
+  without it, two tokens issued in the same second (signup immediately
+  followed by refresh, or two racing refreshes) would be the identical
+  string and collide on `RefreshToken`'s unique index on `token`.
 - computes the refresh token's `expiresAt` Date (now + 7 days) and calls
   `saveRefreshToken({ token, user, expiresAt })` so every caller stores the row
   the same way and the TTL index has its date.

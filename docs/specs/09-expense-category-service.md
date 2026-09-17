@@ -2,7 +2,7 @@
 
 Status: **approved.**
 
-How the chat's seven intents ([01-ai-chat.md](01-ai-chat.md) §6) and the
+How the chat's eight intents ([01-ai-chat.md](01-ai-chat.md) §6) and the
 read-only dashboard endpoints are built, split into the same three layers as
 auth ([05-user-layers.md](05-user-layers.md)):
 
@@ -210,22 +210,36 @@ one place that turns it into a real category document.
    \"<name>\".", candidates: [...] }` so the route can ask the user which one.
 4. Exactly one match → return it.
 
+### `requireLabel(store, description)`
+
+Private helper, not exported. `store` and `description` are both optional at
+the schema level ([04](04-data-model.md)) — either alone is enough to identify
+an expense — but an expense with **neither** is not useful on the dashboard:
+nothing to show, nothing to search on. Throws `{ status: 400, message: "An
+expense needs a store or a description." }` when both are falsy. Called by
+every path that can produce that state — `createExpense`, each draft in
+`createManyExpenses`, and `editExpense` when the edit touches either field.
+
 ### `createExpense(userId, { amount, store, description, date, category })`
 
-1. `resolveCategory(userId, category)`.
-2. `createExpense({ amount, store, description, date, category: categoryDoc._id, user: userId })`.
-3. Return the saved document.
+1. `requireLabel(store, description)`.
+2. `resolveCategory(userId, category)`.
+3. `createExpense({ amount, store, description, date, category: categoryDoc._id, user: userId })`.
+4. Return the saved document.
 
 Amount and date rules (amount required and > 0, date defaults to today) are
 schema-level ([04](04-data-model.md)) — Mongoose is the safety net here, same
-as `User`'s field rules in [05](05-user-layers.md).
+as `User`'s field rules in [05](05-user-layers.md). Store-or-description is
+not schema-level, because the schema allows either field alone — it is
+checked here so a two-expense message fails **before** either is written (no
+partial save), same reasoning as the category-resolution order below.
 
 ### `createManyExpenses(userId, drafts)`
 
-Resolves every draft's category first (`resolveCategory` per draft, so one bad
-category name fails before anything is written — no partial save), then
-`createManyExpenses(docs)` with `user: userId` stamped on each. Return the
-saved documents.
+For every draft: `requireLabel(draft.store, draft.description)`, then
+`resolveCategory` (so one bad category name **or** one labelless draft fails
+before anything is written — no partial save). Then `createManyExpenses(docs)`
+with `user: userId` stamped on each. Return the saved documents.
 
 ### `editExpense(userId, id, changes)`
 
@@ -234,9 +248,15 @@ saved documents.
    ([01](01-ai-chat.md) §6).
    - Not found, or `user` is not `userId` → throw `{ status: 404, message:
      "Expense not found." }`.
-2. If `changes.category` is present, `resolveCategory(userId,
+2. If `changes` touches `store` or `description` (either key present, not just
+   truthy), resolve what the edit would leave the expense with — the new
+   value where `changes` sets it, the existing document's value where it
+   doesn't — and run `requireLabel` on that pair. An edit that clears the only
+   label the expense had must be caught before it's saved, not left to the
+   read side to work around.
+3. If `changes.category` is present, `resolveCategory(userId,
    changes.category)` and replace it with the resolved `_id`.
-3. `updateExpense(id, changes)`. Return the updated document.
+4. `updateExpense(id, changes)`. Return the updated document.
 
 ### `deleteExpense(userId, id)`
 
@@ -250,10 +270,16 @@ Every handler wrapped in `catchAsync`, protected by `requireAuth`.
 
 ### `POST /chat/messages` — request one, every intent
 
+0. Validated before the handler runs: `body("text").trim().notEmpty()`
+   (`express-validator`), then `checkValidationResult`
+   ([03](03-api-contract.md)'s shared 400 error shape). An empty or
+   whitespace-only message never reaches `ai.parseMessage` — there is nothing
+   for the model to parse, and letting it through was the cause of a 500
+   under the old code.
 1. Save the user's message (`Message`, role `user`).
 2. `categories = categoryService.getForUser(req.user.id)`.
 3. `recent = expenseService.getForUser(req.user.id, { from: <30 days ago> })`.
-4. `result = ai.parseMessage(text, categories, recent)` — one of the seven
+4. `result = ai.parseMessage(text, categories, recent)` — one of the eight
    intents ([08](08-expense-category-dal.md)).
 5. By intent:
    - `create-expense` / `create-category` — the drafts are the response, no DB
@@ -264,6 +290,12 @@ Every handler wrapped in `catchAsync`, protected by `requireAuth`.
      result.searchFilters.text)`.
    - `reset-categories` — nothing to search; the response is a confirmation
      prompt only.
+   - `answer-question` **(V2)** — `expenseService.answerQuestion(userId,
+     result.question)`, then a **second** `backend/ai/` call to turn the
+     numbers into a sentence. This is the one intent whose reply is not known
+     at step 4, so the reply saved at step 6 is the second call's sentence, not
+     `result.reply`. See [11-chat-questions-server.md](11-chat-questions-server.md)
+     step 4.
 6. Save the reply (`Message`, role `assistant`).
 7. Respond with the reply text, the intent, and whatever was found (drafts, or
    matches to pick from).
@@ -286,6 +318,9 @@ Every handler wrapped in `catchAsync`, protected by `requireAuth`.
 
 3. Respond with what changed. Nothing here calls `backend/ai/` again — the
    text was already parsed in request one.
+
+`answer-question` never reaches this handler: a question changes nothing, so
+there is nothing to confirm ([10-chat-questions.md](10-chat-questions.md) §1).
 
 On cancel, the client simply never calls `/chat/confirm` — nothing to undo.
 

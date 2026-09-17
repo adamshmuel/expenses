@@ -112,7 +112,8 @@ the refresh token, and returns to `/login`.
 **The chat is the only place the user changes anything.** There is no other
 screen with an edit, delete, or reset button, for an expense or for a
 category. The user writes what they want in plain language, and the AI turns
-it into one of seven intents:
+it into one of eight intents — seven that change something, and one, added in
+V2, that only answers ([10-chat-questions.md](10-chat-questions.md)):
 
 | Intent | Example |
 |---|---|
@@ -123,12 +124,15 @@ it into one of seven intents:
 | Edit a category | `rename Fuel to Gas` |
 | Delete a category | `delete the Gym subcategory` |
 | Reset categories to defaults | `reset my categories` |
+| **Answer a question** (V2) | `how much did I spend on Food this month` |
 
 `/dashboard` ([02-dashboard.md](02-dashboard.md)) shows the result. It never
 writes.
 
-Whichever intent it is, nothing changes in the database until the user
-confirms — this is the core rule of the screen.
+Whichever of the **seven writing** intents it is, nothing changes in the
+database until the user confirms — this is the core rule of the screen. The
+eighth, `answer-question`, changes nothing at all, so it has no confirm step
+and no second request; see [10-chat-questions.md](10-chat-questions.md) §1.
 
 ### Create — the flow
 
@@ -182,7 +186,7 @@ confirmation applies to.
 ### Reset categories — the flow
 
 There is nothing to search for or pick: the intent applies to all of the
-user's categories at once. Shortest of the seven intents.
+user's categories at once. Shortest of the seven writing intents.
 
 1. The client sends the text to the server. **Request one.**
 2. The server passes the text to `backend/ai/`, which returns `{ intent:
@@ -217,13 +221,15 @@ user's categories at once. Shortest of the seven intents.
 
 | Case | Behaviour |
 |---|---|
-| Text does not match any of the seven intents | Say so. Nothing changes |
+| Text does not match any of the eight intents | Say so. Nothing changes |
+| A statement is misread as a question, or the reverse (V2) | The one genuinely new failure V2 introduces — `spent 50 on coffee` and `how much on coffee` are close. See [10-chat-questions.md](10-chat-questions.md) §5 |
 | Amount missing (create expense) | Ask for the amount. Save nothing |
 | Several expenses in one message | Numbered list, one confirmation |
 | Edit/delete matches nothing | Say so. Nothing to confirm |
 | Edit/delete matches several records | Numbered list, user picks one, then confirms the change |
 | A category action would break a rule (three levels, duplicate name, editing "Other") | Say so in the reply. Nothing changes |
-| The AI call fails or times out | Show an error. The user's text is not lost |
+| The AI call fails or times out (provider unreachable) | Show an error, `502`. The user's text is not lost |
+| The model responds but the content is unusable (garbled, empty, oversized, wrong script) | Retry once, identical request; still bad → refuse with "try rephrasing", not a `502`. See §8 |
 | The user cancels | Nothing changes |
 | No messages yet | An empty state, not a blank screen |
 
@@ -241,7 +247,9 @@ user's categories at once. Shortest of the seven intents.
 
 ## 8. What `backend/ai/` exposes
 
-One function. Claude writes it; Adam's server calls it.
+One function in V1. V2 adds a second, `answerQuestion`, used only by the
+`answer-question` intent ([10-chat-questions.md](10-chat-questions.md) §4).
+Claude writes both; Adam's server calls them.
 
 - **Input:** the user's text, the user's categories, and the user's recent
   expenses (e.g. last 30 days) — plain data the route already fetched via the
@@ -250,7 +258,7 @@ One function. Claude writes it; Adam's server calls it.
   expense's category and an edited expense's `changes.category` — the route
   never does a second lookup for that; it matches the name against the same
   list it already passed in.
-- **Output:** one of seven shapes, by intent — the intent name says which
+- **Output:** one of eight shapes, by intent — the intent name says which
   entity (expense or category) and which action (create, edit, delete, reset):
 
   | Intent | Output |
@@ -262,6 +270,7 @@ One function. Claude writes it; Adam's server calls it.
   | `edit-category` | `searchFilters` (to find the category via `getCategoriesByUser`, matched by name) and `changes` (new name) |
   | `delete-category` | `searchFilters` (to find the category) |
   | `reset-categories` | nothing to search or match — applies to all of the user's categories |
+  | `answer-question` (V2) | a `question` object — a shape (`total`/`list`) plus filters — for the server to run. See [10-chat-questions.md](10-chat-questions.md) §4 |
 
   Every response also carries a short reply to show in the chat.
 - It calls Gemini Flash Lite and asks for a fixed response shape, so the result
@@ -272,6 +281,58 @@ One function. Claude writes it; Adam's server calls it.
 - It never throws a raw provider error at the route. A failure comes back as a
   clear result the route can turn into a `502`.
 - The Gemini API key lives in `.env` and never reaches the client.
+
+### The model never claims something happened
+
+`backend/ai/` only ever produces the reply for **request one** — the parse.
+It has no visibility into whether the user goes on to confirm, or into
+whether the resulting write succeeds. So its reply is never phrased in a way
+that could be read as "done", in any tense — not "I've added it", not "added",
+not "saved". It describes what it is **proposing**, and the confirm button is
+what the user reads as the commit point.
+
+This applies the same way to a correction ("actually make that 30, not 25")
+mid-conversation: the reply is derived from the updated draft fields, not
+composed separately — so an acknowledgement can never say one thing while the
+payload underneath it holds the old value.
+
+An edit or delete reply is worded conditionally on there being a match
+("I'll delete the coffee expense, if I've got the right one" rather than "the
+coffee expense is deleted") — the search itself runs server-side, after the
+model has already produced its reply, so it cannot know at reply-time whether
+anything matched.
+
+### Malformed model output never reaches the user unfiltered
+
+Gemini Flash Lite occasionally degenerates: an amount like `-50` or an amount
+with sub-agora precision (`10.005`) slipping past the requested schema,
+reasoning text leaking into a field meant to hold a final value, a reply in
+an unsupported script, or a response that is empty, oversized, or not the
+JSON shape `parseMessage` asked for. None of these are the provider being
+unreachable — the call succeeds, the content is just unusable. `backend/ai/`
+treats them as a distinct failure mode from "the API is down":
+
+- The user's **raw text**, not the model's echo of it, is checked for a
+  leading `-` before an amount — the guard reads from the one place that
+  can't have been altered by the model.
+- A parsed amount with more than two decimal places is rejected the same way.
+- A response with no usable text, an empty draft, a suspicious/leaked field,
+  a reply over 5000 characters, or characters outside the supported script
+  ranges (Hebrew included, per the app's bilingual support) is treated as
+  **garbled**, not passed through.
+- On a garbled response, `parseMessage` retries **once** with an identical
+  request before giving up — Gemini Flash Lite's failures on this app's
+  traffic are transient roughly 1 time in 5, and one retry cuts the
+  user-visible rate to roughly 1 in 25. A second failure in a row is reported
+  to the user as a refusal to parse ("that didn't come out right, try
+  rephrasing"), not a `502` — the provider answered, it just didn't answer
+  usably. Every attempt is logged, so the real failure rate stays visible
+  without guessing.
+- On the client, a draft that comes back with a field the guards couldn't
+  make sense of, but that isn't missing something the user is expected to
+  supply (like a missing amount, which is a normal, silent case), shows an
+  explicit "couldn't read part of the reply, try rephrasing" message rather
+  than a silently empty draft.
 
 ## 9. Course-topic coverage
 

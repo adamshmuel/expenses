@@ -104,12 +104,18 @@ does not log everyone out.
 | token | String | required, unique |
 | user | ObjectId → User | required, indexed |
 | expiresAt | Date | required |
+| replacedByToken | String or null | default `null` |
+| replacedAt | Date or null | default `null` |
 
 Put a **TTL index** on `expiresAt`. MongoDB then deletes expired tokens on its
 own and the collection never grows forever.
 
 - **Login** creates one.
-- **Refresh** deletes the old one and creates a new one — that is the rotation.
+- **Refresh** stamps the old row's `replacedByToken`/`replacedAt` and creates a
+  new one — it does **not** delete the old row. Keeping it is what lets a
+  second, near-simultaneous call with the same old token be answered with the
+  new pair instead of a false 401; see [05-user-layers.md](05-user-layers.md)
+  §4, `refresh`. The TTL index still removes it on the normal 7-day schedule.
 - **Logout** deletes it.
 
 ## How they connect

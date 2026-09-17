@@ -90,9 +90,30 @@ Report which tests went stale and why, ask, and send it back as its own
 scoped round once Adam approves. Never change a test to make a fix look
 green — `tdd.md`.
 
-## 6. Commit per logical change
+## 6. Update the spec the fix touched
+
+Per `sdd.md`, the spec is the source of truth for what the code does — a bug
+fix that changes behaviour and leaves the spec describing the old behaviour
+is a spec bug from the moment the fix lands, not something to catch later in
+a batch.
+
+Once a fix is verified (§4), check whether it changed anything a spec under
+`docs/specs/` describes — a function's steps, a schema field, a case in a
+"cases to handle" table. If it did, update that spec in the same round,
+before moving to the next bug. Small, targeted edits to the section the fix
+touched — not a rewrite of the file, and not a chance to also cover unrelated
+drift noticed along the way; a wider clean-up gets its own round.
+
+This is `docs/`, so it follows `ownership.md`'s normal rule: Claude drafts,
+Adam approves. It is not `docs/reference/testing-reference/`'s
+never-edit-an-existing-file rule — specs are living documents that get edited
+in place as the product they describe changes.
+
+## 7. Commit per logical change
 
 Per `git.md`: output the commands for Adam to run, never run them, one
 command block per commit so each can be copied on its own. Unrelated changes
 caught in the same session — tooling config, an unrelated doc — stay
-unstaged and get mentioned, not bundled.
+unstaged and get mentioned, not bundled. A spec update from §6 is part of the
+same logical change as the fix it documents, so it belongs in that commit,
+not a separate one.
