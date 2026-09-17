@@ -62,7 +62,7 @@ place in the server code so sign-up and reset can never drift apart.
 
 | Field | Type | Rules |
 |---|---|---|
-| amount | Number | required, greater than 0, in shekels |
+| amount | Number | required, greater than 0, in shekels, **at most two decimal places** — an amount like `12.345` is refused, not rounded |
 | store | String | optional — the AI does not always find one |
 | description | String | optional |
 | date | Date | required, defaults to today |

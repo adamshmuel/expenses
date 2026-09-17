@@ -106,12 +106,20 @@ const getExpenseTotalByCategory = (userId, from, to) => {
 
 /**
  * Update one expense by id.
+ *
+ * `runValidators: true` is not optional here. Mongoose runs schema validators
+ * on `.save()` but skips them on update queries, so without it an edit could
+ * set an `amount` the same schema refuses on create — a negative figure, or
+ * more than two decimal places. A failure throws a Mongoose `ValidationError`,
+ * which `error_handling.js` turns into a 400.
+ *
  * @param {string} id
  * @param {object} obj - fields to change
  * @returns {Promise<import('mongoose').Document|null>} the document after the update (`{ new: true }`)
+ * @throws {import('mongoose').Error.ValidationError} if a changed field breaks a schema rule
  */
 const updateExpense = (id, obj) => {
-    return Expense.findOneAndUpdate({ _id: id }, obj, { new: true });
+        return Expense.findOneAndUpdate({ _id: id }, obj, { new: true, runValidators: true });
 }
 
 /**

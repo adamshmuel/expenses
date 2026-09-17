@@ -5,7 +5,9 @@ const mongoose = require("mongoose");
  * conversion (single currency for v1).
  *
  * @typedef {Object} Expense
- * @property {number} amount - Required, greater than 0, in shekels.
+ * @property {number} amount - Required, greater than 0, in shekels, and at
+ *   most two decimal places. A value like 12.345 is refused rather than
+ *   rounded — the app never silently changes a figure the user gave it.
  * @property {string} [store] - Optional — the AI does not always find one.
  * @property {string} [description] - Optional.
  * @property {Date} date - Required, defaults to today.
@@ -22,7 +24,11 @@ const expenseSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: [true, 'Amount is required'],
-        min: [0.01, 'Amount must be greater than 0']
+        min: [0.01, 'Amount must be greater than 0'],
+        validate: {
+            validator: (value) => Number(value.toFixed(2)) === value,
+            message: 'Amount cannot have more than two decimal places'
+        }
     },
     store: {
         type: String

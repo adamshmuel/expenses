@@ -115,7 +115,7 @@ match isn't unique.
 | `createManyExpenses(docs)` | Chat: save several confirmed new expenses from one message, in one insert |
 | `queryExpenses(userId, filters)` | Dashboard: period filter (`from`, `to`). Chat edit/delete: matching text + date against the user's expenses (`text`, `from`, `to`) |
 | `findExpenseById(id)` | The ownership check `expenseService.editExpense`/`deleteExpense` run before acting on the id the user already picked ([09-expense-category-service.md](09-expense-category-service.md)) |
-| `updateExpense(id, obj)` | Chat: apply a confirmed edit. Returns the updated document (`{ new: true }`) |
+| `updateExpense(id, obj)` | Chat: apply a confirmed edit. Returns the updated document (`{ new: true }`), and runs the schema's validators (`{ runValidators: true }`) — without that flag Mongoose skips them on an update, so an edit could set an amount the same schema would refuse on create |
 | `deleteExpense(id)` | Chat: apply a confirmed delete |
 | `reassignExpensesToCategory(userId, categoryId)` | `Expense.updateMany({ user: userId }, { category: categoryId })`. Used by `categoryService.resetToDefaults` ([09-expense-category-service.md](09-expense-category-service.md)) to point every one of this user's expenses at "Other" before their categories are wiped |
 | `getExpenseTotals(userId, filters)` **(V2)** | Chat questions: "how much did I spend on Food this month". One `$match`/`$group` returning **both** `total` (`$sum: "$amount"`) and `count` (`$sum: 1`), so "how much" and "how many" are one pass. Returns `{ total: 0, count: 0 }` — not `[]` — when nothing matches ([10-chat-questions.md](10-chat-questions.md) §5) |
