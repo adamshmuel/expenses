@@ -33,6 +33,7 @@ HTML report inlines each test's full case from here.
 | `api-chat-messages.md` | `GET`/`POST /chat/messages` | api | CM-01 … CM-06 |
 | `api-expenses-categories.md` | `GET /expenses`, `/expenses/summary`, `/categories` | api | ER-01 … ER-11 |
 | `e2e-chat-dashboard-journey.md` | chat → dashboard, real client + real server, browser-driven | e2e | FJ-01, DJ-01 |
+| `v2-chat-questions-2026-09-17.md` | **V2** — asking the chat about past spending. Designed against `docs/specs/10` + `11` **before the feature exists**; no case is exploratory | mixed (44 of 61 browser) | Q-01 … Q-61 |
 
 **Governing specs:** `docs/specs/01-ai-chat.md`, `02-dashboard.md`, `03-api-contract.md`,
 `04-data-model.md`, `05-user-layers.md`, `06-server-modules.md`, `07-server-entry.md`,
