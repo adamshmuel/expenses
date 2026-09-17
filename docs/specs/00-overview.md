@@ -25,6 +25,20 @@ categories split across the DAL ([08-expense-category-dal.md](08-expense-categor
 and the service/route layers on top of it
 ([09-expense-category-service.md](09-expense-category-service.md)).
 
+## V2 — asking, not only telling
+
+V1 is finished and is what the sections below describe: the chat **changes**
+things. V2 adds one thing — the chat can also **answer** questions about what
+you have already spent, without changing anything.
+
+| Spec | Covers | Owner |
+|---|---|---|
+| [10-chat-questions.md](10-chat-questions.md) | The feature: what can be asked, the AI contract, the cases | Claude drafts, Adam approves |
+| [11-chat-questions-server.md](11-chat-questions-server.md) | The four server steps to build it | **Adam writes the code** |
+
+Nothing in V2 adds a new way to write to the database, and no V1 behaviour
+changes. Specs 02, 04, 05, 06 and 07 are untouched by it.
+
 ## Purpose
 
 This is Adam's Node.js course final project. Its goal is to demonstrate as much

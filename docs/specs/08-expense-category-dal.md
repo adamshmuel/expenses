@@ -7,24 +7,30 @@ are used by the layers above. Adam writes the code; this spec is the contract,
 not the implementation. Schemas are [04-data-model.md](04-data-model.md);
 this spec does not repeat them.
 
-## Scope: v1 is create, edit, and delete — not open-ended questions
+## Scope: v1 is create, edit, and delete — questions are V2
 
-The chat (`/home`) parses text into one of seven intents — **create**,
-**edit**, or **delete**, for either an **expense** or a **category**, plus
-**reset** (categories only) — and always confirms before acting. The chat is
+In V1 the chat (`/home`) parses text into one of seven **writing** intents —
+**create**, **edit**, or **delete**, for either an **expense** or a
+**category**, plus **reset** (categories only) — and always confirms before
+acting. The chat is
 the only place either is written; `/dashboard` only reads. See
 [01-ai-chat.md](01-ai-chat.md) §6 for the full flow.
 
-It does not yet answer open-ended questions about past spending ("how much did
-I spend on food this month" with no edit/delete intent). That is a separate
-feature — it needs its own reply shape (an answer, not a draft or a match list)
-— and gets its own spec, later.
+V1 does not answer open-ended questions about past spending ("how much did I
+spend on food this month" with no edit/delete intent). That is a separate
+feature with its own reply shape — an answer, not a draft or a match list — and
+it now has its own spec: [10-chat-questions.md](10-chat-questions.md), built
+per [11-chat-questions-server.md](11-chat-questions-server.md).
 
 This matters for the DAL: v1 does not need per-field finders
 (`getExpensesByStore`, `getExpensesByCategory`, ...). It needs one flexible
 `queryExpenses` function, covering the dashboard's period filter and the chat's
-free-text match for edit/delete, so a future open-question feature extends it
-rather than replacing it.
+free-text match for edit/delete, so the open-question feature extends it rather
+than replacing it.
+
+**V2 did exactly that** — `queryExpenses` gained three keys and one new
+aggregation was added alongside it. Nothing was replaced. See the tables
+below.
 
 ## Layers
 
@@ -112,6 +118,7 @@ match isn't unique.
 | `updateExpense(id, obj)` | Chat: apply a confirmed edit. Returns the updated document (`{ new: true }`) |
 | `deleteExpense(id)` | Chat: apply a confirmed delete |
 | `reassignExpensesToCategory(userId, categoryId)` | `Expense.updateMany({ user: userId }, { category: categoryId })`. Used by `categoryService.resetToDefaults` ([09-expense-category-service.md](09-expense-category-service.md)) to point every one of this user's expenses at "Other" before their categories are wiped |
+| `getExpenseTotals(userId, filters)` **(V2)** | Chat questions: "how much did I spend on Food this month". One `$match`/`$group` returning **both** `total` (`$sum: "$amount"`) and `count` (`$sum: 1`), so "how much" and "how many" are one pass. Returns `{ total: 0, count: 0 }` — not `[]` — when nothing matches ([10-chat-questions.md](10-chat-questions.md) §5) |
 | `getExpenseTotalByCategory(userId, from, to)` | Dashboard breakdown. A Mongo aggregation (`$group`/`$sum`), not a JS loop over fetched docs — matches [02-dashboard.md](02-dashboard.md) open question 2: totals are calculated by the database |
 
 `filters` on `queryExpenses` is a plain object. The function builds a Mongoose
@@ -121,11 +128,15 @@ query from whichever keys are present:
 |---|---|
 | `from`, `to` | `date`, as a `$gte`/`$lte` range |
 | `text` | `store` **or** `description`, case-insensitive partial match (`$or` of two regexes) |
+| `category` **(V2)** | `$in` over an **array** of category ids — the service resolves the name to a category plus its subcategories first, since expenses are filed on the subcategory ([10-chat-questions.md](10-chat-questions.md) §2) |
+| `sort`, `order` **(V2)** | `.sort()` on `amount` or `date`, ascending or descending |
+| `limit` **(V2)** | `.limit()`, capped at 10 by the service |
 
 This is what makes it a "query builder" without being a separate abstraction —
-it is one function, and the filter object is a plain object, not a class. A
-future open-ended-question feature adds more keys the same way; it does not
-need a new function.
+it is one function, and the filter object is a plain object, not a class. V2's
+question feature added its three keys exactly this way, and needed no new
+finder. The chaining works because `Expense.find(...)` returns a query that is
+still open to `.sort()` and `.limit()` before it is awaited.
 
 ## What this earns
 
@@ -138,6 +149,6 @@ need a new function.
 
 ## Open questions
 
-None — open-ended spending questions (with no edit/delete intent) are
-deliberately deferred, not open; that gets its own spec when work on it
-starts.
+None. Open-ended spending questions were deferred here and are now specified
+in [10-chat-questions.md](10-chat-questions.md), which has no open questions of
+its own.

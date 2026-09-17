@@ -187,6 +187,24 @@ category all happen by sending text to the chat and confirming, per
 | List / filter expenses (read-only, for the dashboard) | `GET /expenses?from=&to=` |
 | Statistics | `GET /expenses/summary?from=&to=` |
 
+### V2 adds no endpoint
+
+A question about past spending goes through `POST /chat/messages` like every
+other message ([10-chat-questions.md](10-chat-questions.md)). The client does
+not know in advance that a message is a question, so it cannot choose a
+different route for it.
+
+What changes is one response, and only by what it contains:
+
+| Field | V1 | With `intent: "answer-question"` |
+|---|---|---|
+| `reply` | the AI's line about what it is proposing | **the answer itself** |
+| `drafts`, `draft`, `matches`, `changes` | one of them is filled | all absent |
+
+The client needs no change: it already renders `reply`, and already treats the
+other fields as optional. `POST /chat/confirm` is never called for a question —
+there is nothing to confirm.
+
 The data model behind all of them is agreed and written up in
 [04-data-model.md](04-data-model.md); the DAL functions behind the writes are
 in [08-expense-category-dal.md](08-expense-category-dal.md).
