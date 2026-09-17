@@ -213,6 +213,26 @@ describe('HomePage chat', () => {
     expect(screen.getByRole('button', { name: /cafe/i })).toBeInTheDocument()
   })
 
+  it('tells the user to rephrase instead of showing nothing when a complete draft has an unreadable field', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Want me to add this?',
+      intent: 'create-expense',
+      drafts: [
+        {
+          amount: 50,
+          category: 'Groceries',
+          store: 'supermarket", "category": "Groceries", "date": "2023-10-24" } ] }</body></html>',
+        },
+      ],
+    })
+    renderWithProviders(<App />, '/home')
+
+    await send('spent 50 somewhere')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/try rephrasing/i)
+    expect(screen.queryByRole('button', { name: /^confirm$/i })).not.toBeInTheDocument()
+  })
+
   it('shows an error and keeps the typed text when the server is unreachable', async () => {
     vi.mocked(chatApi.sendMessage).mockRejectedValue({
       message: 'Cannot reach the server. Check that it is running.',

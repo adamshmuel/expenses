@@ -67,56 +67,77 @@ export const isSaneText = (value: string | null | undefined): boolean => {
   return true
 }
 
+/** What the user reads when a draft is dropped because the model glitched —
+ *  never for a "how much was it?"/"no match" case, those are already said in
+ *  `reply` and this would just add noise on top of a working flow. */
+const UNREADABLE_DRAFT_MESSAGE = "That didn't come out right — I couldn't read part of the reply. Try rephrasing."
+
 /**
- * Turns a `/chat/messages` result into what still needs confirming, or
- * `null` when there is nothing to confirm (no match, missing amount, an
- * intent the model didn't recognise, or a free-text field that looks like a
- * leaked JSON/HTML fragment rather than a real store/description name).
+ * `buildPending`'s result: either something to confirm, nothing to confirm
+ * because that's the normal shape of this reply (missing amount, no match,
+ * unrecognised text — `reply` already covers these), or nothing to confirm
+ * because the model produced a broken draft (a free-text field that looks
+ * like leaked JSON/HTML, or a required field missing outright) — this last
+ * case is the only one that also carries a message for the user.
  */
-const buildPending = (result: ChatMessageResult): PendingAction | null => {
+const buildPending = (result: ChatMessageResult): { pending: PendingAction | null; error: string | null } => {
   switch (result.intent) {
     case 'create-expense': {
       const drafts = result.drafts ?? []
+      if (drafts.length === 0) return { pending: null, error: null }
       // The model never invents an amount or a category — if one draft is
       // missing either, the reply already asks for it, so there is nothing
-      // to confirm yet.
-      if (
-        drafts.length === 0 ||
-        drafts.some(
-          (draft) =>
-            draft.amount == null ||
-            draft.category == null ||
-            !isSaneText(draft.store) ||
-            !isSaneText(draft.description),
-        )
-      )
-        return null
-      return { intent: 'create-expense', drafts }
+      // to confirm yet, and nothing wrong to report.
+      if (drafts.some((draft) => draft.amount == null || draft.category == null))
+        return { pending: null, error: null }
+      // Amount and category are both present, so this draft was meant to be
+      // ready to confirm — a free-text field that fails isSaneText here
+      // means the model glitched, not that it's waiting on the user.
+      if (drafts.some((draft) => !isSaneText(draft.store) || !isSaneText(draft.description)))
+        return { pending: null, error: UNREADABLE_DRAFT_MESSAGE }
+      return { pending: { intent: 'create-expense', drafts }, error: null }
     }
     case 'create-category':
-      return result.draft ? { intent: 'create-category', draft: result.draft } : null
+      // Unlike a missing amount, there's no "ask for the name" sub-flow for
+      // a category — the model claimed this intent but sent nothing to act
+      // on, which is the same kind of glitch as an unreadable field.
+      return result.draft
+        ? { pending: { intent: 'create-category', draft: result.draft }, error: null }
+        : { pending: null, error: UNREADABLE_DRAFT_MESSAGE }
     case 'edit-expense':
     case 'delete-expense': {
       const matches = (result.matches ?? []) as ExpenseMatch[]
-      if (matches.length === 0) return null
+      // No match is a normal outcome the reply already states ("no expense
+      // matches that") — nothing broke, there's just nothing to act on.
+      if (matches.length === 0) return { pending: null, error: null }
       const selectedId = matches.length === 1 ? matches[0]._id : null
-      return result.intent === 'edit-expense'
-        ? { intent: 'edit-expense', matches, changes: result.changes ?? {}, selectedId }
-        : { intent: 'delete-expense', matches, selectedId }
+      return {
+        pending:
+          result.intent === 'edit-expense'
+            ? { intent: 'edit-expense', matches, changes: result.changes ?? {}, selectedId }
+            : { intent: 'delete-expense', matches, selectedId },
+        error: null,
+      }
     }
     case 'edit-category':
     case 'delete-category': {
       const matches = (result.matches ?? []) as CategoryMatch[]
-      if (matches.length === 0) return null
+      if (matches.length === 0) return { pending: null, error: null }
       const selectedId = matches.length === 1 ? matches[0]._id : null
-      return result.intent === 'edit-category'
-        ? { intent: 'edit-category', matches, changes: result.changes ?? {}, selectedId }
-        : { intent: 'delete-category', matches, selectedId }
+      return {
+        pending:
+          result.intent === 'edit-category'
+            ? { intent: 'edit-category', matches, changes: result.changes ?? {}, selectedId }
+            : { intent: 'delete-category', matches, selectedId },
+        error: null,
+      }
     }
     case 'reset-categories':
-      return { intent: 'reset-categories' }
+      return { pending: { intent: 'reset-categories' }, error: null }
     default:
-      return null
+      // An intent the model didn't recognise — the reply already says so
+      // (spec §7 "text does not match any of the seven intents").
+      return { pending: null, error: null }
   }
 }
 
@@ -227,7 +248,9 @@ const chatSlice = createSlice({
           role: 'assistant',
           text: action.payload.reply,
         })
-        state.pending = buildPending(action.payload)
+        const { pending, error } = buildPending(action.payload)
+        state.pending = pending
+        if (error) state.error = error
       })
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.status = 'idle'

@@ -233,6 +233,69 @@ describe('chatSlice', () => {
     expect(store.getState().chat.pending).toBeNull()
   })
 
+  it('sets an error and drops the draft when a complete create-expense draft has an unreadable store field', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Want me to add this?',
+      intent: 'create-expense',
+      drafts: [
+        {
+          amount: 50,
+          category: 'Groceries',
+          store: 'supermarket", "category": "Groceries", "date": "2023-10-24" } ] }</body></html>',
+        },
+      ],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('spent 50 somewhere'))
+    const { pending, error } = store.getState().chat
+    expect(pending).toBeNull()
+    expect(error).toMatch(/couldn.t read that reply|try rephrasing/i)
+  })
+
+  it('does not set an error when create-expense is only waiting on a missing amount', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'How much did you spend?',
+      intent: 'create-expense',
+      drafts: [{ store: 'Supermarket', category: 'Groceries' }],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('spent something at the supermarket'))
+    expect(store.getState().chat.pending).toBeNull()
+    expect(store.getState().chat.error).toBeNull()
+  })
+
+  it('does not set an error when an edit matches no expense', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'No expense matches that.',
+      intent: 'edit-expense',
+      matches: [],
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('change the coffee expense to 20'))
+    expect(store.getState().chat.pending).toBeNull()
+    expect(store.getState().chat.error).toBeNull()
+  })
+
+  it('does not set an error for an unrecognised intent', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({ reply: 'Not sure what you mean.', intent: 'unknown' })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('asdkjh'))
+    expect(store.getState().chat.pending).toBeNull()
+    expect(store.getState().chat.error).toBeNull()
+  })
+
+  it('sets an error when a create-category intent comes back with no draft', async () => {
+    vi.mocked(chatApi.sendMessage).mockResolvedValue({
+      reply: 'Add this category?',
+      intent: 'create-category',
+    })
+    const store = makeStore()
+    await store.dispatch(sendChatMessage('add a category called Pets'))
+    const { pending, error } = store.getState().chat
+    expect(pending).toBeNull()
+    expect(error).toMatch(/couldn.t read that reply|try rephrasing/i)
+  })
+
   it('keeps a draft pending when the store name has an apostrophe, ampersand, emoji or Hebrew text', async () => {
     const cases = ["Carrefour l'Étoile", 'Möbelhaus & Co.', 'סופר יוסי', '🍕 Pizza place']
     for (const store of cases) {
