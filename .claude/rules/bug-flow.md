@@ -8,6 +8,19 @@ It sits on top of the other rules, it does not replace them:
 spawned, `product-first.md` decides when a bug is closed, `git.md` decides how
 it is committed.
 
+## 0. Every bug gets fixed
+
+A bug found is a bug to fix. The only thing that closes a bug without a fix is
+Adam saying so, in that turn, in as many words — "we're not fixing that",
+"leave it", "not now".
+
+- Low severity is not a reason to skip one. It is a reason to fix it later in
+  the order, not to drop it.
+- Never quietly park a bug as "known open", "minor", or "cosmetic" and move on.
+  If it is not fixed and Adam has not waived it, it is still on the list.
+- When a findings report is worked through, the round is done when every bug in
+  it is either fixed or waived by Adam. Say which is which at the end.
+
 ## 1. Triage before touching any code
 
 Given a findings report, for **every** bug:
