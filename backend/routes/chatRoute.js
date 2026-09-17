@@ -6,7 +6,13 @@ const categoryService = require('../bl/categoryService.js');
 const expenseService = require('../bl/expenseService.js');
 const messageService = require('../bl/messageService.js');
 const { parseMessage } = require('../ai/index.js');
+const { body } = require("express-validator");
+const checkValidationResult = require('../middleware/checkValidationResult.js');
 
+
+const messageValidators = [
+    body("text").trim().notEmpty().withMessage("Message can't be empty.")
+];
 
 
 /**
@@ -30,7 +36,7 @@ router.get('/messages', requireAuth, catchAsync(async (req, res) => {
  * matches to choose from for an edit/delete. No database write happens here
  * beyond the two chat messages — the actual change waits for /chat/confirm.
  */
-router.post('/messages', requireAuth, catchAsync(async (req, res) => {
+router.post('/messages', requireAuth, messageValidators, checkValidationResult, catchAsync(async (req, res) => {
 
     await messageService.saveMessage(req.user.id, req.body.text, "user");
     const categories = await categoryService.getForUser(req.user.id);
