@@ -1,4 +1,5 @@
 import { dropTestDb, closeTestDb } from "../harness/db.js";
+import { seedLivedIn, disconnectLivedIn } from "../env/lived-in.js";
 
 /**
  * Runs once before the webServers start. Same bracket as the vitest harness's
@@ -15,7 +16,26 @@ import { dropTestDb, closeTestDb } from "../harness/db.js";
  * false` below throws a clear "already used" error instead of silently
  * corrupting the run -- rerun after freeing the port by hand.
  */
+/**
+ * QA_SKIP_DB_SETUP: set by qa/scripts/run-e2e.mjs when it drives one spec
+ * file per `playwright test` invocation (see that file for why -- the
+ * express-rate-limit global limiter is in-memory per server process, and
+ * one continuous server for all 89 tests exhausts it partway through,
+ * turning later tests' real 429s into false failures). The orchestrator
+ * does the DB drop/seed ONCE itself before the whole run and tears down
+ * ONCE after; each per-file invocation only needs a fresh SERVER PROCESS
+ * (which restarting the webServer already gives it), not a fresh database.
+ */
 export default async function globalSetup() {
+  if (process.env.QA_SKIP_DB_SETUP) return;
   await dropTestDb();
   await closeTestDb();
+
+  // Build the four lived-in accounts (qa/specs/env-lived-in.md) directly via
+  // the server's own bl/model layer -- no HTTP call, since the webServers
+  // have not started yet (see the file-level comment above). Not a child
+  // process, so it does not touch the network-reachability hazard that
+  // comment warns about.
+  await seedLivedIn();
+  await disconnectLivedIn();
 }

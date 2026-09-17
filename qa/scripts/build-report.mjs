@@ -16,6 +16,28 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CASES, GOVERNING, GROUPS } from "./testcases.mjs";
+import { FLOW_CASES } from "./parse-flow-specs.mjs";
+
+// The three PROVISIONAL bars (Adam has not confirmed any of them) --
+// coordinator instruction 2026-09-16: mark these clearly so a failure's
+// meaning (app wrong vs. bar wrong) is visible at a glance. Single source:
+// qa/harness/bars.ts names the same three; kept as an id list here since the
+// report only needs to know WHICH tests to flag, not the numbers themselves.
+const PROVISIONAL_BAR_IDS = ["FR-36", "FR-37", "FR-38", "FR-39", "FR-43", "LV-24"];
+
+// A case that never became a runnable test -- reported as BLOCKED, not
+// silently absent. FR-05's unit half needs `buildPending` exported from
+// client/src/store/chatSlice.ts; qa-tester does not touch client/ this run
+// (delegation.md routes it to the builder agent, not authorised this pass).
+const BLOCKED_CASES = [
+  {
+    id: "FR-05",
+    key: "FR",
+    title: "(unit half) buildPending's four rejection branches, tested directly",
+    reason:
+      "buildPending is not exported from client/src/store/chatSlice.ts, so it cannot be unit-tested directly from qa/. Per .claude/rules/delegation.md, a client/ code change is the builder agent's job, not qa-tester's, and it was not authorised this run. The browser half of FR-05 (stubbing /chat/messages to force each rejection branch and checking the user is told what went wrong) IS implemented and ran.",
+  },
+];
 
 const here = dirname(fileURLToPath(import.meta.url));
 const QA = resolve(here, "..");
@@ -47,6 +69,7 @@ for (const suite of raw.testResults ?? []) {
       status: t.status, // "passed" | "failed" | "skipped" | "pending" | "todo"
       duration: t.duration ?? 0,
       failureMessages: t.failureMessages ?? [],
+      aiRawLines: [],
     });
   }
 }
@@ -73,6 +96,18 @@ if (existsSync(PW_RAW)) {
         }
         const full = spec.title || "";
         const m = full.match(ID_RE);
+        // Raw response bodies for cases that drive the real model
+        // (coordinator instruction, 2026-09-16 run): every test's own
+        // console.log via qa/e2e/helpers.ts's logAIRaw lands in Playwright's
+        // per-result stdout, tagged "[AI-RAW ...]" -- pull just those lines
+        // out so a failure can be diagnosed without paying to re-run it.
+        const aiRawLines = [];
+        for (const r of results) {
+          for (const entry of r.stdout ?? []) {
+            const text = typeof entry === "string" ? entry : entry?.text;
+            if (text && text.includes("[AI-RAW")) aiRawLines.push(text.trim());
+          }
+        }
         tests.push({
           id: m ? `${m[1]}-${m[2]}` : null,
           key: m ? m[1] : "??",
@@ -82,6 +117,7 @@ if (existsSync(PW_RAW)) {
           status,
           duration: last.duration ?? 0,
           failureMessages,
+          aiRawLines,
         });
       }
     }
@@ -93,6 +129,24 @@ if (existsSync(PW_RAW)) {
 // ---- classify ----
 const norm = (s) => (s === "pending" || s === "todo" ? "skipped" : s);
 for (const t of tests) t.status = norm(t.status);
+
+// Blocked cases never became a runnable test at all -- injected directly so
+// they show up in the summary counts and their own group, not silently
+// absent from the report.
+for (const b of BLOCKED_CASES) {
+  tests.push({
+    id: b.id,
+    key: b.key,
+    title: `${b.id} ${b.title}`,
+    fullName: `${b.id} ${b.title}`,
+    file: "(blocked — no test file)",
+    status: "blocked",
+    duration: 0,
+    failureMessages: [],
+    aiRawLines: [],
+    blockedReason: b.reason,
+  });
+}
 
 // Known spec/code divergences carried through from the design phase.
 // NOTE (found this pass, not caused by it): RA-06 and XC-11's test bodies
@@ -127,14 +181,125 @@ const DESIGN_BLOCKERS = [
   { id: "B1", text: "backend/index.js does not export `app`. In-process supertest is impossible; API tests spawn the server as a child process. Optional Adam change if in-process testing is ever wanted." },
 ];
 
-const counts = { passed: 0, failed: 0, skipped: 0 };
+// ---- 2026-09-16 pass: cases the spec itself documents as failing against
+// the current build ("Status today: fails" / "Known failure:") -- these are
+// DESIGNED to be red; a pass here would be the surprise. Compiled by hand
+// from qa/specs/flow-fresh-2026-09-16.md and flow-lived-in-2026-09-16.md's
+// own prose (not derived from run results, so it can't drift toward
+// "whatever happened to fail this time").
+const DESIGNED_TO_FAIL_2026_09_16 = [
+  "FR-01", "FR-02", "FR-04", "FR-05", "FR-06", "FR-07", "FR-11", "FR-13",
+  "FR-16", "FR-17", "FR-19", "FR-38", "FR-39", "FR-41", "FR-43", "FR-44",
+  "BD-07", "LV-20",
+];
+
+/**
+ * Per-test triage verdicts for the 2026-09-16 full run, keyed by an exact or
+ * partial (RegExp) match against the test's title. Compiled by hand after
+ * reading every failure's actual error text, and in a handful of cases
+ * (FR-27, LV-22, FR-39) re-running that one test in isolation and, for
+ * LV-22, spinning up the real lived-in server and hitting GET
+ * /expenses/summary directly to compare against a raw database sum.
+ *
+ * verdict: "real" (the app is wrong) | "test" (this test's own code is
+ * wrong) | "artifact" (rate limiting / model slowness / a timing race in
+ * the harness -- not evidence about the app either way) | "inconclusive"
+ * (genuinely unsure -- said plainly rather than guessed).
+ */
+const TRIAGE_2026_09_16 = [
+  // ---- confirmed real defects ----
+  { match: /^BD-01/, verdict: "real", note: "The AI offers to edit/delete an expense that does not exist (\"Would you like me to update the coffee expense to 30?\" with zero expenses on the account) -- a false match, not a refusal." },
+  { match: /^FR-42/, verdict: "real", note: "The refusal to total up spending never mentions the dashboard, even though a handoff is right there -- matches the spec's own expectation exactly." },
+  { match: /^XS-05 \(browser half\)/, verdict: "real", note: "SEVERE. `spent -50 on coffee` -> \"I've noted 50 under Food -> Coffee... Would you like me to save this expense?\" -- the negative sign is silently dropped and a Confirm button is offered for the positive amount. Confirmed via the raw AI-RAW log line, not inferred." },
+  { match: /^FR-16/, verdict: "real", note: "/users/refresh fires twice on start-up (a StrictMode/double-mount race), and because refresh ROTATES the token, the loser's 401 can log the user out. Same root cause as FR-17, FR-18 and UJ-01 below -- one bug, four symptoms." },
+  { match: /^FR-17/, verdict: "real", note: "Same root cause as FR-16 -- reload sometimes lands on /login." },
+  { match: /^FR-18/, verdict: "real", note: "Same root cause as FR-16 -- reachable with two tabs, no StrictMode needed." },
+  { match: /^UJ-01/, verdict: "real", note: "Same root cause as FR-16. This is the pre-existing auth-journey test qa-lead flagged as \"suspect, re-check\" on 2026-09-16 (it used to pass while FR-16/17 documented the same app failing by hand) -- it now fails too. Confirms the suspicion; not a new class of bug." },
+  { match: /^FR-06/, verdict: "real", note: "Same root cause as FR-16 -- surfaced as a TypeError in this test's own refresh helper (an error body where an access token was expected) rather than a clean assertion failure, because the reload raced the same double-refresh bug. The test could handle that response more gracefully; the underlying cause is the app's." },
+  { match: /^FR-11/, verdict: "real", note: "Confirms the spec's documented \"Status today: fails\" -- the confirm card shows no date at all." },
+  { match: /^FR-10/, verdict: "real", note: "NEW. \"actually it was 22\" did not change anything -- the stored amount stayed 18. A correction was silently ignored, not merely mis-worded." },
+  { match: /^LV-20/, verdict: "real", note: "Confirms the spec's own prediction: a real expense (₪200, from LV-08's \"spent 200 at the supermarket\") was written with neither store nor description during this run. The accumulated form of FR-13's bug." },
+  { match: /^LV-15/, verdict: "real", note: "lv_steady's dashboard genuinely overflows horizontally at 375px once expanded with real category depth. Moderate confidence -- not cross-checked against a second run." },
+  { match: /^FR-38 \[PROVISIONAL BAR\]/, verdict: "real", note: "PROVISIONAL BAR. Objective, reproducible measurement: the navbar's \"Log in\"/\"Sign up\" links are 40x23px and 79x36px, both under the proposed 44x44px minimum. Whether they should even be showing while the user is authenticated is a separate question this case doesn't test." },
+  { match: /^FR-43 \[PROVISIONAL BAR\]/, verdict: "real", note: "PROVISIONAL BAR. A Hebrew message got an English reply, exactly the known failure the spec names. Whether this bar is required at all is Adam's call, not yet made." },
+  { match: /^FS-02/, verdict: "real", note: "Pre-existing, already-documented failure (2026-09-16 1630 run) -- not new, left failing on purpose." },
+  { match: /^FS-06/, verdict: "real", note: "Pre-existing, already-documented failure (2026-09-16 1630 run) -- not new, left failing on purpose." },
+  { match: /^FR-44/, verdict: "artifact", note: "Timed out at 60s with no assertion failure recorded -- consistent with the AI slowness documented below (BD-07/FR-08 cluster), not a clean product finding. Re-run to confirm before treating as real." },
+
+  // ---- designed-to-fail cases confirmed still failing (see DESIGNED_TO_FAIL_2026_09_16) ----
+  { match: /^FR-01 /, verdict: "real", note: "PASSED this run, contradicting the spec's \"Status today: fails\" -- see the designed-to-fail table above, worth a second look rather than assumed fixed." },
+  { match: /^FR-02 /, verdict: "real", note: "Confirms the spec's documented false-save-claim bug." },
+  { match: /^FR-03 /, verdict: "real", note: "\"I have saved your 20 expense under Food -> Coffee.\" -- another instance of the false-save-claim class, on the \"yes\" path specifically." },
+  { match: /^FR-04 /, verdict: "real", note: "Confirms the spec's \"fails intermittently\" -- reply named Food AND Coffee, the card showed only Coffee." },
+  { match: /^FR-05 /, verdict: "real", note: "Confirms the spec's documented gap: an over-long store is correctly withheld from the draft, but the reply (\"Got it, ₪20 under Food.\") gives the user no way forward and no sign anything was wrong." },
+  { match: /^FR-07 /, verdict: "real", note: "Confirms the spec's documented \"three of four outcomes are identical\" -- cancelled and reloaded produced byte-identical assistant text." },
+  { match: /^FR-13 \(browser half\)/, verdict: "artifact", note: "This specific run hit the 45s Confirm-button timeout (see the AI-degeneration cluster below), so this instance does not independently confirm the label bug -- but FR-13's API half and LV-20's sweep both confirm it directly this same run, so the underlying bug stands on that evidence regardless." },
+  { match: /^FR-19 /, verdict: "real", note: "Confirms the spec's documented finding -- prose persists, the draft does not, and nothing says it lapsed." },
+  { match: /^FR-41 /, verdict: "test", note: "Test defect, not a product finding: the case's own spec text allows EITHER an on-screen control OR \"a typed answer is understood\" -- this test only ever checks for the control. \"bought coffee\" -> \"how much did it cost?\" is answerable by typing a number (proven elsewhere, FR-09), so this failure reflects an incomplete test, not a real dead end." },
+
+  // ---- confirmed test defects ----
+  { match: /^FR-27/, verdict: "test", note: "Confirmed by re-running in isolation and reading the page snapshot at the moment of failure: the test read the assistant's last bubble immediately after sending \"reset my categories\", before that round trip had returned -- it was still reading the PREVIOUS turn's reply. Missing an await for the round trip, not a product bug." },
+  { match: /^FR-39 \[PROVISIONAL BAR\]/, verdict: "test", note: "Confirmed by reading the client source: FormField.tsx renders a field error in a span with class `field__error` (double underscore); this test looked for `.field-error` (hyphen) and found nothing. A selector typo, not evidence the app has no validation errors." },
+  { match: /^FR-40/, verdict: "test", note: "This test never seeds any expense before checking /dashboard for \"Total spent\" -- on a genuinely empty account the dashboard correctly shows its empty state instead, per spec 02. The test is checking the wrong state, not a missing element." },
+  { match: /^LV-04/, verdict: "test", note: "Environment-builder bug (qa/env/lived-in.ts), not a product bug: \"parking\" is also a label the generic filler expenses can pick from the shared item catalogue, so lv_corrector ended up with more \"parking\"-labelled rows than the curated 4-entry cluster the spec describes. The seeder needs to keep its curated cluster labels out of the generic filler's pool." },
+  { match: /^LV-05/, verdict: "test", note: "Same environment-builder bug as LV-04, for \"supermarket\" (5 curated + 5 more from generic filler = 10 shown)." },
+  { match: /^LV-11/, verdict: "test", note: "Test defect: the dashboard's expand/collapse state is normal React state that persists across this test's 5-period loop; clicking to \"expand\" Food a second time (already left open from the previous period) collapses it instead, hiding the very row being asserted on. Needs to check aria-expanded before clicking, not assume closed." },
+  { match: /^LV-14/, verdict: "test", note: "Test defect: this compared GET /chat/messages against itself -- that endpoint is deliberately capped at 50 (spec 01 §6), so it can never prove \"more than 50 exist\" no matter how many are seeded. Needs a direct database count instead." },
+  { match: /^LV-22/, verdict: "test", note: "Re-verified by hand: started the real lived-in server, logged in as lv_steady, and called GET /expenses/summary directly -- its total (₪21,833.50) matches a raw database sum to the agora. The two numbers agree; this test's own comparison does not currently reproduce that agreement and has an unresolved bug of its own. Not a product defect." },
+  { match: /^LV-02/, verdict: "test", note: "Likely test defect: this test's throwaway fresh-account username is built from bare Date.now() (no counter, unlike the shared makeUser() helper), which risks a timestamp collision under repeated runs. Signup landed back on /signup instead of /home, consistent with a duplicate-username 400/409 rather than a product issue." },
+  { match: /^FR-33/, verdict: "test", note: "A TypeError inside this test's own expect.poll() predicate (\"received value must be a number, received undefined\") -- a scripting bug in the test, not an assertion about the app." },
+  { match: /^BD-04/, verdict: "test", note: "Test defect: reads the transcript immediately after page.reload() with no wait for the async chat-history fetch to finish rendering, so it sometimes sees zero bubbles regardless of what the server actually returns. Needs to wait for the history request before reading the DOM." },
+  { match: /^LV-23/, verdict: "test", note: "This case's own verification logic has two real design flaws found while reading it after the fact: (1) a through-the-screen send is marked successful regardless of whether a Confirm button ever appeared or was clicked; (2) a sentence is \"verified\" by finding ANY expense with a matching amount anywhere in the account's now-200+ row history, which both under- and over-matches. The 30/40 failure count should not be read as 30 separate app defects -- the case needs a rewrite (track the row actually created, e.g. by pre/post count and id, not a value search) before its pass/fail count means anything." },
+
+  // ---- run artifacts (real-time evidence in backend/logs/ai.log) ----
+  { match: /^FR-08 /, verdict: "artifact", note: "\"Confirm\" never appeared within the 45s AI-reply budget. backend/logs/ai.log shows Gemini producing severely degenerate output in this exact window (~20:48-20:54 that night) -- one field repeating \"pharmacy\"/\"the gym\" hundreds of times, one raw response over 200,000 characters, one JSON parse failure from an unterminated string. This is the model, not the app; not evidence either way." },
+  { match: /^FR-09 /, verdict: "artifact", note: "Same AI-degeneration window as FR-08." },
+  { match: /^FR-24/, verdict: "artifact", note: "Same AI-degeneration window as FR-08." },
+  { match: /^FR-28/, verdict: "artifact", note: "Same AI-degeneration window as FR-08." },
+
+  // ---- vitest (API-level) failures ----
+  { match: /^XS-05 \(API half\)/, verdict: "real", note: "NEW. `amount: 12.345` (three decimal places) was accepted with a 200, not refused. expenseModel.js has no validation on decimal precision -- env-lived-in.md's own \"exactly two decimal places, never more\" rule is a seeding-quality assumption the server does not actually enforce." },
+  { match: /^FR-31 \(API half\)/, verdict: "real", note: "NEW. Input 3, an empty-string message (\"\"), makes POST /chat/messages return a 500, not a clean refusal. Every other nonsense/unrelated input in the same 9-input matrix (hello, whitespace, emoji, a URL, a 5000-char paragraph, a bare number) is handled cleanly -- only the empty string crashes." },
+  { match: /^FR-13 \(API half\)/, verdict: "real", note: "Confirms the spec's documented bug directly at the API boundary: a create-expense with neither store nor description is accepted and saved." },
+  { match: /^FR-39 \(API half\)/, verdict: "real", note: "Confirms the spec's documented wording bug in the raw signup 400 body: \"User name must between 3 and 20 characters\" (missing \"be\", and \"User name\" instead of the field's real label \"Username\")." },
+  { match: /^BD-07.*model's raw response/, verdict: "real", note: "Left deliberately red, per the task brief: the AI-response half of the logging gap (backend/ai/parseMessage.js does not capture the model's raw output when the call itself fails, only on a parse failure) is still open. Confirmed again this run with a forced invalid-API-key failure." },
+  { match: /^BD-07.*validation 400|^BD-07.*5xx goes|^BD-07.*failed login/, verdict: "real", note: "PASSED this run -- the request-body-logging half of BD-07 is fixed and stayed fixed." },
+
+  // ---- found while closing the gaps a first automated triage pass missed ----
+  { match: /^FS-05/, verdict: "real", note: "Likely the same double-refresh race as FR-16 -- FS-05 reloads mid-conversation, and if that reload loses, the session bounces to /login before the chat bubble it's looking for ever re-renders. Not independently re-verified this pass; flagged with the same root cause rather than counted as a fifth unrelated bug." },
+  { match: /^FR-21/, verdict: "inconclusive", note: "\"This month\" showed only the today-dated row's total, not today's + the first-of-month row's. Resembles the historical date-boundary class (the 2026-09-15 ER-10/ER-11 fix), but not independently re-verified this pass -- said plainly rather than guessed." },
+  { match: /^FR-22/, verdict: "real", note: "Likely the same double-refresh race as FR-16 -- this case's loading-state check reloads the page, and if that reload loses the race, the app redirects to /login before the dashboard's loading panel (role=\"status\") ever mounts. Not independently re-verified this pass." },
+];
+
+function triageFor(test) {
+  // Accepts either a test object or a bare title string. vitest's JSON
+  // reporter gives each assertion only its OWN title (no describe prefix)
+  // as `.title`, with the describe-qualified path in `.fullName` -- several
+  // of this pass's IDs (BD-07, XS-05/FR-13/FR-31/FR-39's API halves) live
+  // only in the describe title, so matching had to fall back to fullName
+  // too or those rows silently fell through as "not yet triaged".
+  const candidates = typeof test === "string" ? [test] : [test?.fullName, test?.title].filter(Boolean);
+  for (const title of candidates) {
+    for (const t of TRIAGE_2026_09_16) if (t.match.test(title)) return t;
+  }
+  return null;
+}
+
+const counts = { passed: 0, failed: 0, skipped: 0, blocked: 0 };
 for (const t of tests) counts[t.status] = (counts[t.status] ?? 0) + 1;
 const total = tests.length;
 
 const failures = tests.filter((t) => t.status === "failed");
 const expectedDivergenceFails = failures.filter((t) => DIVERGENCES.includes(t.id));
 const realBugFails = failures.filter((t) => REAL_BUGS.includes(t.id));
-const unexpectedFails = failures.filter((t) => !DIVERGENCES.includes(t.id) && !REAL_BUGS.includes(t.id));
+const designedToFailHits = failures.filter((t) => DESIGNED_TO_FAIL_2026_09_16.includes(t.id));
+const unexpectedFails = failures.filter(
+  (t) =>
+    !DIVERGENCES.includes(t.id) &&
+    !REAL_BUGS.includes(t.id) &&
+    !DESIGNED_TO_FAIL_2026_09_16.includes(t.id) &&
+    !triageFor(t),
+);
 
 // ---- coverage-against-spec statement ----
 const SPEC_COVERAGE = [
@@ -162,10 +327,12 @@ const esc = (s) =>
 
 function casePanel(t) {
   const c = t.id ? CASES[t.id] : null;
+  const flow = !c && t.id ? FLOW_CASES[t.id] : null;
   const gov = t.id ? GOVERNING[t.key] : null;
   const isDiv = t.id && DIVERGENCES.includes(t.id);
   const isFinding = t.id && FINDINGS.includes(t.id);
   const isBug = t.id && REAL_BUGS.includes(t.id);
+  const isProvisional = t.id && PROVISIONAL_BAR_IDS.includes(t.id);
   const rows = [];
   if (c) {
     rows.push(`<div class="fld"><span class="k">Purpose</span><span class="v">${esc(c.purpose)}</span></div>`);
@@ -173,8 +340,20 @@ function casePanel(t) {
     rows.push(`<div class="fld"><span class="k">Method (setup + exact inputs + action)</span><span class="v">${esc(c.method)}</span></div>`);
     rows.push(`<div class="fld"><span class="k">Expected result</span><span class="v">${esc(c.expected)}</span></div>`);
     if (c.divergence) rows.push(`<div class="fld div"><span class="k">Spec/code note</span><span class="v">${esc(c.divergence)}</span></div>`);
+  } else if (flow) {
+    // The case, inlined directly from qa/specs/flow-fresh-2026-09-16.md or
+    // flow-lived-in-2026-09-16.md (parsed, not retyped -- see
+    // qa/scripts/parse-flow-specs.mjs). Title carries the "· *provenance*" tag.
+    rows.push(`<div class="fld"><span class="k">Case (from ${esc(flow.file)})</span><span class="v">${flow.html}</span></div>`);
+  } else if (t.status === "blocked") {
+    rows.push(`<div class="fld"><span class="k">Why blocked</span><span class="v">${esc(t.blockedReason || "")}</span></div>`);
   } else {
     rows.push(`<div class="fld"><span class="k">Note</span><span class="v">No design-time case matched this test id. Title: ${esc(t.fullName)}</span></div>`);
+  }
+  if (isProvisional) {
+    rows.push(
+      `<div class="fld div"><span class="k">Provisional bar</span><span class="v">This case runs against a bar Adam has NOT yet confirmed (qa/harness/bars.ts is the single place the number lives). If this fails, that means either the app is genuinely slow/wrong, OR the proposed number itself is wrong — read the failure detail before assuming either.</span></div>`,
+    );
   }
   rows.push(
     `<div class="fld"><span class="k">Actual result (this run)</span><span class="v">${
@@ -182,9 +361,19 @@ function casePanel(t) {
         ? "PASSED — all assertions held."
         : t.status === "skipped"
         ? "SKIPPED."
+        : t.status === "blocked"
+        ? "BLOCKED — never became a runnable test this run (see \"Why blocked\" above)."
         : "FAILED. " + (isDiv ? "(Expected: this is a carried-through spec/code divergence.)" : isBug ? "(Expected: this asserts the spec's correct behaviour against a real bug found this pass — see the Findings section above.)" : "")
     }</span></div>`
   );
+  const triage = triageFor(t);
+  if (triage) {
+    const verdictLabel = { real: "REAL DEFECT — the app is wrong", test: "TEST DEFECT — this test's own code is wrong, the app is fine", artifact: "RUN ARTIFACT — not evidence about the app either way", inconclusive: "INCONCLUSIVE — genuinely unsure" }[triage.verdict];
+    const verdictColor = { real: "var(--fail)", test: "var(--accent)", artifact: "var(--mut)", inconclusive: "var(--skip)" }[triage.verdict];
+    rows.push(
+      `<div class="fld"><span class="k">Triage verdict</span><span class="v"><strong style="color:${verdictColor}">${esc(verdictLabel)}</strong><br>${esc(triage.note)}</span></div>`,
+    );
+  }
   if (t.status === "failed" && t.failureMessages.length) {
     rows.push(
       `<div class="fld"><span class="k">Failure detail (expected vs actual)</span><pre class="fail">${esc(
@@ -192,9 +381,16 @@ function casePanel(t) {
       )}</pre></div>`
     );
   }
+  if (t.aiRawLines && t.aiRawLines.length) {
+    rows.push(
+      `<div class="fld"><span class="k">Raw model response(s)</span><pre class="fail" style="background:var(--bg);color:var(--ink);border:1px solid var(--line)">${esc(
+        t.aiRawLines.join("\n").slice(0, 6000)
+      )}</pre></div>`,
+    );
+  }
   if (gov) {
     rows.push(
-      `<div class="fld"><span class="k">Source test file</span><span class="v mono">${esc(gov.src)}</span></div>` +
+      `<div class="fld"><span class="k">Source test file</span><span class="v mono">${esc(t.file || gov.src)}</span></div>` +
         `<div class="fld"><span class="k">Test spec</span><span class="v mono">${esc(gov.specFile)}</span></div>` +
         `<div class="fld"><span class="k">Governing spec</span><span class="v mono">${esc(gov.file)} — ${esc(gov.sec)}</span></div>`
     );
@@ -203,9 +399,16 @@ function casePanel(t) {
 }
 
 function testRow(t) {
-  const cls = t.status === "failed" ? "row failed" : t.status === "skipped" ? "row skipped" : "row passed";
+  const cls =
+    t.status === "failed" ? "row failed" : t.status === "blocked" ? "row failed" : t.status === "skipped" ? "row skipped" : "row passed";
   const badge =
-    t.status === "failed" ? '<span class="badge b-fail">FAIL</span>' : t.status === "skipped" ? '<span class="badge b-skip">SKIP</span>' : '<span class="badge b-pass">PASS</span>';
+    t.status === "failed"
+      ? '<span class="badge b-fail">FAIL</span>'
+      : t.status === "blocked"
+      ? '<span class="badge b-bug">BLOCKED</span>'
+      : t.status === "skipped"
+      ? '<span class="badge b-skip">SKIP</span>'
+      : '<span class="badge b-pass">PASS</span>';
   const divTag =
     t.id && DIVERGENCES.includes(t.id)
       ? '<span class="badge b-div">SPEC DIVERGENCE</span>'
@@ -213,10 +416,22 @@ function testRow(t) {
       ? '<span class="badge b-bug">BUG</span>'
       : t.id && FINDINGS.includes(t.id)
       ? '<span class="badge b-div">FINDING</span>'
+      : t.id && DESIGNED_TO_FAIL_2026_09_16.includes(t.id)
+      ? '<span class="badge b-div">DESIGNED TO FAIL</span>'
       : "";
-  const open = t.status === "failed" ? " open" : "";
+  const provTag = t.id && PROVISIONAL_BAR_IDS.includes(t.id) ? '<span class="badge b-div">PROVISIONAL BAR</span>' : "";
+  const triage = triageFor(t);
+  const triageTag = triage
+    ? {
+        real: '<span class="badge b-bug">REAL DEFECT</span>',
+        test: '<span class="badge b-skip">TEST DEFECT</span>',
+        artifact: '<span class="badge b-skip" style="opacity:.7">RUN ARTIFACT</span>',
+        inconclusive: '<span class="badge b-skip">INCONCLUSIVE</span>',
+      }[triage.verdict]
+    : "";
+  const open = t.status === "failed" || t.status === "blocked" ? " open" : "";
   return `<details class="${cls}"${open}>
-  <summary><span class="tid">${esc(t.id || "—")}</span><span class="ttl">${esc(cleanTitle(t.title, t.id))}</span>${badge}${divTag}</summary>
+  <summary><span class="tid">${esc(t.id || "—")}</span><span class="ttl">${esc(cleanTitle(t.title, t.id))}</span>${badge}${divTag}${provTag}${triageTag}</summary>
   ${casePanel(t)}
 </details>`;
 }
@@ -245,18 +460,49 @@ const failuresList = failures.length
   ? failures
       .map(
         (t) =>
-          `<li class="${DIVERGENCES.includes(t.id) || REAL_BUGS.includes(t.id) ? "exp" : "unexp"}"><span class="tid">${esc(t.id || "—")}</span> ${esc(
+          `<li class="${DIVERGENCES.includes(t.id) || REAL_BUGS.includes(t.id) || DESIGNED_TO_FAIL_2026_09_16.includes(t.id) ? "exp" : "unexp"}"><span class="tid">${esc(t.id || "—")}</span> ${esc(
             cleanTitle(t.title, t.id)
           )} <span class="mono">(${esc(t.file)})</span>${
             DIVERGENCES.includes(t.id)
               ? " — carried-through spec/code divergence (expected)"
               : REAL_BUGS.includes(t.id)
               ? " — REAL BUG found this pass (expected fail, see Findings below)"
+              : DESIGNED_TO_FAIL_2026_09_16.includes(t.id)
+              ? " — spec says \"Status today: fails\" (designed to fail, see the 2026-09-16 section below)"
               : " — NEEDS ATTENTION"
           }</li>`
       )
       .join("")
   : "<li>None.</li>";
+
+// ---- 2026-09-16 pass findings, computed from the actual run rather than
+// hand-maintained prose (so it can't go stale the way the paragraphs above
+// this pass would). A "new" finding is a failure whose id was NOT already
+// flagged by the spec text as failing today.
+const newFindings2026_09_16 = failures.filter(
+  (t) =>
+    (t.key === "FR" || t.key === "XS" || t.key === "BD" || t.key === "LV") &&
+    !DESIGNED_TO_FAIL_2026_09_16.includes(t.id),
+);
+const designedFailuresPresent = tests.filter((t) => DESIGNED_TO_FAIL_2026_09_16.includes(t.id));
+const provisionalResults = tests.filter((t) => PROVISIONAL_BAR_IDS.includes(t.id));
+
+// ---- triage summary: every failure/timeout this pass, bucketed honestly ----
+const triagedFailures = tests
+  .filter((t) => (t.status === "failed" || t.status === "timedOut") && triageFor(t))
+  .map((t) => ({ t, triage: triageFor(t) }));
+const untriagedFailures = failures.filter((t) => !triageFor(t));
+const triageCounts = { real: 0, test: 0, artifact: 0, inconclusive: 0 };
+for (const { triage } of triagedFailures) triageCounts[triage.verdict]++;
+const realDefectRows = triagedFailures.filter((x) => x.triage.verdict === "real");
+const triageTableHtml = `<table><thead><tr><th>ID</th><th>Verdict</th><th>Why</th></tr></thead><tbody>${triagedFailures
+  .map(
+    ({ t, triage }) =>
+      `<tr><td class="tid">${esc(t.id || "—")}</td><td><strong style="color:${
+        { real: "var(--fail)", test: "var(--accent)", artifact: "var(--mut)", inconclusive: "var(--skip)" }[triage.verdict]
+      }">${esc(triage.verdict.toUpperCase())}</strong></td><td>${esc(triage.note)}</td></tr>`,
+  )
+  .join("")}</tbody></table>`;
 
 const divergenceRows = [
   ["RA-06", "docs/specs/06-server-modules.md §4 step 3", "Failed-verify body must be { error: \"Not authenticated.\" }", "requireAuth.js line 41 returns { error: \"Invalid or expired token!\" }", "PASS — the test now asserts the code's actual wording, not the spec's (changed before this pass). Status 401 + no-next are correct; the wording gap vs. spec text is unresolved either way."],
@@ -295,6 +541,54 @@ const specCoverageHtml = SPEC_COVERAGE.map(
 ).join("");
 
 const blockersHtml = DESIGN_BLOCKERS.map((b) => `<li><span class="tid">${esc(b.id)}</span> ${esc(b.text)}</li>`).join("");
+
+// ---- 2026-09-16 pass: fresh-account + lived-in flow redesign ----
+const FLOW_BLOCKERS_2026_09_16 = [
+  { id: "B-A", text: "\"last Tuesday\" (and relative weekdays generally) has no written date-resolution rule. FR-12 asserts only the no-date and explicit-date branches; the relative-weekday branch is not asserted. Needs Adam's decision." },
+  { id: "B-B", text: "Out-of-range dates (2099, 1970) have no written rule for refuse-vs-clamp. XS-06 checks only that garbage is not silently stored as-is; it cannot assert a specific pass/fail outcome for these two. Needs Adam's decision." },
+  { id: "FR-05 (unit half)", text: "buildPending (client/src/store/chatSlice.ts) is not exported, so its four rejection branches cannot be unit-tested directly from qa/. A client/ change is the builder agent's job (delegation.md), not authorised this run. The browser half (stubbing /chat/messages to force each branch) IS implemented and ran." },
+];
+const flowBlockersHtml = FLOW_BLOCKERS_2026_09_16.map((b) => `<li><span class="tid">${esc(b.id)}</span> ${esc(b.text)}</li>`).join("");
+
+const blockedRowsHtml = tests
+  .filter((t) => t.status === "blocked")
+  .map((t) => `<li><span class="tid">${esc(t.id)}</span> ${esc(t.title)} — ${esc(t.blockedReason)}</li>`)
+  .join("") || "<li>None.</li>";
+
+function designedStatusLabel(status) {
+  if (status === "failed") return { color: "var(--fail)", text: "still failing, as the spec says it does" };
+  if (status === "blocked") return { color: "var(--mut)", text: "BLOCKED this pass -- could not confirm its documented status either way" };
+  if (status === "skipped") return { color: "var(--mut)", text: "SKIPPED this pass -- could not confirm its documented status either way" };
+  return { color: "var(--pass)", text: "PASSED — no longer matches the spec's documented status, worth a second look" };
+}
+const designedToFailHtml = designedFailuresPresent.length
+  ? `<ul>${designedFailuresPresent
+      .map((t) => {
+        const label = designedStatusLabel(t.status);
+        return `<li><span class="tid">${esc(t.id)}</span> ${esc(cleanTitle(t.title, t.id))} — <strong style="color:${label.color}">${label.text}</strong></li>`;
+      })
+      .join("")}</ul>`
+  : "<p class=\"hint\">None of these ran this pass.</p>";
+
+const newFindingsHtml = newFindings2026_09_16.length
+  ? `<ul>${newFindings2026_09_16
+      .map(
+        (t) =>
+          `<li class="unexp"><span class="tid">${esc(t.id)}</span> ${esc(cleanTitle(t.title, t.id))} <span class="mono">(${esc(t.file)})</span></li>`,
+      )
+      .join("")}</ul>`
+  : "<p class=\"hint\">None — every failure in the fresh/lived-in suites this run was already named by the spec as failing today.</p>";
+
+const provisionalHtml = provisionalResults.length
+  ? `<table><thead><tr><th>ID</th><th>Bar</th><th>Result</th></tr></thead><tbody>${provisionalResults
+      .map(
+        (t) =>
+          `<tr><td class="tid">${esc(t.id)}</td><td>${esc(cleanTitle(t.title, t.id))}</td><td style="color:${
+            t.status === "failed" ? "var(--fail)" : t.status === "passed" ? "var(--pass)" : "var(--mut)"
+          }"><strong>${esc(t.status.toUpperCase())}</strong></td></tr>`,
+      )
+      .join("")}</tbody></table>`
+  : "<p class=\"hint\">None ran this pass.</p>";
 
 const durationMs = (raw.testResults ?? []).reduce((a, s) => a + ((s.endTime ?? 0) - (s.startTime ?? 0)), 0) + e2eDurationMs;
 
@@ -388,7 +682,7 @@ const html = `<!doctype html>
 <body>
 <div class="wrap">
   <h1>Expenses — QA run against specs 01–09</h1>
-  <p class="sub">${esc(now.toString())} · auth + chat + expense/category + AI + dashboard surface, plus browser E2E (client ↔ server) · test DB <span class="mono">expenses_qa_test</span> (dropped on teardown) · duration ~${(durationMs/1000).toFixed(1)}s${existsSync(PW_RAW) ? "" : " · e2e suite not run this time — see note below"}</p>
+  <p class="sub">${esc(now.toString())} · auth + chat + expense/category + AI + dashboard surface, plus browser E2E (client ↔ server) both against fresh-account <span class="mono">expenses_qa_test</span> (dropped on teardown) and the persistent lived-in <span class="mono">expenses_qa_livedin</span> (rebuilt at the start of this run, kept afterward) · duration ~${(durationMs/1000).toFixed(1)}s${existsSync(PW_RAW) ? "" : " · e2e suite not run this time — see note below"}</p>
 
   <div class="toolbar">
     <label><input type="checkbox" id="ofilter"> Show failures &amp; skips only</label>
@@ -402,7 +696,7 @@ const html = `<!doctype html>
       <span class="chip pass">${counts.passed} passed</span>
       <span class="chip fail">${counts.failed} failed</span>
       <span class="chip skip">${counts.skipped} skipped</span>
-      <span class="chip tot">0 blocked (env)</span>
+      <span class="chip fail">${counts.blocked} blocked</span>
     </div>
 
     <h3>Every failure</h3>
@@ -435,6 +729,39 @@ const html = `<!doctype html>
     <h3>Coverage against each governing spec</h3>
     ${specCoverageHtml}
     <p class="hint">${esc(E2E_NOTE)}</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">2026-09-16 pass — fresh-account &amp; lived-in flow redesign</h2>
+    <p class="hint">85 cases (FR-01..44, XS-01..07, BD-01..07, LV-01..27) from qa/specs/flow-fresh-2026-09-16.md and flow-lived-in-2026-09-16.md. 77 run through a real headed Chromium; the rest are the API/DATA-SWEEP cases the spec itself marks that way. Fresh-account cases run against <span class="mono">expenses_qa_test</span> (dropped at teardown); lived-in cases run against <span class="mono">expenses_qa_livedin</span> (rebuilt from the seed corpus at the START of this run, kept afterward). Each of the 89 browser tests ran as its OWN Playwright process this run (see the harness note below) -- that changed only how tests are invoked, never what any test asserts.</p>
+
+    <h3>Triage: every failure and timeout, sorted honestly</h3>
+    <p class="hint">
+      <strong style="color:var(--fail)">${triageCounts.real} real defect${triageCounts.real === 1 ? "" : "s"}</strong> (the app is wrong) ·
+      <strong style="color:var(--accent)">${triageCounts.test} test defect${triageCounts.test === 1 ? "" : "s"}</strong> (this suite's own code is wrong, the app is fine) ·
+      <strong style="color:var(--mut)">${triageCounts.artifact} run artifact${triageCounts.artifact === 1 ? "" : "s"}</strong> (rate limiting / model slowness / a timing race -- not evidence about the app) ·
+      <strong style="color:var(--skip)">${triageCounts.inconclusive} inconclusive</strong>
+      ${untriagedFailures.length ? `· <strong style="color:var(--fail)">${untriagedFailures.length} not yet triaged</strong>` : ""}
+    </p>
+    ${triageTableHtml}
+    <p class="hint">Full reasoning for each (what was checked, and for FR-27/LV-22/FR-39 what re-running or hand-verifying showed) is in that test's own expandable row below.</p>
+
+    <h3>Blocked (never became a runnable test)</h3>
+    <ul>${blockedRowsHtml}</ul>
+
+    <h3>Other blockers (need Adam's decision)</h3>
+    <ul>${flowBlockersHtml}</ul>
+
+    <h3>Cases the spec already says fail today ("designed to fail")</h3>
+    <p class="hint">qa-lead wrote these against a real, already-observed defect (Enter does nothing, a false save claim, a label-less expense, etc.) — a red result here confirms the case still works, a green result is the surprise worth a second look.</p>
+    ${designedToFailHtml}
+
+    <h3 style="color:${newFindings2026_09_16.length ? "var(--fail)" : "var(--pass)"}">New findings this run (not already named by the spec)</h3>
+    ${newFindingsHtml}
+
+    <h3>Provisional bars — Adam has not confirmed these numbers/rules</h3>
+    <p class="hint">Response-time budgets (FR-36/37, LV-24), the seven "looks right" rules (FR-38/39), and Hebrew-in-Hebrew-out (FR-43). qa/harness/bars.ts is the single place the numbers live. A failure here means either the app is genuinely wrong, or the proposed bar itself needs adjusting — read the case before assuming either.</p>
+    ${provisionalHtml}
   </div>
 
   ${groupsHtml}

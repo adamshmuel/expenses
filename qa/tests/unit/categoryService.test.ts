@@ -73,7 +73,10 @@ describe("bl/categoryService.js", () => {
   });
 
   it("CS-05 createCategory with a nonexistent parent -> 400", async () => {
-    repo.findCategoryById.mockResolvedValue(null);
+    // Corrected 2026-09-16: createCategory now resolves `parent` by NAME via
+    // findByName -> getCategoriesByUser (bug 9's fix -- the old mock here was
+    // findCategoryById, matching a by-id resolution the code no longer does).
+    repo.getCategoriesByUser.mockResolvedValue([]);
     let err: any;
     try {
       await categoryService.createCategory("u1", { name: "Pets", parent: "ghost" });
@@ -84,19 +87,30 @@ describe("bl/categoryService.js", () => {
     expect(repo.createCategory).not.toHaveBeenCalled();
   });
 
-  it("CS-06 createCategory with a parent owned by another user -> 400", async () => {
-    repo.findCategoryById.mockResolvedValue({ _id: "p1", owner: "someone-else" });
+  it("CS-06 createCategory with an ambiguous parent name (2+ matches) -> 400", async () => {
+    // Replaces the old "parent owned by another user" case, which the
+    // current implementation can no longer reach -- findByName's search is
+    // already scoped to this user's own categories via getCategoriesByUser
+    // (userId), so a foreign owner is never a candidate. This is the
+    // multi-match branch of createCategory's own parent resolution, distinct
+    // from resolveCategory's equivalent branch for expenses (see
+    // qa/specs/api-chat-confirm-resolution.md CR-04) -- untested until now.
+    repo.getCategoriesByUser.mockResolvedValue([
+      { _id: "p1", name: "p1", owner: "u1", parent: null },
+      { _id: "p2", name: "p1", owner: "u1", parent: null },
+    ]);
     let err: any;
     try {
       await categoryService.createCategory("u1", { name: "Pets", parent: "p1" });
     } catch (e) {
       err = e;
     }
-    expect(err).toEqual({ status: 400, message: "No such category to add a subcategory to." });
+    expect(err).toEqual({ status: 400, message: 'More than one category named "p1".' });
+    expect(repo.createCategory).not.toHaveBeenCalled();
   });
 
   it("CS-07 createCategory with a parent that is itself a subcategory -> 400 (two-level rule)", async () => {
-    repo.findCategoryById.mockResolvedValue({ _id: "p1", owner: "u1", parent: "grandparent" });
+    repo.getCategoriesByUser.mockResolvedValue([{ _id: "p1", name: "p1", owner: "u1", parent: "grandparent" }]);
     let err: any;
     try {
       await categoryService.createCategory("u1", { name: "X", parent: "p1" });

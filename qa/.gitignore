@@ -1,6 +1,9 @@
 node_modules/
 reports/_last-run.json
 reports/_last-run-e2e.json
+reports/_e2e-partial/
+.e2e-bundle-cache/
 logs/
 test-results/
 playwright-report/
+env/.lived-in-fixtures.json

@@ -9,10 +9,10 @@ Adam's own `backend/ai/__tests__/parseMessage.test.js` (`node:test`) already cov
 
 ---
 
-### AI-01 — `buildPrompt` embeds `categories`/`recentExpenses` verbatim
-- **Purpose:** the model must see the user's real data, not a stale or empty list (spec §8 "lets the AI resolve a category by name").
+### AI-01 — `buildPrompt` embeds `recentExpenses` verbatim and `categories` with parent names resolved
+- **Purpose:** the model must see the user's real data, not a stale or empty list (spec §8 "lets the AI resolve a category by name"); a subcategory's raw `parent` id is meaningless to the model on its own, so it must see the parent's *name* instead (needed for replies like "under Food → Coffee").
 - **Method:** `buildPrompt([{ name: "Fuel" }], [{ amount: 12, store: "Aroma" }])`.
-- **Expected:** the returned string contains `JSON.stringify([{ name: "Fuel" }], null, 2)` and `JSON.stringify([{ amount: 12, store: "Aroma" }], null, 2)` verbatim.
+- **Expected:** the returned string contains `JSON.stringify([{ amount: 12, store: "Aroma" }], null, 2)` verbatim (expenses are not transformed), and `JSON.stringify([{ name: "Fuel", parent: null }], null, 2)` for the categories block — **not** the raw input shape. **Corrected 2026-09-16**: the original version of this test asserted categories were embedded byte-for-byte from the input, which stopped being true once `buildPrompt` grew `withParentNames` (part of the same session's chat-flow fixes, `2026-09-16-chat-flow-bugs-and-fixes.md`) to resolve each subcategory's `parent` id to its main category's name before embedding. This pass's full-suite run caught the drift (the old assertion failed against the real current prompt).
 
 ### AI-02 — `buildPrompt` defaults `undefined`/`null` to `[]`, never the literal string `"undefined"`
 - **Purpose:** a first-time user with no categories/expenses yet must not confuse the model with the string `"undefined"`.

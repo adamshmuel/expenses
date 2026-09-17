@@ -52,21 +52,33 @@ describe("POST /chat/confirm", () => {
     expect(res.status).toBe(401);
   });
 
-  it("CC-02 create-expense with a single draft saves one expense", async () => {
+  it("CC-02 create-expense with a single draft saves one expense, every field correct", async () => {
     const { accessToken } = await signupUser();
+    const categories = await getCategories(accessToken);
+    const food = categories.find((c: any) => c.name === "Food");
+
     const r = await confirm(accessToken, {
       intent: "create-expense",
       drafts: [{ amount: 12.5, store: "Aroma", category: "Food" }],
     });
     expect(r.status).toBe(200);
+    // Strengthened 2026-09-16 -- Finding A ("concrete example") flagged that
+    // this test never checked store or that category actually resolved to
+    // Food's real id, only amount and that a row with the id existed.
     expect(r.body.changed.amount).toBe(12.5);
+    expect(r.body.changed.store).toBe("Aroma");
+    expect(r.body.changed.category).toBe(food._id);
+    expect(r.body.changed.date.slice(0, 10)).toBe(new Date().toISOString().slice(0, 10));
 
     const expenses = await getExpenses(accessToken);
     expect(expenses.some((e: any) => e._id === r.body.changed._id)).toBe(true);
   });
 
-  it("CC-03 create-expense with drafts.length > 1 uses the batch path", async () => {
+  it("CC-03 create-expense with drafts.length > 1 uses the batch path, every field correct on both", async () => {
     const { accessToken } = await signupUser();
+    const categories = await getCategories(accessToken);
+    const food = categories.find((c: any) => c.name === "Food");
+
     const r = await confirm(accessToken, {
       intent: "create-expense",
       drafts: [
@@ -77,6 +89,11 @@ describe("POST /chat/confirm", () => {
     expect(r.status).toBe(200);
     expect(Array.isArray(r.body.changed)).toBe(true);
     expect(r.body.changed).toHaveLength(2);
+    // Strengthened 2026-09-16 -- same Finding A reasoning as CC-02: match by
+    // value, and confirm both resolved to Food's real id, not just a count.
+    const amounts = r.body.changed.map((e: any) => e.amount).sort();
+    expect(amounts).toEqual([1, 2]);
+    expect(r.body.changed.every((e: any) => e.category === food._id)).toBe(true);
 
     const expenses = await getExpenses(accessToken);
     expect(expenses).toHaveLength(2);

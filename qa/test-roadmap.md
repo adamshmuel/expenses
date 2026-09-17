@@ -288,3 +288,338 @@ Report: `qa/reports/latest.html` (dated copy: `qa/reports/2026-09-15-2259.html`)
 - **TTL index actually deleting an expired row** — MongoDB's TTL reaper runs ~every 60 s; asserting real deletion would make the suite slow and flaky. We assert the index *definition* only (MD-* checks `expireAfterSeconds: 0` on `expiresAt`).
 - **`exception.log` / `rejection.log` crash handlers** — would require crashing the process mid-suite. We assert the handlers are configured on the logger instance (LG-* inspects `logger.exceptions`/transports), not that a real uncaught throw lands there.
 - **Concurrency / race on the duplicate-key 409** — we simulate the race by disabling the async validator path (posting a duplicate that the unique index catches), not by true parallel requests.
+
+---
+
+## 2026-09-16 pass — the add-an-expense flow, after eleven bugs found by hand
+
+**Task:** test the add-an-expense flow the way a real user performs it, after
+`docs/reference/testing-reference/2026-09-16-manual-bugs-found.md` (bugs 1-6,
+Finding A) and `2026-09-16-chat-flow-bugs-and-fixes.md` (bugs 7-11, "what qa
+should take from this") recorded eleven bugs found by hand while every
+existing automated test stayed green. Full four-question / flow-list
+analysis: `qa/flow-analysis-2026-09-16.md` (written first, before any
+inventory work, per process).
+
+### New test classes added, and why (the two bug files' explicit lessons)
+
+| Lesson from the bug-fix files | Class added | Where |
+|---|---|---|
+| "Test the user's goal, not the endpoint" — no test drove a real message through to a database row | Flow tests through the real UI, real server, occasional real AI, asserting stored fields | `qa/specs/e2e-chat-stress-flows.md`, `FS-01..FS-07` |
+| "Assert stored values, not just status codes and row counts" (Finding A) | Field-level assertions on `expenses` and `messages`, not just amount/count/existence | `CC-02`/`CC-03` strengthened; new `CR-01`,`CR-03`,`CR-06` for the `messages` collection specifically |
+| "Hold a conversation" — every existing chat test was one message long | Multi-turn E2E: missing field answered later, a correction mid-draft | `FS-01`, `FS-02` |
+| "Exercise the AI→server contract" — `/chat/confirm` tests never touch a real AI-produced payload | `FJ-01` (pre-existing) already does this for the happy path; `FS-01..FS-04` extend it to incomplete/adversarial real-AI payloads | `qa/e2e/tests/chat-stress-flows.spec.ts` |
+| "Cover the incomplete-input shapes" — every existing payload was complete and valid | Missing category, empty-string category, nonexistent category, ambiguous category name, one-bad-category-in-a-batch, create-category with a nonexistent/ambiguous parent name | `qa/specs/api-chat-confirm-resolution.md`, `CR-01..CR-08` |
+
+**Re-checking what was already covered, per the same instruction** (a class
+learned must be applied backwards, not just forward):
+- `CC-02`/`CC-03` (`qa/tests/api/06-chat-confirm.test.ts`) were exactly
+  Finding A's own "concrete example" of the gap — strengthened in place to
+  check `store`, resolved `category` id, and `date`, not just `amount` and
+  row existence.
+- `qa/tests/unit/categoryService.test.ts`'s CS-05/06/07 and
+  `qa/tests/unit/ai.test.ts`'s AI-01 were re-derived this pass (see "Harness
+  bug found and fixed" below) — they had silently drifted from the real
+  current implementation and were passing for the wrong reason.
+
+### Harness bug found and fixed: cross-file require-cache pollution
+
+Running the full suite after adding the new tests initially produced **29
+failures** across files that were previously green and untouched by this
+pass (`tests/integration/expenseCategoryDal.test.ts`,
+`tests/integration/expenseService.test.ts`), with errors like
+`expenseRepository.queryExpenses is not a function` and
+`Cannot read properties of undefined (reading 'filter')`.
+
+Root cause: `qa/harness/cjs-stub.ts`'s `loadCjsWithStubs` seeds Node's
+`require.cache` with fake module records so a unit test's `require()` calls
+resolve to stubs, and — per its own old comment — deliberately left those
+stub entries "in place for the lifetime of the test file", on the assumption
+that each test file runs in its own process. That assumption is false here:
+`qa/vitest.config.ts` sets `fileParallelism: false` +
+`poolOptions.forks.singleFork: true` (needed so every API test shares one
+server and one in-memory rate limiter), so **all test files share one Node
+process and one require cache**. A unit test stubbing
+`dal/categoryRepository.js` or `dal/expenseRepository.js` was silently
+handing its fake object to any *later* file's plain `require()` of the same
+resolved path — exactly the "shared mutable state across tests" anti-pattern
+`test-data-management` warns about, just at the module-loader level instead
+of the database level.
+
+**Fixed**: `loadCjsWithStubs` now records whatever was cached at each
+resolved path (stub dependencies *and* the unit-under-test's own module)
+before overwriting it, and restores those exact entries immediately after
+the fresh module is built — the unit-under-test has already captured a
+direct closure reference to the stub object by then, so nothing about the
+test itself changes, only the leak stops. Full suite re-run clean:
+**225/225 vitest tests passed** across all 23 files after the fix.
+
+While fixing this, two existing unit tests were found to have drifted from
+the real implementation independently (see re-derivation below) and are
+corrected as part of the same pass:
+- `categoryService.test.ts` CS-05/06/07 mocked `findCategoryById`, matching
+  an older `createCategory` that resolved `parent` **by id**. Bug 9's fix
+  changed it to resolve `parent` **by name** via `findByName` (the AI always
+  sends a name, never an id — that mismatch was bug 9 itself). CS-06 is
+  repurposed from an unreachable "parent owned by another user" scenario
+  (impossible now that `findByName`'s search is already scoped to the
+  calling user) to the previously-untested "ambiguous parent name" branch.
+- `ai.test.ts` AI-01 asserted `buildPrompt` embeds `categories` verbatim;
+  `buildPrompt` grew a `withParentNames` transform (same session's fixes)
+  that resolves a subcategory's `parent` id to its main category's name
+  before embedding, so a main category with no parent now serializes as
+  `{name, parent: null}`, not the raw input shape.
+
+Both are corrected in their `qa/specs/*.md` file, their test file, and
+`qa/scripts/testcases.mjs`, each with a `divergence` note explaining the
+correction rather than silently rewriting history.
+
+### New bugs found by the new stress tests (not the ones this run set out to verify)
+
+Both reproduced identically across two separate full runs — not flakes.
+
+1. **Chat state leaks across logout/login (`FS-06`, failing, left in the
+   suite).** Logging out and back in, in the same browser tab, does not
+   clear `chatSlice`'s `pending` draft: `store.ts` combines `authReducer`
+   and `chatReducer` independently, and `authSlice`'s `logout.fulfilled`
+   only resets the `auth` slice. Since logout is a client-side SPA
+   navigation (no full reload), a stale, unconfirmed draft from *before*
+   logout is still visible and still confirmable after logging back in —
+   potentially as a different user in the same tab. Flagged as a background
+   task (`client/src/store/`, Claude's own code — not this session's to
+   fix); not one of this run's two pre-declared open items.
+2. **A numeric correction to a complete draft isn't always acknowledged
+   (`FS-02`, failing, left in the suite).** "spent 30 on transport" → a
+   complete draft; "actually make that 50" → the identical previous reply,
+   unchanged — the exact failure `prompt.js`'s own correction rule calls out
+   ("an identical reply to a pushback is the single worst failure here"),
+   but for a plain numeric correction, a shape the rule's own examples
+   (naming a different category, "I said X") don't explicitly cover.
+   Flagged as a background task (`backend/ai/prompt.js`) to determine
+   whether it needs an explicit example or is LLM noise worth more sampling
+   first.
+
+### Two test-locator bugs found and fixed while writing the new E2E tests (not product bugs)
+
+- `FS-04` initially threw a Playwright strict-mode violation: the assistant
+  echoed the user's own words back verbatim ("I see you spent 45 on a new
+  bike, but..."), so an unscoped `getByRole("listitem").filter({hasText})`
+  matched both bubbles. Fixed by scoping every "wait for the round trip to
+  land" assertion to `.chat-bubble--user` specifically (`userBubble()`
+  helper in `qa/e2e/tests/chat-stress-flows.spec.ts`).
+
+### Full run result
+
+Vitest: **225/225 passed** (23/23 files). Playwright e2e: **9/11 passed**,
+2 failed (`FS-02`, `FS-06` — real product findings above, not test bugs).
+Report: `qa/reports/latest.html` (dated copy `qa/reports/2026-09-16-1630.html`).
+
+### Self-check (per the QA process's step 9)
+
+- **Every flow named in the flow-analysis doc — does each have a test that
+  walks it end to end through the real UI?** Flows 1-5, 9-12 yes (`FJ-01`,
+  `DJ-01`, `FS-01..FS-07`). Flows 6-8 (edit an expense, delete an expense
+  with several matches, reset categories) — **no**, only API-level coverage
+  (`CC-04..CC-11`) exists; no E2E walk through the real UI + real AI. Named
+  plainly as an accepted gap, not silently skipped — see
+  `qa/flow-analysis-2026-09-16.md`'s flow table. Reason: each needs the AI to
+  correctly extract `searchFilters` from free text, which is a second axis
+  of non-determinism on top of the intent/draft parsing already exercised;
+  time-boxed out of this pass rather than rushed.
+- **Does each flow test assert stored data field by field, not just that the
+  request succeeded?** Yes for all of `FS-01..FS-07` and the flagship
+  (`FJ-01` checks `amount` only — see below) — `FS-01`/`FS-03` check amount,
+  category-id-is-real, and date; `FS-02` checks amount changed and count
+  stayed at one. `FJ-01` itself was **not** widened this pass (left as the
+  single-field-check original) — it remains a real, if smaller, sample of
+  Finding A's gap; the new `FS-*` tests carry the field-level rigor instead
+  of retrofitting the older test.
+- **Does at least one path exercise the real producer of a payload rather
+  than a hand-written one?** Yes — `FJ-01` (pre-existing) and every `FS-*`
+  test drive the real `backend/ai/` call end to end; `CR-*` deliberately
+  stays hand-written/deterministic since `/chat/confirm` never calls the AI
+  (same reasoning as `CC-*`).
+- **For every escaped bug read this run, was a test *class* added to the
+  roadmap, and were already-covered areas re-checked against it?** Yes — see
+  the lessons table and the CS-05/06/07 + AI-01 re-derivation above.
+- **Is there any flow where the only coverage is a single happy-path walk?**
+  Yes, plainly: flows 6, 7, and 8 (edit/delete an expense, reset categories)
+  have only the API-level happy/negative paths from `CC-04..CC-11` — no
+  multi-turn or adversarial E2E variant exists for any of the three. That is
+  a sample, not coverage, and is named here rather than left implicit.
+
+### Verified matching the two intentionally-open items (not failures)
+
+- **Bug 6 (typing "yes" instead of clicking Confirm)** — `FS-07` confirms
+  current behaviour: no expense is silently saved by typing "yes". Passing,
+  documents the open state per the task's explicit instruction.
+- **Bug 10, second half (create-category + save-under-it needs two
+  confirmations)** — not given a dedicated test this pass (would need a
+  multi-step real-AI flow with an uncertain number of turns depending on
+  model wording); `FS-04` incidentally confirms the *first* half still holds
+  (a nonexistent category is never silently saved as an expense). The second
+  half remains unverified by automation, named here as a gap rather than
+  assumed.
+
+### Out of scope this pass (and why)
+
+- E2E walks for edit-expense, delete-expense (incl. "several matches, pick
+  one"), and reset-categories through the real UI + real AI — accepted gap,
+  see self-check above.
+- Widening `FJ-01` itself to field-level assertions — left as-is; the new
+  `FS-*` tests carry the rigor forward instead of retrofitting every
+  existing E2E test in the same pass.
+
+---
+
+# Designed (sixth run, 2026-09-16) — user-first redesign, both environments
+
+**Not yet automated.** `qa-lead` designed these; Adam approves; `qa-tester`
+implements. Nothing below has test code.
+
+This run started at the keyboard, not in the files: a real signup, real chat
+messages against the real model, the real dashboard, and direct database reads —
+with the specs and the bug records closed. Field notes:
+`qa/field-notes-2026-09-16-exploratory.md`. User model, archetypes and flows:
+`qa/flow-analysis-2026-09-16b.md`.
+
+## New specs
+
+| Spec | Cases | Environment |
+|---|---|---|
+| `qa/specs/flow-fresh-2026-09-16.md` | FR-01 … FR-27, XS-01 … XS-06 | fresh |
+| `qa/specs/flow-lived-in-2026-09-16.md` | LV-01 … LV-22 | lived-in |
+| `qa/specs/env-lived-in.md` | the environment itself | — |
+
+`FR-` is a new prefix; `FS-` was already taken by `e2e-chat-stress-flows.md`.
+
+## The classes this run adds, applied backwards
+
+Each is a class, not a case. They govern every future test and re-grade every
+existing one.
+
+| Class | What it says |
+|---|---|
+| **C1** | After any write, assert every field the user supplied **and** every field the system derived. Not that a row exists. Not a count. |
+| **C2** | Assert the assistant's prose and its structured payload agree, and that the app refuses to act when they do not. |
+| **C3** | On every non-confirm path, assert the absence of a write by count **and** by content. |
+| **C4** | At least one case per flow originates its payload from the real AI, not a hand-written body. |
+| **C5** | Assert the user can tell which of the four draft outcomes occurred — confirmed / cancelled / discarded / broken. |
+
+C1 and C4 restate `Finding A` from `2026-09-16-manual-bugs-found.md`, which this
+run derived independently before reading it. C2, C3 and C5 are new, and come from
+the exploratory session.
+
+## What these classes demote to samples
+
+Not failures — useful tests that were being counted as more than they are.
+
+| Existing | Now | Why |
+|---|---|---|
+| `CC-02` and every `06-chat-confirm.test.ts` case | sample of the endpoint contract | Hand-built payload, asserts `amount` + row exists. C1 and C4 both unmet. |
+| `08-expenses-categories.test.ts` category checks | sample | Asserts a count of 17. Would pass with 17 rows of garbage names. |
+| `DJ-01` and every total-only dashboard case | sample | The total can be right while the breakdown, the dates and the recent rows are all wrong. C1. |
+| `FJ-01`, `chat-dashboard-journey.spec.ts` | sample | Deterministic, AI deliberately bypassed. C4 unmet — nothing verifies that what the AI produces is what the save path accepts. |
+| `UJ-01` ("survive a reload") | **suspect, re-check** | It passes, yet a reload logs the user out by hand (FR-16/FR-17). Either it exercises a different build or it is a latent flake. |
+| Every flow's single happy-path walk | sample | Already named in the fifth-run self-check; unchanged. |
+
+## Blockers
+
+| # | Blocker | Owner |
+|---|---|---|
+| B-A | **`last Tuesday` has no rule.** Resolved to 2026-09-08 when 2026-09-15 was also a Tuesday. `docs/specs/01-ai-chat.md` §6 fixes only the no-date default. FR-12 cannot assert until Adam decides. | Adam — spec |
+| B-B | **Out-of-range dates have no rule.** Nothing says what happens to a date in 2099 or 1970. XS-06 blocked. | Adam — spec |
+| B-C | **The testing-reference derivation markers are all stale.** `backend/bl,dal,models,routes` has moved since `62cb457`, `backend/ai` since `ece6439`, and `client/src` since `60c12e2` — the latter by ~1,500 lines including the entire dashboard, which has no area file at all. Per `.claude/rules/testing-reference.md` that folder is the main session's to update, not `qa-lead`'s, so it is reported rather than rewritten. | Adam / main session |
+
+## Not covered this round, accepted
+
+- **Performance beyond a smoke budget.** LV-15 records a render time and a
+  screenshot; there is no performance budget in any spec to assert against.
+- **Concurrency beyond two tabs.** FR-18 covers two. Nothing covers N.
+- **Accessibility.** No spec makes a claim, so there is nothing to test against.
+  Worth a spec before it is worth a test.
+- **The design canvas (`docs/designs/Expenses Redesign.dc.html`).** Not compared
+  against the built client this run. It is the source of truth for structure and
+  copy that specs do not pin down, and it deserves its own pass.
+
+## Second pass, same day — the nine standard areas
+
+Adam ruled that nine standard QA areas must all be covered, and that a missing
+spec is not grounds to skip a check — it is grounds to propose a bar.
+
+| Area | Now covered by |
+|---|---|
+| User experience | FR-41, FR-42, FR-43, FR-44 (plus FR-05, FR-07, FR-11) |
+| UI | FR-38, FR-39, FR-40, LV-15 |
+| Response time | FR-36, FR-37, LV-24 |
+| Input diversity | LV-23 + the 180-sentence corpus, `env-lived-in.md` §2a |
+| Edge values | FR-28, FR-29, FR-12, LV-09 |
+| Interruption mid-flow | FR-32, FR-33, LV-27 |
+| Log out / back in / carry on | FR-34, FR-35, LV-25 |
+| Nonsense and injection | FR-31, XS-07, LV-26 |
+| Missing info given later | FR-09 (amount), FR-30 (category) |
+
+**Two proposed bars need Adam's confirmation** — they are written into the cases
+and marked PROPOSED:
+
+- **Response time:** screens usable in 2 s, chat reply in 10 s, visible feedback
+  within 300 ms. `flow-fresh-2026-09-16.md` Group 9.
+- **"Looks right":** seven rules covering three screen widths, four screen states,
+  touch targets, and copy correctness. Group 10.
+
+A third, **FR-43**, proposes that the app should reply in the language it was
+written to. If Adam rejects that, the case is deleted rather than weakened.
+
+**Input diversity is now a design decision, not a volume number.** 180 distinct
+sentences are written once and checked in; the seeder parses them locally to build
+the history; a named 40 are sent through the real model as LV-23, reported
+sentence by sentence.
+
+## Layer per case — added 2026-09-16
+
+Every case in both new specs now carries a **Layer** field, and both specs open
+with a binding "Layer discipline" section. This was missing: without it the
+implementer picks the layer, and the cheapest reading of almost any case is an
+API test — the exact failure that put `FJ-01` and the chat-dashboard journey in
+the demoted column.
+
+| Layer | Cases | |
+|---|---:|---|
+| Browser only (headed Chromium) | 56 | |
+| Split — browser **plus** API, unit or a data sweep; both halves required | 21 | |
+| API only | 8 | XS-01…XS-04, XS-06, FR-35, BD-02, BD-07 — going *around* the UI, or checking contracts and logs |
+| **Total** | **85** | **77 touch a real headed browser** |
+
+Revised the same day on Adam's instruction: everything that can honestly be driven
+through the UI moved to the browser layer. FR-04 and the five sweeps LV-18…LV-22
+became split cases rather than browser-only, because the dashboard renders
+`slice(0, 10)` of the recent expenses — a browser pass sees ten rows of 180 and
+**cannot** replace a sweep over the whole collection. Each of those five states
+plainly what its browser half can and cannot see, so the cheap half is never
+counted as the full check.
+
+Browser tests run with `headless: false`, recorded here and in
+`.agents/qa-project-context.md` → Conventions.
+
+## Bug-derived classes — BD-01 to BD-07, added 2026-09-16
+
+The eleven escaped bugs were read **last**, after the 78 cases existed, so they
+extended the design instead of defining it. Seven new cases, every one aimed at a
+part of the app the bug never touched:
+
+| ID | Class | Where the same mistake still lives |
+|---|---|---|
+| BD-01 | Incomplete / unresolvable draft | The five intents nobody has ever sent a broken shape |
+| BD-02 | Two components each internally consistent, disagreeing at the seam | Every AI↔server field that is a name on one side, an id on the other |
+| BD-03 | A system-*derived* value wrong while the typed values are right | The category and message write paths (C1 only closed it for expenses) |
+| BD-04 | The outcome of a write not recorded anywhere durable | The six intents beyond create, and every failure path |
+| BD-05 | No conversation memory → now a 10-message memory **edge** | Turn 11 and beyond |
+| BD-06 | Garbage inside a well-typed string field | The reply bubble, and stored labels on the dashboard forever after |
+| BD-07 | A failure that cannot be reconstructed afterwards | Every error path; nothing in the suite tests observability at all |
+
+**Four bugs produced no case**, because the 78 already cover their class: bug 11
+(→ FR-38), bug 6 (→ FR-02/FR-03), bug 4 (→ FR-12 + rule C1), bug 1 (→ FR-05,
+FR-29, XS-05). Recorded rather than padded.
+
+**BD-07 is expected to fail** on one assertion: the AI-response half of the
+logging gap is recorded as still open. That is deliberate.

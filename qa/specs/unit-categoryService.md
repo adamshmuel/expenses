@@ -31,17 +31,18 @@ Doubles: `categoryRepository` — full mock, every export a `vi.fn()`.
 
 ### CS-05 — `createCategory` with a `parent` that does not exist → 400
 - **Purpose:** spec §2 step 1, "not found ... → throw 400".
-- **Method:** `findCategoryById` resolves `null`. Call `createCategory("u1", { name: "Pets", parent: "ghost" })`.
+- **Method:** `getCategoriesByUser` resolves `[]`. Call `createCategory("u1", { name: "Pets", parent: "ghost" })`.
 - **Expected:** rejects with `{ status: 400, message: "No such category to add a subcategory to." }`. `categoryRepository.createCategory` never called.
+- **Corrected 2026-09-16** — this test (and CS-06/CS-07 below) used to mock `findCategoryById`, matching an older implementation that resolved `parent` **by id**. Bug 9 (`2026-09-16-chat-flow-bugs-and-fixes.md`) changed `createCategory` to resolve `parent` **by name** via `findByName` → `getCategoriesByUser` (the AI always sends a parent *name*, never an id — that mismatch was bug 9 itself). These three tests still mocked the old seam and were passing for the wrong reason until this pass's full-suite run caught the drift (`TypeError: Cannot read properties of undefined (reading 'filter')` — `getCategoriesByUser` was never mocked, so `findByName`'s internal `.filter` call blew up). Fixed to mock the seam the current code actually calls.
 
-### CS-06 — `createCategory` with a `parent` owned by another user → 400
-- **Purpose:** ownership check, same branch as CS-05 (spec §2 step 1).
-- **Method:** `findCategoryById` resolves `{ _id: "p1", owner: "someone-else" }`. Call `createCategory("u1", { name: "Pets", parent: "p1" })`.
-- **Expected:** rejects with the same 400 message as CS-05.
+### CS-06 — `createCategory` with an ambiguous `parent` name (2+ matches) → 400
+- **Purpose:** the multi-match branch of `createCategory`'s own parent resolution (distinct from `resolveCategory`'s equivalent branch for expenses, covered by `qa/specs/api-chat-confirm-resolution.md` CR-04) — untested at any level before this pass. **Replaces** the old CS-06 ("parent owned by another user"), which described a scenario the current implementation cannot reach: `findByName` already scopes its search to `getCategoriesByUser(userId)`, so a same-named category belonging to a different user is never even a candidate — the `owner` check on the resolved `parentDoc` is a defensive line that the public API can no longer trigger, not a reachable branch worth a dedicated test.
+- **Method:** `getCategoriesByUser` resolves two categories both named `"p1"` (e.g. one main, one sub of a different main) for user `"u1"`. Call `createCategory("u1", { name: "Pets", parent: "p1" })`.
+- **Expected:** rejects with `{ status: 400, message: 'More than one category named "p1".' }`. `categoryRepository.createCategory` never called.
 
 ### CS-07 — `createCategory` with a `parent` that is itself a subcategory → 400 (two-level rule)
 - **Purpose:** spec §2 step 1, three-level rejection.
-- **Method:** `findCategoryById` resolves `{ _id: "p1", owner: "u1", parent: "grandparent" }`. Call `createCategory("u1", { name: "X", parent: "p1" })`.
+- **Method:** `getCategoriesByUser` resolves `[{ _id: "p1", name: "p1", owner: "u1", parent: "grandparent" }]`. Call `createCategory("u1", { name: "X", parent: "p1" })`.
 - **Expected:** rejects with `{ status: 400, message: "Categories can only be two levels deep." }`.
 
 ### CS-08 — `createCategory` with a duplicate name under the same parent → 409

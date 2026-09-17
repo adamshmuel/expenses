@@ -13,13 +13,13 @@
 - **Method:** `POST /chat/confirm` with `{ intent: "create-expense", drafts: [{ amount: 1, category: "Food" }] }`, no auth header.
 - **Expected:** `401`. The service layer is never reached (no expense is created).
 
-### CC-02 — `create-expense` with a single draft saves one expense
+### CC-02 — `create-expense` with a single draft saves one expense, every field correct
 - **Method:** sign up a user (seeds default categories, incl. "Food"). `POST /chat/confirm` `{ intent: "create-expense", drafts: [{ amount: 12.5, store: "Aroma", category: "Food" }] }` with `Authorization: Bearer <accessToken>`.
-- **Expected:** `200 { changed: <the saved expense> }`; `changed.amount === 12.5`. A follow-up `GET /expenses` for this user includes it.
+- **Expected:** `200 { changed: <the saved expense> }`; `changed.amount === 12.5`, `changed.store === "Aroma"`, `changed.category` equals "Food"'s real `_id` (fetched via `GET /categories`) — **not** the string `"Food"` — and `changed.date` falls on today's date (UTC calendar day). **Strengthened 2026-09-16** — the original version of this test asserted only `amount` and that a row with the returned `_id` existed (see `2026-09-16-manual-bugs-found.md`, Finding A's "concrete example": this exact test "never checks that `store` came back... or that `category` resolved to Food"). A follow-up `GET /expenses` for this user includes the same row, unchanged.
 
-### CC-03 — `create-expense` with `drafts.length > 1` uses the batch path
-- **Method:** same user. `POST /chat/confirm` with two drafts, both category `"Food"`.
-- **Expected:** `200 { changed: [<2 saved expenses>] }`. `GET /expenses` shows both.
+### CC-03 — `create-expense` with `drafts.length > 1` uses the batch path, every field correct on both
+- **Method:** same user. `POST /chat/confirm` with two drafts of different amounts, both category `"Food"`.
+- **Expected:** `200 { changed: [<2 saved expenses>] }`, each with the right `amount` (matched by value, not just count) and `category` equal to "Food"'s real `_id`. `GET /expenses` shows both. **Strengthened 2026-09-16** alongside CC-02, same reasoning.
 
 ### CC-04 — `edit-expense` updates the named field
 - **Method:** create an expense via CC-02's flow. `POST /chat/confirm` `{ intent: "edit-expense", id: <its id>, changes: { amount: 99 } }`.

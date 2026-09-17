@@ -31,12 +31,16 @@ function fakeClient(impl: (args: any) => any) {
 }
 
 describe("backend/ai/prompt.js", () => {
-  it("AI-01 buildPrompt embeds categories/recentExpenses verbatim", () => {
+  it("AI-01 buildPrompt embeds recentExpenses verbatim and categories with parent names resolved", () => {
+    // Corrected 2026-09-16: buildPrompt now runs categories through
+    // withParentNames (resolves a subcategory's raw parent id to its main
+    // category's name) before embedding -- a main category with no parent
+    // comes out as { name, parent: null }, not the raw input shape.
     const categories = [{ name: "Fuel" }];
     const expenses = [{ amount: 12, store: "Aroma" }];
     const prompt = buildPrompt(categories, expenses);
-    expect(prompt).toContain(JSON.stringify(categories, null, 2));
     expect(prompt).toContain(JSON.stringify(expenses, null, 2));
+    expect(prompt).toContain(JSON.stringify([{ name: "Fuel", parent: null }], null, 2));
   });
 
   it("AI-02 buildPrompt defaults undefined/null to [], never the string 'undefined'", () => {
