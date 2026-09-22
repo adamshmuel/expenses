@@ -11,6 +11,7 @@
 
 // dotenv first, before any require that reads process.env.
 require("dotenv").config();
+const path = require("path");
 const express = require('express');
 const app = express()
 const { connectDB } = require("./.config/db");
@@ -58,6 +59,12 @@ app.use("/chat", chatRouter);
 app.use("/expenses", expensesRouter);
 app.use("/categories", categoriesRouter);
 
+// --- The built React app ---
+const clientDist = path.join(__dirname, "../client/dist");
+app.use(express.static(clientDist));
+app.get(["/", "/home", "/dashboard", "/login", "/signup", "/how-to-use"], (req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+});
 
 // --- Tail: 404, then the central error handler, registered last (spec 07 §4) ---
 app.use((req, res) => {
