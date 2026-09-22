@@ -1,6 +1,6 @@
 # 12 — How to use
 
-Status: **draft, awaiting approval.**
+Status: **approved.**
 
 A tutorial page that teaches the app by showing it working. It is entirely
 client-side: no route on the server, no API call, no data of the user's own.
@@ -62,9 +62,9 @@ Top to bottom, one column:
 
 1. **Opening** — one sentence saying what the app is, and the one rule:
    you write it, you confirm it, then it is saved.
-2. **The four lessons**, in the order above. The first three carry an
-   animation; the fourth carries a link to the dashboard (§4). Each is a short heading, one or
-   two lines of text, and one animation.
+2. **The four lessons**, in the order above. Each is a short heading and one
+   or two lines of text. The first three carry an animation; the fourth
+   carries a link to the dashboard instead (§4).
 3. **A short list of sentences that work** — real examples the user can copy,
    covering phrasings the parser handles (amounts, dates, stores, categories).
 4. **Closing** — a link to `/home` when logged in, or to `/signup` when logged
