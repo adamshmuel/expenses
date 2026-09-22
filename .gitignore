@@ -35,6 +35,7 @@ qa/reports/
 # never tracked or pushed. Fresh clones will not have these; see the project
 # owner before relying on git history to restore them.
 .claude/
+.agents/
 .github/
 opencode.json
 /*.md
