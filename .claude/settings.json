@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(kill 52659)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); console.log\\('URI set:', typeof process.env.MONGODB_URI, process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 'MISSING'\\)\")",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/signup -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"email\":\"zzsanitycheck1@example.com\",\"password\":\"password123\"}' -c /tmp/sanity_cookies.txt)",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/login -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"password\":\"wrongpassword\"}')",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/login -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"password\":\"password123\"}' -c /tmp/sanity_cookies2.txt)",
+      "Bash(lsof -i :5173 -sTCP:LISTEN)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}\\\\n' -X POST http://localhost:3000/users/login -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"password\":\"wrongpassword\"}')",
+      "Bash(curl -s -o /dev/null -w '%{http_code}\\\\n' -X POST http://localhost:3000/users/login -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"password\":\"password123\"}')",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/refresh -H 'Origin: http://localhost:5173' -b /tmp/sanity_cookies2.txt)",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/refresh -H \"Origin: http://localhost:5173\")",
+      "Bash(curl -s -i -X POST http://localhost:3000/users/login -H 'Content-Type: application/json' -H 'Origin: http://localhost:5173' -d '{\"username\":\"zzsanitycheck1\",\"password\":\"password123\"}')",
+      "Bash(cp /tmp/live_check.mjs /Users/adamshmuel/Dev/git/expenses/client/live_check.mjs)",
+      "Bash(node live_check.mjs)",
+      "Bash(rm /Users/adamshmuel/Dev/git/expenses/client/live_check.mjs)",
+      "Bash(curl -s -i -X OPTIONS http://localhost:3000/users/login -H 'Origin: http://localhost:5173' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,authorization')",
+      "Bash(curl -s -o /tmp/cors_headers.txt -D /tmp/cors_headers.txt -w 'STATUS:%{http_code}\\\\n' -X OPTIONS http://localhost:3000/users/login -H 'Origin: http://localhost:5173' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,authorization')",
+      "Bash(curl -v -X OPTIONS http://localhost:3000/users/login -H 'Origin: http://localhost:5173' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,authorization')",
+      "Bash(curl -s -o /dev/null -w \"STATUS:%{http_code}\\\\n\" http://localhost:3000/users/refresh -X POST)",
+      "Bash(kill 52958 53169)",
+      "Bash(nohup node index.js)",
+      "Bash(disown)",
+      "Bash(curl -s -o /dev/null -w \"vite STATUS:%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(pkill -f \"node index.js\")",
+      "Bash(pkill -f \"client/node_modules/.bin/vite\")",
+      "Bash(node -e ' *)",
+      "Bash(grep -rln -i \"month\" /Users/adamshmuel/Dev/home-budget --include=\"*.md\" --include=\"*.js\" --include=\"*.py\" --include=\"*.sql\" 2>/dev/null | grep -v node_modules)",
+      "Read(//Users/adamshmuel/Dev/home-budget/**)",
+      "Bash(npm view *)",
+      "Bash(npm install *)",
+      "Bash(mkdir -p /Users/adamshmuel/Dev/git/expenses/backend/ai/__tests__ && ls /Users/adamshmuel/Dev/git/expenses/backend/ai)",
+      "Bash(node -e \"const { Type, GoogleGenAI } = require\\('@google/genai'\\); console.log\\(Type\\); console.log\\(typeof GoogleGenAI\\);\")",
+      "Bash(npx playwright *)",
+      "Bash(cp /tmp/check_date_bug.mjs /Users/adamshmuel/Dev/git/expenses/qa/scripts/check_date_bug.mjs)",
+      "Bash(sed -i '' 's#\"../backend/.env\"#\"../backend/.env\"#' scripts/check_date_bug.mjs)",
+      "Bash(node scripts/check_date_bug.mjs)",
+      "Bash(python3)",
+      "Bash(node scripts/build-report.mjs)",
+      "Bash(rm -f /tmp/check_date_bug.mjs *)",
+      "Bash(npm run *)",
+      "Bash(node --test backend/ai/__tests__/*.test.js)",
+      "Bash(awk '/^## 6\\\\./,/^## 9\\\\./' docs/specs/01-ai-chat.md)",
+      "Bash(node --test __tests__/*.test.js)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e \"require\\('./backend/bl/categoryService.js'\\); require\\('./backend/routes/chatRoute.js'\\); console.log\\('both files parse OK'\\)\")",
+      "Bash(git check-ignore *)",
+      "Bash(node -e \"require\\('./backend/routes/chatRoute.js'\\); console.log\\('parses OK'\\)\")",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X POST http://localhost:3100/api/users/signup -H 'Content-Type: application/json' -d '{\"username\":\"qa_chatroute_verify\",\"password\":\"TestPass123!\"}')"
+    ],
+    "additionalDirectories": [
+      "/Users/adamshmuel/Dev/git/expenses/backend/ai",
+      "/private/tmp"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-backend.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking the backend/ boundary"
+          }
+        ]
+      }
+    ]
+  }
+}
