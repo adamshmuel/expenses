@@ -34,9 +34,7 @@ qa/reports/
 # AI tooling config and AI-authored root docs — kept on disk for local use,
 # never tracked or pushed. Fresh clones will not have these; see the project
 # owner before relying on git history to restore them.
-.claude/settings.local.json
-.claude/worktrees/
-.claude/hooks/__pycache__/
+.claude/
 .github/
 opencode.json
 /*.md
