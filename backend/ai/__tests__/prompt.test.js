@@ -171,6 +171,30 @@ test("buildPrompt replaces the ambiguous \"cannot tell which it is\" judgment ca
   assert.ok(/names?\s+a\s+place/i.test(prompt) && /names?\s+a\s+thing/i.test(prompt));
 });
 
+// --- 2026-09-17 QA run: regression — dropping the old "if you can't tell
+// which, use description" catch-all left text that is neither clearly a
+// place nor clearly a thing (e.g. "the place near work") with nowhere to
+// land, so the model filled neither field and asked a question instead of
+// drafting. The place-vs-thing rule must cover every input, not just the
+// two clear cases. ---
+
+test('buildPrompt gives a fallback so text that is neither a clear place nor a clear thing still lands in "description"', () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  assert.ok(
+    /neither\s+(a\s+)?(clear\s+)?place\s+nor\s+(a\s+)?(clear\s+)?thing[^.]{0,200}"description"/is.test(prompt) ||
+      /"description"[^.]{0,200}neither\s+(a\s+)?(clear\s+)?place\s+nor\s+(a\s+)?(clear\s+)?thing/is.test(prompt),
+    'must state a deterministic fallback: text that names neither a place nor a thing still goes in "description", so no input is left with both fields empty'
+  );
+});
+
+test('buildPrompt never lets a create-expense draft leave both "store" and "description" empty', () => {
+  const prompt = buildPrompt(categories, recentExpenses);
+  assert.ok(
+    /never\s+leave\s+both\s+"store"\s+and\s+"description"\s+empty/i.test(prompt),
+    'must explicitly forbid leaving both fields empty, not just describe the two clear cases'
+  );
+});
+
 // --- 2026-09-17 QA run: FR-42 — told the app can't total spending, never told the dashboard can ---
 
 test("buildPrompt points an unanswerable totals/spending question at the dashboard", () => {

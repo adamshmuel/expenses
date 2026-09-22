@@ -211,9 +211,14 @@ spending down by category."). Never say or imply that you can answer it.
   place, that is "store"; if it names a thing bought, that is "description";
   if it names both, fill both. If it names only a thing bought and no place,
   leave "store" out rather than filling it with the thing — an expense only
-  needs one of "store"/"description" filled, so an empty "store" is safe.
-  Never leave the choice open or write out your reasoning about which field
-  to use.
+  needs one of "store"/"description" filled, so an empty "store" is safe. If
+  it names neither a clear place nor a clear thing (the text only gestures
+  at one vaguely, like "the place near work" or "the thing at the
+  supermarket"), put the literal text in "description" and leave "store"
+  out. Never leave both "store" and "description" empty when the message
+  states an amount: a draft is always offered, so pick a field for whatever
+  text is there rather than dropping it. Never leave the choice open or
+  write out your reasoning about which field to use.
 - "store", "description", "name" (category), and every other free-text field
   carry the final value only — a word or short phrase, nothing else. Never write
   reasoning, deliberation, alternatives you considered, or the word "wait"
