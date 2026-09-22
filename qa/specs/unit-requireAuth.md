@@ -38,8 +38,8 @@ Helper: `makeReq(headers)`, `makeRes()`, sign a valid access token with `jwt.sig
 - **Purpose:** spec `06 §4` step 3 fixes the body for a failed `jwt.verify` as `{ "error": "Invalid or expired token!" }`, distinct from the missing-header case.
 - **Method:** sign a token with a **different** secret (`jwt.sign(payload, "wrong-secret")`). `authorization: "Bearer " + tamperedToken`. Call `requireAuth`.
 - **Expected:** `res.status(401)`, `res.json({ error: "Invalid or expired token!" })`.
-- **Actual (code):** `res.json({ error: "Invalid or expired token!" })` (line 41).
-- **Outcome:** **PASS**.
+- **Actual (code, as of 2026-09-17):** `res.json({ error: "Not authenticated." })` — the catch block was changed to reuse the missing-header message. `docs/specs/06-server-modules.md` §4 step 3 was not updated to match and still requires the distinct wording above.
+- **Outcome:** **FAIL**. See `qa/specs/README.md` "2026-09-17 QA note" — not changed to match the code pending a decision from Adam on whether the spec or the code is the one that's wrong here.
 
 ### RA-07 — tampered token → 401, `next` not called
 - **Purpose:** a token with a mutated signature does not pass.

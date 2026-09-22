@@ -60,8 +60,8 @@
 - **Purpose:** spec `07` §4 #1 fixes the 404 body as `{ "error": "Not Found" }`.
 - **Method:** from XC-10, read `body.error`.
 - **Expected:** `body.error === "Not Found"`.
-- **Actual (code):** `index.js` line 57 returns `{ error: "Not Found" }`.
-- **Outcome:** **PASS**.
+- **Actual (code, as of 2026-09-17):** `index.js`'s 404 handler now returns `{ error: "Not found." }` (lowercase, trailing period). `docs/specs/07-server-entry.md` §4 was not updated to match and still requires `"Not Found"`.
+- **Outcome:** **FAIL**. See `qa/specs/README.md` "2026-09-17 QA note" — not changed to match the code pending a decision from Adam on whether the spec or the code is the one that's wrong here.
 
 ### XC-12 — JSON body parsing and cookie parsing are wired (middleware order effect)
 - **Purpose:** spec `07` §2 #3–#4 — `express.json` before the routers, `cookie-parser` before `/users/refresh`.

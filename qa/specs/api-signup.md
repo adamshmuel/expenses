@@ -62,3 +62,34 @@
 - **Purpose:** spec `05` §8 — normal path is the async validator (400 on the field); a race that slips past becomes a 409 in the central handler (`err.code === 11000`).
 - **Method:** signup a user, then `POST /users/signup` again with the **same username** (fresh email).
 - **Expected:** HTTP is `400` with an `errors[]` entry `field === "username"` **or** HTTP `409` with a `{ error: <string> }` body. In both cases: no `password` in the body, and the response is one of the two agreed shapes. (With the async validator present, `400` is the expected outcome; `409` is accepted as spec-compliant.)
+
+---
+
+## Added 2026-09-17 — FR-39, the signup wording
+
+### SU-13 — the username-length message matches spec 03
+- **Purpose:** FR-39. The message was `"User name must between 3 and 20
+  characters"` — a missing verb, and a field name (`User name`) that does not
+  match its own input label or the `field` key the client maps on.
+- **Under test:** `backend/routes/userRoute.js`'s `signupValidators`.
+- **Method:** `POST /users/signup` with `username: "ab"` and an otherwise
+  valid body. Then repeat with a 21-character username.
+- **Expected:** 400, `{ errors: [...] }`, an entry with `field === "username"`
+  and `message === "Username must be 3–20 characters."` in both.
+- **Environment:** fresh.
+- **Fails if reverted:** yes.
+- **⚠ Implementer, read this.** The message contains an **en dash** (`–`,
+  U+2013) between 3 and 20, not a hyphen (`-`). A test that retypes it by hand
+  will fail for a reason that has nothing to do with the product. Assert
+  against the string as written in `docs/specs/03-api-contract.md`; if the spec
+  does not carry it verbatim, that is itself worth reporting, and the fallback
+  is to read it from `backend/routes/userRoute.js` rather than to invent it.
+
+### SU-14 — SU-11 still holds after the wording change
+- **Purpose:** the neighbour check. FR-39 changed a `withMessage` on the
+  username validator; SU-11 asserts every `field` key in a multi-error response
+  matches a request body key.
+- **Method:** re-run SU-11 unchanged.
+- **Expected:** unchanged — the set of `field` values is a subset of
+  `{ username, email, password }`. The fix touched the message, not the field
+  key, and this is what proves it.

@@ -79,14 +79,38 @@ describe("error_handling.js — catchAsync", () => {
 });
 
 describe("error_handling.js — errorHandler", () => {
-  it("EH-05 err.code 11000 -> 409, {error} shape, logger.warn [wording note]", () => {
-    const err = Object.assign(new Error("E11000 duplicate key error ... username_1"), { code: 11000 });
+  it("EH-05 duplicate username -> 409 { error: 'username already exists.' }, logger.warn", () => {
+    const err = Object.assign(new Error("E11000 duplicate key error ... username_1"), {
+      code: 11000,
+      keyValue: { username: "amir" },
+    });
     const res = makeRes();
     errorHandler(err, req, res, vi.fn());
     expect(res.status).toHaveBeenCalledWith(409);
-    const body = res.json.mock.calls[0][0];
-    expect(Object.keys(body)).toEqual(["error"]);
-    expect(typeof body.error).toBe("string");
+    expect(res.json).toHaveBeenCalledWith({ error: "username already exists." });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("EH-05 duplicate email -> 409 { error: 'email already exists.' }, logger.warn", () => {
+    const err = Object.assign(new Error("E11000 duplicate key error ... email_1"), {
+      code: 11000,
+      keyValue: { email: "amir@example.com" },
+    });
+    const res = makeRes();
+    errorHandler(err, req, res, vi.fn());
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ error: "email already exists." });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("EH-05 err.keyValue absent -> 409 falls back to { error: 'That value already exists.' }, logger.warn", () => {
+    const err = Object.assign(new Error("E11000 duplicate key error"), { code: 11000 });
+    const res = makeRes();
+    errorHandler(err, req, res, vi.fn());
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ error: "That value already exists." });
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.error).not.toHaveBeenCalled();
   });

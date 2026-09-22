@@ -68,3 +68,85 @@ Adam's own `backend/ai/__tests__/parseMessage.test.js` (`node:test`) already cov
 - **Purpose:** nothing outside `backend/ai/` may import `prompt.js`/`schema.js` directly (file's own header comment) — a single, stable entry point.
 - **Method:** `require("backend/ai/index.js")`, inspect its keys.
 - **Expected:** exported keys are exactly `["parseMessage"]`.
+
+---
+
+## Added 2026-09-17 — the prompt-only fixes, and the seam beneath them
+
+Bugs 1, 2, 3, 5 and 8 were fixed by adding sentences to `backend/ai/prompt.js`.
+FR-42 and FR-43 already have prompt-text assertions in
+`backend/ai/__tests__/prompt.test.js` (added this round) and are **not**
+duplicated here. Bug 3's two rules have none, and neither does the schema
+question beneath them.
+
+These are the deterministic half. The behavioural half — does the model
+actually obey — is `RG-01` … `RG-08` in `qa/specs/regression-2026-09-17.md`,
+designed as rates rather than yes/no for the reason given there.
+
+### AI-13 — the prompt states the negative-amount rule
+- **Purpose:** bug 3's sign half. A prompt-text assertion is a weak test of
+  behaviour and a strong test of *reversion*: it fails the moment the rule is
+  edited out, deterministically and without an API call.
+- **Method:** `buildPrompt(categories, recentExpenses)`; assert the text
+  instructs the model never to turn a negative amount into a positive one,
+  and to leave `amount` out and use intent `unknown` instead.
+- **Expected:** present.
+- **Note to implementer:** match on the *rule*, not on an exact sentence — the
+  existing tests in `backend/ai/__tests__/prompt.test.js` use loose regexes for
+  exactly this reason, so a reworded rule does not fail. Follow that pattern.
+
+### AI-14 — the prompt states the two-decimal-places rule
+- **Method:** as AI-13, for the precision half: three or more decimal places →
+  do not round, do not put it in `amount`, use `unknown`.
+- **Expected:** present.
+- **Note:** assert the *no self-rounding* clause specifically. A rule that only
+  said "at most two decimals" would be satisfied by the model rounding
+  `12.345` to `12.35`, which is the failure the rule exists to prevent — the
+  user confirms a number they did not type.
+
+### AI-15 — the schema does not contradict the prompt, and cannot enforce it
+- **Purpose:** the seam. `schema.js` declares
+  `amount: { type: Type.NUMBER, description: "Never invented — omit if not
+  stated." }`. Gemini's `Type.NUMBER` has **no** `multipleOf` and no minimum,
+  so the sign and precision rules exist in the prompt only, with nothing
+  structural behind them.
+- **Method:** static. Assert `schema.js`'s `amount` declares no numeric
+  constraint, and that this spec and `RG-02`/`RG-04` are the only places the
+  constraint is claimed to live.
+- **Expected:** it holds today.
+- **Why assert a limitation rather than a behaviour:** so that if a future SDK
+  gains `multipleOf` and someone adds it, this case fails and forces the
+  design note to be updated rather than leaving two contradictory accounts of
+  where the rule lives. The point of a seam check is that both declarations are
+  read together.
+- **Carries forward:** the real backstop is missing — `RG-04`, a blocker in
+  `backend/` (Adam's).
+
+### AI-16 — `buildPrompt` and `schema.js` agree on every field name
+- **Purpose:** the seam class named in the 2026-09-17 findings — *"`backend/ai/`
+  sends a category name; `backend/bl/` expected an id. Both halves passed their
+  own tests."* The same hazard sits between the prompt's prose and the schema's
+  declared shape: the prompt tells the model to fill fields by name, and the
+  schema declares them independently.
+- **Method:** static, no model. Extract every field name the schema declares
+  (`intent`, `reply`, `drafts[]`, `amount`, `store`, `description`, `date`,
+  `category`, `changes`, `searchFilters`, …). Extract every field name the
+  prompt's rules refer to in quotes. Compare the two sets.
+- **Expected:** every name the prompt instructs the model to fill is declared
+  in the schema, and every schema field the server later reads is mentioned in
+  the prompt. Report any name in one and not the other.
+- **Why it earns its place:** it is cheap, needs no live model, runs in
+  milliseconds, and catches the exact failure that produced eleven green tests
+  next to a broken app. A field the prompt names and the schema omits is
+  silently dropped from every response; a field the schema declares and the
+  prompt never mentions is never filled.
+
+### AI-17 — the prompt's own example uses a real arrow
+- **Purpose:** `CX-06`. The prompt's category rule spells the example
+  `"under Food → Coffee"` with `→`, and replies in production come back with
+  `->`. Assert the prompt at least does not model the ASCII form.
+- **Method:** assert `buildPrompt`'s output contains no `->` in the rules that
+  demonstrate reply wording.
+- **Expected:** none.
+- **Severity:** low. Listed because it is the cheapest end of `CX-06` and
+  costs nothing to keep.

@@ -34,6 +34,10 @@ HTML report inlines each test's full case from here.
 | `api-expenses-categories.md` | `GET /expenses`, `/expenses/summary`, `/categories` | api | ER-01 … ER-11 |
 | `e2e-chat-dashboard-journey.md` | chat → dashboard, real client + real server, browser-driven | e2e | FJ-01, DJ-01 |
 | `v2-chat-questions-2026-09-17.md` | **V2** — asking the chat about past spending. Designed against `docs/specs/10` + `11` **before the feature exists**; no case is exploratory | mixed (48 of 67 browser) | Q-01 … Q-67 |
+| `how-to-use.md` | **New area** — the public tutorial page, against `docs/specs/12` | component + browser | HT-01 … HT-34 |
+| `client-shared-components.md` | **New area** — `ChatScreen`, `DashboardTotals`, `CategoryBreakdown`, `lib/dashboardFormat`, now shared by two callers each | component (+1 browser) | SC-01 … SC-16 |
+| `regression-2026-09-17.md` | **New** — the thirteen fixes from the 2026-09-17 run, none yet verified end to end | mixed | RG-01 … RG-31 |
+| `exploratory-2026-09-17.md` | **New** — found by hand on 2026-09-17: protected-route deep links, what the user can see while waiting, `store` vs `description` | mixed (mostly browser) | RT-01 … RT-10, CX-01 … CX-07, SD-01 … SD-03 |
 
 **Governing specs:** `docs/specs/01-ai-chat.md`, `02-dashboard.md`, `03-api-contract.md`,
 `04-data-model.md`, `05-user-layers.md`, `06-server-modules.md`, `07-server-entry.md`,
@@ -63,10 +67,41 @@ about from here:
 
 | ID | Governing clause | Spec says | Code does | Test outcome |
 |---|---|---|---|---|
-| RA-06 | 06 §4 step 3 | verify-failure body `{ error: "Not authenticated." }` | `{ error: "Invalid or expired token!" }` | **PASS** — the test asserts the code's current wording (updated before this pass), not the spec's; the wording gap itself is still open |
-| XC-11 | 07 §4 | 404 body `{ error: "Not found." }` | `{ error: "Not Found" }` | **PASS** — same: test asserts current wording, spec-wording gap still open |
+| ~~RA-06~~ | 06 §4 steps 2–3 | step 2 `{ error: "Not authenticated." }`, step 3 `{ error: "Invalid or expired token!" }` | `requireAuth.js:32` → `"Not authenticated."`; `:41` → `"Invalid or expired token!"` | **Retired 2026-09-17 (second correction).** Code and spec agree exactly. No divergence. |
+| ~~XC-11~~ | 07 §4 | 404 body `{ error: "Not Found" }` | `index.js:64` → `{ error: "Not Found" }` | **Retired 2026-09-17 (second correction).** Code and spec agree exactly. No divergence. |
 | XC-13 | 07 §2 | `helmet()` is middleware #1 | `compression()` is #1, `helmet()` #2 | PASS with a recorded design note (helmet still covers every response) |
-| EH-05 | 06 §3.2 | 409 body `{ error: "<field> already exists." }` | `{ error: "That username or email is already taken." }` | PASS on shape + status; wording divergence recorded as a note |
+| ~~EH-05~~ | 06 §3.2 | 409 body `{ error: "<field> already exists." }` | `{ error: "<field from err.keyValue> already exists." }`, falling back to `"That value already exists."` | **Retired 2026-09-17** — code now derives the field name from `err.keyValue`; test and spec both updated to match and assert it directly (three shapes: `username`, `email`, no-`keyValue` fallback). No divergence remains. |
+
+### 2026-09-17 QA note on RA-06 / XC-11 — resolved, and this table was wrong twice
+
+This table has now described these two rows incorrectly on two separate
+occasions, in opposite directions. Recorded in full because the pattern, not
+either individual error, is the thing to learn from.
+
+1. A scoped round changed the `requireAuth` and 404 wordings in the code, and
+   the table was written to say the tests should follow.
+2. Those code changes were then **reverted** once the specs were re-read —
+   recorded in `docs/reference/testing-reference/2026-09-17-how-to-use-testable.md`.
+3. The table was corrected, but the correction described the **pre-revert**
+   code, so it still claimed a divergence that no longer existed and marked
+   both tests as FAIL.
+
+**Verified against the source on 2026-09-17, by `qa-lead`:**
+
+| | Spec | Code | |
+|---|---|---|---|
+| RA-06 | 06 §4 step 2 `"Not authenticated."`, step 3 `"Invalid or expired token!"` | `requireAuth.js:32` and `:41`, exactly those two strings | **agree** |
+| XC-11 | 07 §4 `{ "error": "Not Found" }` | `index.js:64`, exactly that | **agree** |
+
+Both tests should **pass**. If a run reports either as failing, the test is
+asserting something neither the spec nor the code says, and the test is what
+is wrong.
+
+**The standing rule this produced**, already stated at the end of the
+2026-09-17 testable-surface file and repeated here because this table is where
+people look: **anything deriving an expected wording reads `docs/specs/`
+directly. Never this table.** A summary of a spec is a second source of truth
+and it has now been wrong twice in one day.
 
 ## Findings, fixed since the 2026-09-15 pass
 
@@ -84,3 +119,42 @@ None. All 4 previously-open bugs are fixed and re-verified.
 ## Test-code fix, this pass (not a product bug)
 
 DJ-01 (`qa/e2e/tests/chat-dashboard-journey.spec.ts`) used bare `page.getByText(...)` locators for the total figure and each category name. `DashboardPage.tsx` renders the total in two places by design (the top summary card and the category list's own total row) and each category name in two places by design (the "By category" breakdown and the "Recent expenses" table) — so the un-scoped locators were a Playwright strict-mode violation, not a product bug. Fixed by scoping to `.dashboard-totals__figure` for the total and to the "By category" region for category names.
+
+---
+
+## 2026-09-17 design round — what changed for the existing specs
+
+Three existing files were **extended**, not rewritten:
+
+| File | Added | Why there and not in a new file |
+|---|---|---|
+| `unit-errorHandling.md` | `EH-12` … `EH-15` | The 409 body is now derived from `err.keyValue`. It is the same module and the same branch EH-05 already covers. |
+| `api-signup.md` | `SU-13`, `SU-14` | FR-39 changed one validator message on an endpoint that already has a spec. |
+| `unit-ai.md` | `AI-13` … `AI-17` | Bug 3's prompt rules, and the prompt↔schema seam. FR-42 and FR-43 are **not** here — they already have prompt-text tests in `backend/ai/__tests__/prompt.test.js`. |
+
+### Existing cases demoted to samples by this round
+
+Not deleted, not failing — reclassified, because a new case now covers what
+they were being counted for.
+
+| ID | Was counted as | Now | Superseded by |
+|---|---|---|---|
+| `FJ-01` | coverage of chat → stored expense | **sample** — asserts the reply and a row count, not the stored field values | `RG-22`, which checks every field the user supplied and every field the system derived |
+| `UJ-01` | coverage of "a reload keeps you where you are" | **sample** — reloads `/home` only, which is the accidental destination of the `/dashboard` redirect bug, so it passes straight through the defect | `RT-01` … `RT-04` |
+| `DJ-01` | coverage of the dashboard reflecting the chat | **sample** — one happy path, two rows | `SC-15`, `SD-02` at lived-in volume |
+| every `CC-*` posting a hand-written `/chat/confirm` payload | coverage of the confirm contract | **samples** — determinism justifies them, but nothing verifies the upstream produces those payloads | `RG-06`, `RG-22` walk the real producer |
+| `LV-17` | coverage of A6, the returner | **deleted** — a tautology that cannot fail (the 2026-09-17 findings say so, and say `qa-lead` owed a rewrite) | `RT-09` |
+
+### The classes this round added, applied backwards
+
+Each escaped bug contributes a class, not a case. Where the class was already
+closed, nothing was added and it says so.
+
+| Class | Added? |
+|---|---|
+| After any write, assert every field the user supplied **and** every field the system derived | already closed by the 2026-09-16 round's design; `RG-22` is the instance for this round's flows. **Nothing new added.** |
+| Drive at least one path through the real producer, not a hand-written payload | already closed. `RG-06` and `RG-22` do it. **Nothing new added.** |
+| **Where one component hands a structure to another, read both declarations and check they agree** | **new.** `AI-16` (prompt ↔ schema), `SC-01`/`SC-02`/`SC-04` (the two money formatters, and the tutorial's literals against the real types). This is the class that found the `₪1234.50` vs `₪ 1,234.50` split. |
+| **Can a failure be reconstructed afterwards — and does it leave behind anything it should not** | **new.** `RG-27`, `RG-28`, `RG-29`, `RG-30`. |
+| **A fix that lives only in a prompt is fallible: test it as a rate, and pair it with a deterministic invariant** | **new.** Applied to every AI-layer case in `regression-2026-09-17.md` §1, and it is what exposed `RG-04`'s missing backstop. |
+| **At 375px, assert the element's own right edge, not the document's `scrollWidth`** | **new.** `HT-16`, `RG-20`, `SC-15`. The document-level check passes today while the dashboard's table is cut off inside its own scroller. |

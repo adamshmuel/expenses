@@ -623,3 +623,88 @@ FR-29, XS-05). Recorded rather than padded.
 
 **BD-07 is expected to fail** on one assertion: the AI-response half of the
 logging gap is recorded as still open. That is deliberate.
+
+---
+
+# Round 2026-09-17b — the tutorial, the extraction, and thirteen unverified fixes
+
+**Designed, not automated.** `qa-lead` stops here per
+`.claude/rules/delegation.md`; Adam reviews, then `qa-tester` implements.
+
+**State going in:** 225 V1 cases plus 67 designed V2 cases. Thirteen fixes sit
+in the working tree, **uncommitted and unverified by any run**. A new public
+page exists, and three components were extracted out of `HomePage` and
+`DashboardPage` so it can reuse them.
+
+**Design order followed:** exploratory session by hand → four questions →
+archetypes → flow list sealed → **then** the bug reports and specs.
+Field notes: `qa/field-notes-2026-09-17-exploratory.md`. Flows:
+`qa/flow-analysis-2026-09-17.md`.
+
+## New blockers
+
+| # | Item | Why it blocks | Effort | Owner |
+|---|---|---|---|---|
+| B8 | **No server-side backstop for amount precision.** `expenseModel.amount` has `min: 0.01` and nothing else; `expenseService` applies no precision check. `12.345` is a valid Number above 0.01 and will be stored. The only defence is a sentence in `backend/ai/prompt.js`, and a prompt is fallible by construction. | `RG-04` cannot pass. Once an over-precise amount is stored, every total is computed from it while every screen prints a rounded version, so the dashboard's rows stop summing to its own total — and nothing crashes. | small | **Adam only** — `backend/models/expenseModel.js` or `backend/bl/expenseService.js`. Not written, not sketched. |
+| B9 | **`backend/ai/` has no output-length cap and no repetition guard.** The 2026-09-17 run recorded a 207 KB response from a one-sentence parse. | `RG-30` fails. A wasted API call and a dead-ended user. | small | **Claude** — `backend/ai/`. Fixable without Adam writing code, but the ceiling (proposed: 8 KB) is his number. |
+| B10 | `buildPending` is not exported from `client/src/store/chatSlice.ts` | `FR-05`'s unit half, carried over from the 2026-09-17 run's gap table. | trivial | **Claude** — `client/`. Listed because the earlier run filed it as a blocker without saying it is not an Adam-only one. It is an ordinary change. |
+
+B4 (no committed `backend/.env.example`) remains open and Adam-only.
+
+## Roadmap, risk desc / effort asc
+
+| # | Target | Level | What it asserts | Risk | Effort | Depends on |
+|---|---|---|---|---|---|---|
+| 34 | `client/src/store/authSlice.ts` — `initialState.status` | browser | `RT-01`…`RT-04`: reloading or deep-linking `/dashboard` lands on `/dashboard`, and never passes through `/login` | 3 | 1 | — |
+| 35 | `backend/error_handling.js` — 11000 branch | unit | `EH-12`…`EH-15`: the 409 field is derived from `err.keyValue`; three shapes; no `"undefined already exists."` | 3 | 1 | — |
+| 36 | `backend/bl/userService.js` — rotation | api + browser | `RG-09`…`RG-11`: ten reloads keep the session; concurrent refreshes both succeed; the old token still dies after the grace window | 3 | 2 | reads `RACE_GRACE_MS` from source |
+| 37 | `backend/routes/chatRoute.js`, `backend/bl/expenseService.js` | api | `RG-12`, `RG-13`: empty message → 400 not 500; no expense without a label, including whitespace-only | 3 | 1 | — |
+| 38 | `backend/ai/prompt.js` + `schema.js` | unit | `AI-13`…`AI-17`: the sign and precision rules are present; the prompt and schema agree field by field | 3 | 1 | — |
+| 39 | `backend/models/expenseModel.js` | api | `RG-02`, `RG-04`: negative and over-precise amounts never reach the database | 3 | 1 | **B8** for `RG-04` |
+| 40 | `client/src/lib/dashboardFormat.ts`, `ChatScreen.tsx` | component | `SC-01`…`SC-03`, `RG-31`: one money formatter; the chat and the dashboard print the same amount identically | 3 | 1 | — |
+| 41 | `backend/ai/prompt.js` — behaviour | browser, real model | `RG-01`, `RG-03`, `RG-05`, `RG-06`, `RG-08`: rates over repetitions, each paired with a no-write invariant | 3 | 3 | costs real Gemini calls |
+| 42 | `client/src/store/chatSlice.ts` | component | `RG-07`: an unreadable draft always tells the user; never a silent drop | 3 | 2 | **B10** |
+| 43 | `client/src/components/HowToUsePage.tsx` etc. | component + browser | `HT-01`…`HT-15`: public access, both navbar states, one animation at a time, no request, nothing typable | 2 | 2 | — |
+| 44 | the three extracted components | component | `SC-04`…`SC-14`: the tutorial-only props, both callers, the dashboard unchanged | 2 | 2 | — |
+| 45 | `client/src/index.css` | browser | `RG-20`, `RG-21`, `HT-16`, `HT-17`: 375px on every route in both auth states, element-level not document-level | 2 | 2 | — |
+| 46 | `HomePage`, `chatSlice` — visible feedback | browser | `CX-01`…`CX-04`: your message appears within 150ms; a busy indicator throughout; the card shows the date | 2 | 2 | bars **proposed**, need Adam |
+| 47 | `backend/logs/*` | integration | `RG-27`…`RG-29`: a failure can be reconstructed, and leaks nothing | 2 | 2 | — |
+| 48 | `backend/ai/` output ceiling | unit | `RG-30` | 2 | 1 | **B9** |
+| 49 | accessibility of the tutorial | component + browser | `HT-18`…`HT-21`, `SC-07`: reduced motion, no focusable control inside `aria-hidden`, keyboard order | 2 | 2 | `HT-18` needs a **spec decision** first |
+| 50 | tutorial copy and content | browser | `HT-22`…`HT-24`, `HT-32`, `HT-33`, `CX-06`: the waiting state does not misinstruct; the printed sentences actually work | 2 | 2 | `SC-10` proposes the fix shape |
+| 51 | `store` vs `description` | api + browser | `SD-01`…`SD-03`: a STORE column does not print a description; an edit finds either | 2 | 2 | — |
+| 52 | A5 / A6 debt from the 2026-09-17 run | browser, lived-in | `RT-09` replaces the `LV-17` tautology; `RT-10` unblocks `LV-04`/`LV-05` by asserting the seed corpus first | 2 | 3 | fixture repair |
+| 53 | `HT-25`, `HT-26` — timers | component, fake timers | the animation never jumps backwards on a parent re-render; timers and observers are torn down | 1 | 1 | — |
+| 54 | `HT-07` — sequencer interruption | browser | replaying one lesson does not strand another mid-animation | 2 | 1 | derived from code, **not reproduced** |
+
+## Not covered, accepted — each with a risk judgement, not a shrug
+
+- **Visual-diff baselines.** No pixel baselines exist, so "nothing clipped, no
+  layout collapse" stays partly unprovable. *Acceptable today because* `HT-16`,
+  `RG-20` and `SC-15` assert element-level geometry at 375px, which catches the
+  two layout failures that have actually occurred here; a baseline harness is a
+  larger piece of work than this round and would land untrusted.
+- **Bug 2 has no deterministic backstop.** Whether a correction reached the
+  payload is answerable only from the model's output — both 18 and 22 are valid
+  amounts, so no server-side invariant exists. *Acceptable today because*
+  `RG-06` walks the real producer at 5 repetitions across 3 phrasings, which is
+  the strongest claim the design supports. It must be re-run on every prompt
+  change.
+- **`docs/designs/` conformance beyond three pinned tokens.** *Acceptable today
+  because* `SC-13` pins the three places the serif/gold tokens apply, which is
+  where the `.dashboard-vars` change could regress the real dashboard.
+
+## Missed — I did not design it, and it says so
+
+Not the same list as the one above. These have no risk judgement because the
+honest reason is that I ran out of design, not that I weighed it.
+
+- **Reduced motion combined with a reload.** `HT-19` covers reduced motion plus
+  Replay; the reload path is absent.
+- **Scroll-driven election at 375px**, where every lesson is full-width and the
+  "most in view" arithmetic differs from desktop. This is the case I would
+  write next.
+- **`DashboardTotals` at zero expenses** — the empty dashboard a real user sees
+  on their first evening. No case in this round renders it.
+- **Replaying a lesson at 375px**, and reading the tutorial on a phone with an
+  expired session.
